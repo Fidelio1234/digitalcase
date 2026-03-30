@@ -1,30 +1,21 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 
-export const USERS = {
-  owner: {
-    id: 'owner',
-    name: 'Titolare',
-    pin: '1234',
-    role: 'owner',
-    initials: 'TIT',
-  },
-  staff1: {
-    id: 'staff1',
-    name: 'Cassiere 1',
-    pin: '0000',
-    role: 'staff',
-    initials: 'C1',
-  },
-  staff2: {
-    id: 'staff2',
-    name: 'Cassiere 2',
-    pin: '1111',
-    role: 'staff',
-    initials: 'C2',
-  },
-}
-
 const AuthContext = createContext(null)
+
+function getUtentiStorage() {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('sd_utenti')
+    if (!raw) return [
+      { id: 'owner', nome: 'Titolare', pin: '1234', ruolo: 'owner', abilitato: true },
+      { id: 'staff1', nome: 'Cassiere 1', pin: '0000', ruolo: 'staff', abilitato: true },
+      { id: 'staff2', nome: 'Cassiere 2', pin: '1111', ruolo: 'staff', abilitato: true },
+    ]
+    return JSON.parse(raw)
+  } catch {
+    return []
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -39,10 +30,12 @@ export function AuthProvider({ children }) {
   }, [])
 
   function login(userId, pinInput) {
-    const u = USERS[userId]
-    if (!u) return { ok: false }
-    if (pinInput !== u.pin) return { ok: false }
-    const session = { id: u.id, name: u.name, role: u.role, initials: u.initials }
+    const utenti = getUtentiStorage()
+    const u = utenti.find(u => u.id === userId)
+    if (!u) return { ok: false, reason: 'Utente non trovato' }
+    if (!u.abilitato) return { ok: false, reason: 'Utente disabilitato' }
+    if (pinInput !== u.pin) return { ok: false, reason: 'PIN errato' }
+    const session = { id: u.id, name: u.nome, role: u.ruolo, initials: u.nome.substring(0,2).toUpperCase() }
     setUser(session)
     sessionStorage.setItem('sd_user', JSON.stringify(session))
     return { ok: true }

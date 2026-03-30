@@ -100,10 +100,12 @@ export default async function handler(req, res) {
       </table>
 
       <!-- TOTALE -->
-      <div style="padding:16px;background:#1a1c24;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:13px;color:#5a5d6e;letter-spacing:2px;text-transform:uppercase">TOTALE</span>
-        <span style="font-size:24px;font-weight:700;color:#00e5a0;font-family:monospace">€ ${fmt(scontrino.totale)}</span>
-      </div>
+      <table style="width:100%;border-collapse:collapse;background:#1a1c24">
+        <tr>
+          <td style="padding:16px;font-size:13px;color:#5a5d6e;letter-spacing:2px;text-transform:uppercase;width:50%">TOTALE</td>
+          <td style="padding:16px;font-size:24px;font-weight:700;color:#00e5a0;font-family:monospace;text-align:right">€ ${fmt(scontrino.totale)}</td>
+        </tr>
+      </table>
     </div>
 
     <!-- METODO PAGAMENTO -->
@@ -132,7 +134,13 @@ export default async function handler(req, res) {
       html,
     })
 
-    if (error) return res.status(400).json({ error })
+    if (error) {
+      console.log('Resend error:', error)
+      return res.status(400).json({ 
+        error: error.message || 'Errore invio',
+        hint: 'Verifica che il dominio mittente sia verificato su Resend'
+      })
+    }
     return res.status(200).json({ ok: true, id: data?.id })
   } catch (err) {
     return res.status(500).json({ error: err.message })

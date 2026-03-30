@@ -1,16 +1,29 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
-import { useAuth, USERS } from '@/context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import styles from '@/styles/Login.module.css'
 
 const MAX_ATTEMPTS = 3
 const LOCK_SECONDS = 30
 
+function getUtenti() {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('sd_utenti')
+    if (!raw) return [
+      { id: 'owner', nome: 'Titolare', pin: '1234', ruolo: 'owner', abilitato: true },
+      { id: 'staff1', nome: 'Cassiere 1', pin: '0000', ruolo: 'staff', abilitato: true },
+      { id: 'staff2', nome: 'Cassiere 2', pin: '1111', ruolo: 'staff', abilitato: true },
+    ]
+    return JSON.parse(raw).filter(u => u.abilitato)
+  } catch { return [] }
+}
+
 export default function LoginPage() {
   const { login, user } = useAuth()
   const router = useRouter()
-
-  const [selectedUserId, setSelectedUserId] = useState('owner')
+  const [utenti, setUtenti] = useState([])
+  const [selectedUserId, setSelectedUserId] = useState('')
   const [pin, setPin] = useState('')
   const [attempts, setAttempts] = useState(0)
   const [locked, setLocked] = useState(false)
@@ -23,17 +36,20 @@ export default function LoginPage() {
   }, [user, router])
 
   useEffect(() => {
+    const u = getUtenti()
+    setUtenti(u)
+    if (u.length > 0) setSelectedUserId(u[0].id)
+  }, [])
+
+  useEffect(() => {
     if (!locked) return
     let remaining = LOCK_SECONDS
     const interval = setInterval(() => {
       remaining--
       if (remaining <= 0) {
         clearInterval(interval)
-        setLocked(false)
-        setAttempts(0)
-        setPin('')
-        setErrorMsg('')
-        setDotState('idle')
+        setLocked(false); setAttempts(0); setPin('')
+        setErrorMsg(''); setDotState('idle')
       } else {
         setErrorMsg(`Troppi tentativi — riprova tra ${remaining}s`)
       }
@@ -66,10 +82,7 @@ export default function LoginPage() {
   const pressKey = useCallback((k) => {
     if (locked || success) return
     setErrorMsg('')
-    if (k === 'del') {
-      setPin(prev => prev.slice(0, -1))
-      return
-    }
+    if (k === 'del') { setPin(prev => prev.slice(0,-1)); return }
     setPin(prev => {
       if (prev.length >= 4) return prev
       const next = prev + k
@@ -89,13 +102,10 @@ export default function LoginPage() {
 
   const selectUser = (id) => {
     setSelectedUserId(id)
-    setPin('')
-    setAttempts(0)
-    setErrorMsg('')
-    setDotState('idle')
+    setPin(''); setAttempts(0); setErrorMsg(''); setDotState('idle')
   }
 
-  const users = Object.values(USERS)
+  const selectedUser = utenti.find(u => u.id === selectedUserId)
 
   return (
     <div className={styles.screen}>
@@ -118,16 +128,18 @@ export default function LoginPage() {
       </div>
 
       <div className={styles.userSelector}>
-        {users.map(u => (
+        {utenti.map(u => (
           <button
             key={u.id}
             className={`${styles.userBtn} ${selectedUserId === u.id ? styles.active : ''}`}
             onClick={() => selectUser(u.id)}
           >
-            <div className={`${styles.userAvatar} ${styles[u.role]}`}>{u.initials}</div>
-            <div className={styles.userName}>{u.name}</div>
-            <div className={`${styles.userRole} ${styles[u.role]}`}>
-              {u.role === 'owner' ? 'Admin' : 'Cassa'}
+            <div className={`${styles.userAvatar} ${styles[u.ruolo]}`}>
+              {u.nome.substring(0,2).toUpperCase()}
+            </div>
+            <div className={styles.userName}>{u.nome}</div>
+            <div className={`${styles.userRole} ${styles[u.ruolo]}`}>
+              {u.ruolo === 'owner' ? 'Admin' : 'Cassa'}
             </div>
           </button>
         ))}
@@ -149,7 +161,6 @@ export default function LoginPage() {
               </div>
               <div className={styles.pinMsg}>{errorMsg}</div>
             </div>
-
             <div className={styles.numpad}>
               {['1','2','3','4','5','6','7','8','9'].map(n => (
                 <button key={n} className={styles.key} onClick={() => pressKey(n)} disabled={locked}>
@@ -175,9 +186,9 @@ export default function LoginPage() {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <div className={styles.successName}>{USERS[selectedUserId]?.name}</div>
+            <div className={styles.successName}>{selectedUser?.nome}</div>
             <div className={styles.successRole}>
-              {USERS[selectedUserId]?.role === 'owner' ? '● Accesso Completo' : '● Accesso Cassa'}
+              {selectedUser?.ruolo === 'owner' ? '● Accesso Completo' : '● Accesso Cassa'}
             </div>
             <div className={styles.loadBar}>
               <div className={`${styles.loadBarFill} ${styles.animating}`} />

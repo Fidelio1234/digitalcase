@@ -167,3 +167,33 @@ export function incrementaChiusura() {
   if (typeof window !== "undefined") localStorage.setItem(KEY_CONTATORI, JSON.stringify(updated))
   return updated
 }
+
+// ─── UTENTI ───────────────────────────────────────────────────────────────
+const KEY_UTENTI = 'sd_utenti'
+
+const DEFAULT_UTENTI = [
+  { id: 'owner', nome: 'Titolare', pin: '1234', ruolo: 'owner', abilitato: true },
+  { id: 'staff1', nome: 'Cassiere 1', pin: '0000', ruolo: 'staff', abilitato: true },
+  { id: 'staff2', nome: 'Cassiere 2', pin: '1111', ruolo: 'staff', abilitato: true },
+]
+
+export function getUtenti() {
+  if (typeof window === 'undefined') return DEFAULT_UTENTI
+  try {
+    const raw = localStorage.getItem(KEY_UTENTI)
+    if (!raw) return DEFAULT_UTENTI
+    return JSON.parse(raw)
+  } catch {
+    return DEFAULT_UTENTI
+  }
+}
+
+export function saveUtenti(utenti) {
+  if (typeof window === 'undefined') return false
+  try {
+    localStorage.setItem(KEY_UTENTI, JSON.stringify(utenti))
+    return true
+  } catch {
+    return false
+  }
+}
