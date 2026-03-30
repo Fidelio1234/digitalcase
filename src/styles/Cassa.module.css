@@ -1,0 +1,425 @@
+.page {
+  --accent: #00e5a0;
+  --accent-dim: rgba(0,229,160,0.12);
+  --accent-glow: rgba(0,229,160,0.25);
+  --bg: #08090c;
+  --surface: #111318;
+  --surface2: #1a1c24;
+  --border: #252830;
+  --text: #eef0f6;
+  --muted: #5a5d6e;
+  --danger: #ff4d6a;
+  --danger-dim: rgba(255,77,106,0.12);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ─── HEADER ─────────────────────────────────────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 16px; flex-shrink: 0;
+}
+.headerLeft { display: flex; align-items: center; gap: 10px; }
+.logoMark { font-size: 1.4rem; }
+.logoName { font-family: 'Unbounded', sans-serif; font-size: 0.85rem; font-weight: 700; }
+.headerUser { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+.headerCenter { flex: 1; display: flex; justify-content: center; }
+.errore {
+  background: rgba(255,77,106,0.12); border: 1px solid var(--danger);
+  color: var(--danger); padding: 6px 16px; border-radius: 8px;
+  font-size: 0.78rem; animation: erroreIn 0.2s ease;
+}
+@keyframes erroreIn { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:none } }
+.headerRight { display: flex; gap: 8px; align-items: center; }
+.cfgBtn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 12px; color: var(--muted);
+  font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.cfgBtn:hover { border-color: var(--accent); color: var(--accent); }
+.logoutBtn {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 12px; color: var(--muted);
+  font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.logoutBtn:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ─── MAIN 3 COLONNE ─────────────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 280px 1fr 260px;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ─── COLONNA SINISTRA: Tastiera ─────────────────────────────────────────── */
+.colLeft {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px; overflow-y: auto;
+}
+
+.displayImporto {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px;
+  text-align: center;
+}
+.displayLabel { font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+.displayValue {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 2rem; font-weight: 700;
+  color: var(--accent); margin-top: 6px; letter-spacing: -1px;
+}
+.ultimaChiusa {
+  font-size: 0.7rem; color: var(--muted); margin-top: 8px;
+  padding-top: 8px; border-top: 1px solid var(--border);
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.key {
+  aspect-ratio: 1.3;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.1rem; font-weight: 400;
+  color: var(--text); cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.key:hover { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+.key:active { transform: scale(0.92); }
+
+.funzioni { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fnBtn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 8px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--muted); font-family: 'DM Mono', monospace;
+  font-size: 0.7rem; cursor: pointer; transition: all 0.2s;
+}
+.fnBtn svg { width: 16px; height: 16px; }
+.fnBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.fnBtn:disabled { opacity: 0.3; cursor: default; }
+.fnDanger:hover:not(:disabled) { border-color: var(--danger) !important; color: var(--danger) !important; background: var(--danger-dim) !important; }
+
+.subtotale {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px;
+}
+.subtotaleRow {
+  display: flex; justify-content: space-between;
+  font-size: 0.82rem; font-weight: 500;
+}
+.subtotaleIva {
+  display: flex; justify-content: space-between;
+  font-size: 0.7rem; color: var(--muted); margin-top: 4px;
+}
+
+.chiudiBtn {
+  background: var(--accent); color: #000;
+  border: none; border-radius: 12px; padding: 14px;
+  font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: auto;
+}
+.chiudiBtn:hover:not(:disabled) { background: #00ffb3; box-shadow: 0 4px 20px var(--accent-glow); }
+.chiudiBtn:disabled { opacity: 0.3; cursor: default; }
+.chiudiBadge {
+  background: rgba(0,0,0,0.2); border-radius: 6px;
+  padding: 2px 8px; font-size: 0.8rem;
+}
+
+/* ─── COLONNA CENTRO: Display battute ───────────────────────────────────── */
+.colCenter {
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.displayHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.displayTitle { font-family: 'Unbounded', sans-serif; font-size: 0.82rem; font-weight: 700; }
+.righeCount { font-size: 0.72rem; color: var(--muted); }
+
+.righeList {
+  flex: 1; overflow-y: auto; padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.righeEmpty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--muted); text-align: center; gap: 8px;
+  font-size: 0.82rem; padding: 40px;
+  height: 100%;
+}
+
+.riga {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+  transition: all 0.2s;
+}
+.rigaLast { border-color: var(--accent); background: var(--accent-dim); }
+.rigaIcona {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.rigaInfo { flex: 1; min-width: 0; }
+.rigaNome { font-size: 0.88rem; font-weight: 500; }
+.rigaQty {
+  margin-left: 8px; font-size: 0.72rem;
+  background: var(--surface2); border-radius: 4px; padding: 1px 6px;
+  color: var(--muted);
+}
+.rigaMeta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.rigaTotale { font-family: 'Unbounded', sans-serif; font-size: 0.9rem; font-weight: 600; }
+
+.totaleBanner {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px;
+  background: var(--surface); border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.totaleVal {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.4rem; font-weight: 700; color: var(--accent);
+}
+
+/* ─── COLONNA DESTRA: Reparti ────────────────────────────────────────────── */
+.colRight {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.repartiHeader {
+  padding: 14px 16px;
+  font-size: 0.65rem; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.repartiList {
+  flex: 1; overflow-y: auto;
+  padding: 10px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.repartoBtn {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--surface2); cursor: pointer;
+  transition: all 0.2s; text-align: left;
+  font-family: 'DM Mono', monospace;
+}
+.repartoBtn:hover { background: var(--accent-dim); border-color: var(--accent); }
+.repartoActive { background: var(--accent-dim) !important; }
+.repartoIcn { font-size: 1.2rem; flex-shrink: 0; }
+.repartoNm { flex: 1; font-size: 0.85rem; color: var(--text); }
+.repartoEuro {
+  font-size: 0.72rem; font-weight: 600;
+  padding: 3px 8px; border-radius: 6px;
+  white-space: nowrap;
+}
+
+.srList {
+  display: flex; flex-direction: column; gap: 4px;
+  margin: 4px 0 4px 12px;
+  animation: slideDown 0.2s ease;
+}
+@keyframes slideDown { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:none } }
+
+.srBtn {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface); cursor: pointer;
+  transition: all 0.2s; font-family: 'DM Mono', monospace;
+}
+.srBtn:hover { background: var(--accent-dim); border-color: var(--accent); }
+.srNm { font-size: 0.8rem; color: var(--text); }
+.srPrezzo { font-size: 0.8rem; font-weight: 600; }
+
+/* ─── MODAL CHIUSURA ─────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; animation: fadeIn 0.2s ease;
+}
+.chiusuraModal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; width: 100%; max-width: 480px;
+  max-height: 90vh; display: flex; flex-direction: column;
+  animation: slideUp 0.25s ease;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:none } }
+
+.modalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+}
+.modalTitle { font-family: 'Unbounded', sans-serif; font-size: 0.95rem; font-weight: 700; }
+.modalId { font-size: 0.72rem; color: var(--accent); background: var(--accent-dim); padding: 4px 10px; border-radius: 6px; }
+
+.modalRighe {
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+  overflow-y: auto; max-height: 200px;
+}
+.modalRiga { display: flex; justify-content: space-between; font-size: 0.82rem; }
+.modalTotale {
+  display: flex; justify-content: space-between;
+  font-family: 'Unbounded', sans-serif; font-size: 1rem; font-weight: 700;
+  padding-top: 8px; border-top: 1px solid var(--border);
+  color: var(--accent);
+}
+
+.modalIva {
+  padding: 10px 24px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.modalIvaRow { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); }
+
+.modalSection { padding: 16px 24px; border-bottom: 1px solid var(--border); }
+.modalLabel { font-size: 0.68rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+
+.metodoGroup { display: flex; gap: 8px; }
+.metodoBtn {
+  flex: 1; padding: 10px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--muted); font-family: 'DM Mono', monospace;
+  font-size: 0.82rem; cursor: pointer; transition: all 0.2s;
+}
+.metodoBtn:hover { border-color: var(--accent); color: var(--accent); }
+.metodoActive { border-color: var(--accent) !important; background: var(--accent-dim) !important; color: var(--accent) !important; }
+
+.contantiWrap { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.contantiInput {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.contantiInput:focus { border-color: var(--accent); }
+.restoBox {
+  background: var(--accent-dim); border: 1px solid var(--accent);
+  border-radius: 8px; padding: 8px 14px;
+  font-size: 0.85rem; color: var(--accent);
+}
+
+.clienteInput {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  font-family: 'DM Mono', monospace; font-size: 0.88rem; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.clienteInput:focus { border-color: var(--accent); }
+.clienteInput::placeholder { color: var(--muted); }
+
+.modalFooter {
+  display: flex; gap: 10px; padding: 16px 24px;
+}
+.cancelBtn {
+  flex: 1; padding: 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-family: 'DM Mono', monospace;
+  font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+}
+.cancelBtn:hover { border-color: var(--text); color: var(--text); }
+.inviaBtn {
+  flex: 2; padding: 12px; border-radius: 10px;
+  border: none; background: var(--accent); color: #000;
+  font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.inviaBtn:hover { background: #00ffb3; box-shadow: 0 4px 16px var(--accent-glow); }
+
+/* ─── MODAL CONFERMA ANNULLA ─────────────────────────────────────────────── */
+.confirmModal {
+  background: var(--surface); border: 1px solid var(--danger);
+  border-radius: 20px; padding: 36px 32px;
+  width: 100%; max-width: 400px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  animation: slideUp 0.25s ease;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+}
+.confirmIcona { font-size: 2.5rem; }
+.confirmTitolo { font-family: 'Unbounded', sans-serif; font-size: 1.1rem; font-weight: 700; }
+.confirmSub { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+.confirmBtns { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
+.confirmDangerBtn {
+  flex: 1; padding: 12px; border-radius: 10px;
+  border: none; background: var(--danger); color: #fff;
+  font-family: 'Unbounded', sans-serif; font-size: 0.75rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.confirmDangerBtn:hover { background: #ff2d4f; box-shadow: 0 4px 16px rgba(255,77,106,0.4); }
+
+/* ─── MODAL SUCCESSO ─────────────────────────────────────────────────────── */
+.successModal {
+  background: var(--surface); border: 1px solid var(--accent);
+  border-radius: 20px; padding: 40px 32px;
+  width: 100%; max-width: 380px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  animation: successPop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 60px var(--accent-glow), 0 32px 80px rgba(0,0,0,0.5);
+}
+@keyframes successPop {
+  from { opacity:0; transform:scale(0.8) }
+  to   { opacity:1; transform:scale(1) }
+}
+.successCircle {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--accent-dim); border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 32px var(--accent-glow); color: var(--accent);
+  animation: circlePulse 0.5s ease 0.2s both;
+}
+@keyframes circlePulse {
+  from { transform:scale(0) } to { transform:scale(1) }
+}
+.successCircle svg { width: 32px; height: 32px; }
+.successTitolo { font-family: 'Unbounded', sans-serif; font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
+.successId { font-size: 0.72rem; color: var(--accent); background: var(--accent-dim); padding: 4px 12px; border-radius: 6px; }
+.successContatto { font-size: 0.82rem; color: var(--muted); }
+.successTotale {
+  font-family: 'Unbounded', sans-serif; font-size: 2rem; font-weight: 700;
+  color: var(--accent); letter-spacing: -1px; margin: 4px 0;
+}
+.successMeta { font-size: 0.78rem; color: var(--muted); }
+.successBtn {
+  margin-top: 12px; width: 100%; padding: 14px;
+  background: var(--accent); color: #000;
+  border: none; border-radius: 12px;
+  font-family: 'Unbounded', sans-serif; font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.successBtn:hover { background: #00ffb3; box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-1px); }
