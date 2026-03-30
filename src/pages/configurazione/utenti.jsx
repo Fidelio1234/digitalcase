@@ -24,6 +24,7 @@ export default function UtentiPage() {
   const [errore, setErrore] = useState('')
   const [showPin, setShowPin] = useState(false)
   const [toast, setToast] = useState('')
+  const [confirmElimina, setConfirmElimina] = useState(null)
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
@@ -101,18 +102,21 @@ export default function UtentiPage() {
   }
 
   function elimina(id) {
-    // Non eliminare l'unico titolare
     const titolari = utenti.filter(u => u.ruolo === 'owner')
     const target = utenti.find(u => u.id === id)
     if (target?.ruolo === 'owner' && titolari.length <= 1) {
       showToast('⚠ Deve esserci almeno un titolare')
       return
     }
-    if (!confirm(`Eliminare ${target?.nome}?`)) return
-    const updated = utenti.filter(u => u.id !== id)
+    setConfirmElimina(target)
+  }
+
+  function confermaElimina() {
+    const updated = utenti.filter(u => u.id !== confirmElimina.id)
     setUtenti(updated)
     saveUtenti(updated)
     showToast('Utente eliminato')
+    setConfirmElimina(null)
   }
 
   function toggleAbilitato(id) {
@@ -336,6 +340,28 @@ export default function UtentiPage() {
               <button className={styles.cancelBtn} onClick={closeModal}>Annulla</button>
               <button className={styles.saveBtn} onClick={salva}>
                 {modal === 'add' ? 'Aggiungi' : 'Salva modifiche'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFERMA ELIMINA */}
+      {confirmElimina && (
+        <div className={styles.overlay} onClick={() => setConfirmElimina(null)}>
+          <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.confirmIcona}>🗑️</div>
+            <div className={styles.confirmTitolo}>Eliminare utente?</div>
+            <div className={styles.confirmSub}>
+              Stai per eliminare <strong>{confirmElimina.nome}</strong>.<br/>
+              Questa operazione non può essere annullata.
+            </div>
+            <div className={styles.confirmBtns}>
+              <button className={styles.cancelBtn} onClick={() => setConfirmElimina(null)}>
+                No, annulla
+              </button>
+              <button className={styles.confirmDangerBtn} onClick={confermaElimina}>
+                Sì, elimina
               </button>
             </div>
           </div>

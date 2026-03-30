@@ -305,3 +305,27 @@
 .pinEmpty {
   font-size: 1.2rem; color: var(--border);
 }
+
+/* ─── MODAL CONFERMA ELIMINA ─────────────────────────────────────────────── */
+.confirmModal {
+  background: var(--surface); border: 1px solid var(--danger);
+  border-radius: 20px; padding: 36px 32px;
+  width: 100%; max-width: 380px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  animation: slideUp 0.25s ease;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+}
+.confirmIcona { font-size: 2.5rem; }
+.confirmTitolo {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.1rem; font-weight: 700;
+}
+.confirmSub { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.confirmBtns { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
+.confirmDangerBtn {
+  flex: 1; padding: 12px; border-radius: 10px;
+  border: none; background: var(--danger); color: #fff;
+  font-family: 'Unbounded', sans-serif; font-size: 0.75rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.confirmDangerBtn:hover { background: #ff2d4f; box-shadow: 0 4px 16px rgba(255,77,106,0.4); }
