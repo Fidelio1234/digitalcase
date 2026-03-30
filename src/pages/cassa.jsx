@@ -94,7 +94,9 @@ export default function CassaPage() {
     if (righe.length === 0) return
     setRigheBackup([...righe])
     const sc = chiudiScontrino()
-    setScontrinoCorrente(sc)
+    const c = incrementaScontrino()
+    setContatori(getContatori())
+    setScontrinoCorrente({ ...sc, numeroScontrino: c.scontrini, numeroChiusure: c.chiusure })
     setShowChiusura(true)
   }
 
@@ -110,11 +112,9 @@ export default function CassaPage() {
   }
 
   function handleSuccesso(info) {
-    const c = incrementaScontrino()
-    if (info.chiusuraGiornaliera) incrementaChiusura()
     setContatori(getContatori())
     setShowChiusura(false)
-    setShowSuccesso({ ...info, numeroScontrino: c.scontrini, numeroChiusure: c.chiusure })
+    setShowSuccesso(info)
     setRigheBackup([])
   }
 
@@ -381,10 +381,32 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
   const [metodo, setMetodo] = useState('carta')
   const [datoCliente, setDatoCliente] = useState('')
   const [contanti, setContanti] = useState('')
-  const contantiCents = Math.round(parseFloat(contanti.replace(',','.') || '0') * 100)
+  const [invio, setInvio] = useState('idle') // idle | sending | error
+  const contantiCents = Math.round(parseFloat(contanti.replace(',', '.') || '0') * 100)
   const resto = metodo === 'contanti' ? Math.max(0, contantiCents - scontrino.totale) : 0
 
-  function handleInvia() {
+  async function handleInvia() {
+    const negozio = (() => { try { return JSON.parse(localStorage.getItem('sd_negozio') || '{}') } catch { return {} } })()
+    // Invia email solo se il contatto è un'email valida
+    if (datoCliente && datoCliente.includes('@')) {
+      setInvio('sending')
+      try {
+        const res = await fetch('/api/invia-scontrino', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            destinatario: datoCliente,
+            scontrino: { ...scontrino, metodo, resto },
+            negozio,
+          })
+        })
+        if (!res.ok) throw new Error('Errore invio')
+      } catch {
+        setInvio('error')
+        setTimeout(() => setInvio('idle'), 3000)
+        return
+      }
+    }
     onSuccesso({ id:scontrino.id, totale:scontrino.totale, contatto:datoCliente||null, metodo, resto })
   }
 
@@ -450,7 +472,9 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
         </div>
         <div className={styles.modalFooter}>
           <button className={styles.cancelBtn} onClick={onAnnulla}>← Torna al conto</button>
-          <button className={styles.inviaBtn} onClick={handleInvia}>✓ Conferma e invia</button>
+          <button className={styles.inviaBtn} onClick={handleInvia} disabled={invio === 'sending'}>
+            {invio === 'sending' ? '⏳ Invio in corso...' : invio === 'error' ? '❌ Errore — riprova' : '✓ Conferma e invia'}
+          </button>
         </div>
       </div>
     </div>

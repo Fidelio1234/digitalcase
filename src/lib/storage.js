@@ -67,6 +67,7 @@ const DEFAULT_REPARTI = [
 
 export function getReparti() {
   try {
+    if (typeof window === "undefined") return DEFAULT_REPARTI
     const raw = localStorage.getItem(KEY_REPARTI)
     if (!raw) return DEFAULT_REPARTI
     return JSON.parse(raw)
@@ -77,6 +78,7 @@ export function getReparti() {
 
 export function saveReparti(reparti) {
   try {
+    if (typeof window === "undefined") return false
     localStorage.setItem(KEY_REPARTI, JSON.stringify(reparti))
     return true
   } catch {
@@ -115,6 +117,7 @@ const DEFAULT_NEGOZIO = {
 
 export function getNegozio() {
   try {
+    if (typeof window === "undefined") return DEFAULT_NEGOZIO
     const raw = localStorage.getItem(KEY_NEGOZIO)
     if (!raw) return DEFAULT_NEGOZIO
     return { ...DEFAULT_NEGOZIO, ...JSON.parse(raw) }
@@ -125,6 +128,7 @@ export function getNegozio() {
 
 export function saveNegozio(data) {
   try {
+    if (typeof window === "undefined") return false
     localStorage.setItem(KEY_NEGOZIO, JSON.stringify(data))
     return true
   } catch {
@@ -137,6 +141,7 @@ const KEY_CONTATORI = 'sd_contatori'
 
 export function getContatori() {
   try {
+    if (typeof window === "undefined") return { data: new Date().toDateString(), scontrini: 0, chiusure: 0 }
     const raw = localStorage.getItem(KEY_CONTATORI)
     const oggi = new Date().toDateString()
     if (!raw) return { data: oggi, scontrini: 0, chiusure: 0 }
@@ -152,13 +157,13 @@ export function getContatori() {
 export function incrementaScontrino() {
   const c = getContatori()
   const updated = { ...c, scontrini: c.scontrini + 1 }
-  localStorage.setItem(KEY_CONTATORI, JSON.stringify(updated))
+  if (typeof window !== "undefined") localStorage.setItem(KEY_CONTATORI, JSON.stringify(updated))
   return updated
 }
 
 export function incrementaChiusura() {
   const c = getContatori()
   const updated = { ...c, chiusure: c.chiusure + 1 }
-  localStorage.setItem(KEY_CONTATORI, JSON.stringify(updated))
+  if (typeof window !== "undefined") localStorage.setItem(KEY_CONTATORI, JSON.stringify(updated))
   return updated
 }
