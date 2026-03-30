@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
-import { getReparti } from '@/lib/storage'
+import { getReparti, incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
 import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 
@@ -9,7 +9,7 @@ const ICONE = {
   coffee:'☕', cake:'🍰', food:'🍽️', drink:'🥤', beer:'🍺',
   wine:'🍷', pizza:'🍕', sandwich:'🥪', ice_cream:'🍦', candy:'🍬',
   bread:'🥐', fruit:'🍎', salad:'🥗', fish:'🐟', meat:'🥩',
-  shopping:'🛍️', gift:'��', star:'⭐', tag:'🏷️', box:'📦',
+  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️', box:'📦',
 }
 
 function fmt(cents) {
@@ -24,14 +24,16 @@ export default function CassaPage() {
   const [showChiusura, setShowChiusura] = useState(false)
   const [showConfirmAnnulla, setShowConfirmAnnulla] = useState(false)
   const [showSuccesso, setShowSuccesso] = useState(null)
+  const [showAvvisoMezzanotte, setShowAvvisoMezzanotte] = useState(false)
   const [scontrinoCorrente, setScontrinoCorrente] = useState(null)
-  const [righeBackup, setRigheBackup] = useState([]) // FIX 1: backup righe
+  const [righeBackup, setRigheBackup] = useState([])
+  const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
 
   const {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, annullaUltima, annullaTutto, chiudiScontrino,
-    ripristinaRighe
+    ripristinaRighe, eliminaRiga
   } = useCassa()
 
   useEffect(() => {
@@ -39,11 +41,36 @@ export default function CassaPage() {
     const r = getReparti().filter(r => r.abilitato)
     setReparti(r)
     if (r.length > 0) setRepartoAttivo(r[0].id)
+    setContatori(getContatori())
   }, [user, router])
+
+  // ── Avviso mezzanotte ──────────────────────────────────────────────────
+  useEffect(() => {
+    const check = () => {
+      const now = new Date()
+      if (now.getHours() === 23 && now.getMinutes() === 50 && now.getSeconds() === 0) {
+        setShowAvvisoMezzanotte(true)
+        // suono beep
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)()
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.connect(gain); gain.connect(ctx.destination)
+          osc.frequency.value = 880
+          gain.gain.setValueAtTime(0.3, ctx.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5)
+          osc.start(ctx.currentTime)
+          osc.stop(ctx.currentTime + 1.5)
+        } catch {}
+      }
+    }
+    const interval = setInterval(check, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     const handler = (e) => {
-      if (showChiusura || showConfirmAnnulla || showSuccesso) return
+      if (showChiusura || showConfirmAnnulla || showSuccesso || showAvvisoMezzanotte) return
       if (e.key >= '0' && e.key <= '9') pressDigit(e.key)
       else if (e.key === 'Backspace') pressClear()
       else if (e.key === 'Escape') {
@@ -52,7 +79,7 @@ export default function CassaPage() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [showChiusura, showConfirmAnnulla, showSuccesso, pressDigit, pressClear, righe])
+  }, [showChiusura, showConfirmAnnulla, showSuccesso, showAvvisoMezzanotte, pressDigit, pressClear, righe])
 
   function handleRepartoClick(reparto) {
     if (inputCents > 0) { aggiungiRiga(reparto); return }
@@ -63,7 +90,6 @@ export default function CassaPage() {
     aggiungiRiga(reparto, sr)
   }
 
-  // FIX 1: salva backup righe prima di aprire chiusura
   function handleChiudi() {
     if (righe.length === 0) return
     setRigheBackup([...righe])
@@ -72,27 +98,25 @@ export default function CassaPage() {
     setShowChiusura(true)
   }
 
-  // FIX 1: se annulla chiusura, ripristina le righe
   function handleAnnullaChiusura() {
     ripristinaRighe(righeBackup)
     setRigheBackup([])
     setShowChiusura(false)
   }
 
-  // FIX 2: conferma annulla tutto
   function handleConfermAnnulla() {
     annullaTutto()
     setShowConfirmAnnulla(false)
   }
 
-  // FIX 3: successo invio
   function handleSuccesso(info) {
+    const c = incrementaScontrino()
+    if (info.chiusuraGiornaliera) incrementaChiusura()
+    setContatori(getContatori())
     setShowChiusura(false)
-    setShowSuccesso(info)
+    setShowSuccesso({ ...info, numeroScontrino: c.scontrini, numeroChiusure: c.chiusure })
     setRigheBackup([])
   }
-
-  const repartoEspanso = reparti.find(r => r.id === repartoAttivo)
 
   return (
     <div className={styles.page}>
@@ -109,8 +133,12 @@ export default function CassaPage() {
           {errore && <div className={styles.errore}>⚠ {errore}</div>}
         </div>
         <div className={styles.headerRight}>
+          <div className={styles.contatori}>
+            <span title="Scontrini oggi">🧾 {contatori.scontrini}</span>
+            <span title="Chiusure oggi">🔒 {contatori.chiusure}</span>
+          </div>
           {user?.role === 'owner' && (
-            <button className={styles.cfgBtn} onClick={() => router.push('/configurazione/reparti')}>
+            <button className={styles.cfgBtn} onClick={() => router.push('/configurazione')}>
               ⚙️ Config
             </button>
           )}
@@ -206,7 +234,15 @@ export default function CassaPage() {
                   </div>
                   <div className={styles.rigaMeta}>IVA {r.iva}% · €{fmt(r.importo)} cad.</div>
                 </div>
-                <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
+                <div className={styles.rigaDestra}>
+                  <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
+                  <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -264,7 +300,7 @@ export default function CassaPage() {
         />
       )}
 
-      {/* FIX 2: MODAL CONFERMA ANNULLA TUTTO */}
+      {/* MODAL CONFERMA ANNULLA */}
       {showConfirmAnnulla && (
         <div className={styles.overlay} onClick={() => setShowConfirmAnnulla(false)}>
           <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
@@ -286,7 +322,7 @@ export default function CassaPage() {
         </div>
       )}
 
-      {/* FIX 3: MODAL SUCCESSO */}
+      {/* MODAL SUCCESSO */}
       {showSuccesso && (
         <div className={styles.overlay} onClick={() => setShowSuccesso(null)}>
           <div className={styles.successModal} onClick={e => e.stopPropagation()}>
@@ -297,21 +333,42 @@ export default function CassaPage() {
             </div>
             <div className={styles.successTitolo}>Scontrino inviato!</div>
             <div className={styles.successId}>{showSuccesso.id}</div>
-            {showSuccesso.contatto && (
-              <div className={styles.successContatto}>
-                📨 Inviato a <strong>{showSuccesso.contatto}</strong>
-              </div>
-            )}
-            <div className={styles.successTotale}>
-              € {fmt(showSuccesso.totale)}
+            <div className={styles.successContatori}>
+              <span>🧾 Scontrino n° {showSuccesso.numeroScontrino}</span>
+              <span>🔒 Chiusura n° {showSuccesso.numeroChiusure}</span>
             </div>
+            {showSuccesso.contatto && (
+              <div className={styles.successContatto}>📨 Inviato a <strong>{showSuccesso.contatto}</strong></div>
+            )}
+            <div className={styles.successTotale}>€ {fmt(showSuccesso.totale)}</div>
             <div className={styles.successMeta}>
-              {showSuccesso.metodo === 'carta' ? '💳 Carta / POS' : '�� Contanti'}
+              {showSuccesso.metodo === 'carta' ? '💳 Carta / POS' : '💵 Contanti'}
               {showSuccesso.metodo === 'contanti' && showSuccesso.resto > 0 &&
                 ` · Resto €${fmt(showSuccesso.resto)}`}
             </div>
             <button className={styles.successBtn} onClick={() => setShowSuccesso(null)}>
               Nuovo scontrino
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AVVISO MEZZANOTTE */}
+      {showAvvisoMezzanotte && (
+        <div className={styles.overlay}>
+          <div className={styles.avvisoModal}>
+            <div className={styles.avvisoIcona}>⏰</div>
+            <div className={styles.avvisoTitolo}>Chiusura tra 10 minuti!</div>
+            <div className={styles.avvisoSub}>
+              Sono le 23:50 — ricordati di effettuare la<br/>
+              <strong>chiusura giornaliera</strong> prima della mezzanotte.
+            </div>
+            <div className={styles.avvisoContatori}>
+              <div>Scontrini oggi: <strong>{contatori.scontrini}</strong></div>
+              <div>Chiusure: <strong>{contatori.chiusure}</strong></div>
+            </div>
+            <button className={styles.avvisoBtn} onClick={() => setShowAvvisoMezzanotte(false)}>
+              Ho capito, provvedo subito
             </button>
           </div>
         </div>
@@ -324,18 +381,11 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
   const [metodo, setMetodo] = useState('carta')
   const [datoCliente, setDatoCliente] = useState('')
   const [contanti, setContanti] = useState('')
-
   const contantiCents = Math.round(parseFloat(contanti.replace(',','.') || '0') * 100)
   const resto = metodo === 'contanti' ? Math.max(0, contantiCents - scontrino.totale) : 0
 
   function handleInvia() {
-    onSuccesso({
-      id: scontrino.id,
-      totale: scontrino.totale,
-      contatto: datoCliente || null,
-      metodo,
-      resto,
-    })
+    onSuccesso({ id:scontrino.id, totale:scontrino.totale, contatto:datoCliente||null, metodo, resto })
   }
 
   return (
@@ -345,7 +395,6 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
           <div className={styles.modalTitle}>Chiudi Scontrino</div>
           <div className={styles.modalId}>{scontrino.id}</div>
         </div>
-
         <div className={styles.modalRighe}>
           {scontrino.righe.map(r => (
             <div key={r.id} className={styles.modalRiga}>
@@ -358,7 +407,6 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
             <span>€ {fmt(scontrino.totale)}</span>
           </div>
         </div>
-
         <div className={styles.modalIva}>
           {Object.entries(
             scontrino.righe.reduce((acc,r) => {
@@ -373,7 +421,6 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
             </div>
           ))}
         </div>
-
         <div className={styles.modalSection}>
           <div className={styles.modalLabel}>Metodo di pagamento</div>
           <div className={styles.metodoGroup}>
@@ -390,28 +437,20 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
                 value={contanti} onChange={e => setContanti(e.target.value)}
                 className={styles.contantiInput} autoFocus />
               {contantiCents > 0 && (
-                <div className={styles.restoBox}>
-                  Resto: <strong>€ {fmt(resto)}</strong>
-                </div>
+                <div className={styles.restoBox}>Resto: <strong>€ {fmt(resto)}</strong></div>
               )}
             </div>
           )}
         </div>
-
         <div className={styles.modalSection}>
           <div className={styles.modalLabel}>Invia scontrino digitale (opzionale)</div>
           <input type="text" inputMode="email" placeholder="Email o numero di telefono"
             value={datoCliente} onChange={e => setDatoCliente(e.target.value)}
             className={styles.clienteInput} />
         </div>
-
         <div className={styles.modalFooter}>
-          <button className={styles.cancelBtn} onClick={onAnnulla}>
-            ← Torna al conto
-          </button>
-          <button className={styles.inviaBtn} onClick={handleInvia}>
-            ✓ Conferma e invia
-          </button>
+          <button className={styles.cancelBtn} onClick={onAnnulla}>← Torna al conto</button>
+          <button className={styles.inviaBtn} onClick={handleInvia}>✓ Conferma e invia</button>
         </div>
       </div>
     </div>

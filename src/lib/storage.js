@@ -100,3 +100,65 @@ export function parseEuro(str) {
   const clean = str.replace(',', '.').replace(/[^\d.]/g, '')
   return Math.round(parseFloat(clean) * 100) || 0
 }
+
+// ─── IMPOSTAZIONI NEGOZIO ─────────────────────────────────────────────────
+const KEY_NEGOZIO = 'sd_negozio'
+
+const DEFAULT_NEGOZIO = {
+  ragioneSociale: '',
+  indirizzo: '',
+  partitaIva: '',
+  telefono: '',
+  sitoWeb: '',
+  numeroRt: '',
+}
+
+export function getNegozio() {
+  try {
+    const raw = localStorage.getItem(KEY_NEGOZIO)
+    if (!raw) return DEFAULT_NEGOZIO
+    return { ...DEFAULT_NEGOZIO, ...JSON.parse(raw) }
+  } catch {
+    return DEFAULT_NEGOZIO
+  }
+}
+
+export function saveNegozio(data) {
+  try {
+    localStorage.setItem(KEY_NEGOZIO, JSON.stringify(data))
+    return true
+  } catch {
+    return false
+  }
+}
+
+// ─── CONTATORI GIORNALIERI ────────────────────────────────────────────────
+const KEY_CONTATORI = 'sd_contatori'
+
+export function getContatori() {
+  try {
+    const raw = localStorage.getItem(KEY_CONTATORI)
+    const oggi = new Date().toDateString()
+    if (!raw) return { data: oggi, scontrini: 0, chiusure: 0 }
+    const c = JSON.parse(raw)
+    // reset se nuovo giorno
+    if (c.data !== oggi) return { data: oggi, scontrini: 0, chiusure: 0 }
+    return c
+  } catch {
+    return { data: new Date().toDateString(), scontrini: 0, chiusure: 0 }
+  }
+}
+
+export function incrementaScontrino() {
+  const c = getContatori()
+  const updated = { ...c, scontrini: c.scontrini + 1 }
+  localStorage.setItem(KEY_CONTATORI, JSON.stringify(updated))
+  return updated
+}
+
+export function incrementaChiusura() {
+  const c = getContatori()
+  const updated = { ...c, chiusure: c.chiusure + 1 }
+  localStorage.setItem(KEY_CONTATORI, JSON.stringify(updated))
+  return updated
+}

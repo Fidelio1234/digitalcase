@@ -423,3 +423,69 @@
   cursor: pointer; transition: all 0.2s;
 }
 .successBtn:hover { background: #00ffb3; box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-1px); }
+
+/* ─── X ELIMINA RIGA ─────────────────────────────────────────────────────── */
+.rigaDestra {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.rigaDelete {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: transparent; border: 1px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); transition: all 0.15s;
+  flex-shrink: 0;
+}
+.rigaDelete svg { width: 14px; height: 14px; }
+.rigaDelete:hover {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* ─── CONTATORI HEADER ───────────────────────────────────────────────────── */
+.contatori {
+  display: flex; gap: 12px; align-items: center;
+  font-size: 0.75rem; color: var(--muted);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 12px;
+}
+.contatori span { display: flex; align-items: center; gap: 4px; }
+
+/* ─── SUCCESSO CONTATORI ─────────────────────────────────────────────────── */
+.successContatori {
+  display: flex; gap: 16px;
+  font-size: 0.75rem; color: var(--muted);
+  background: var(--surface2); border-radius: 8px; padding: 8px 16px;
+}
+
+/* ─── AVVISO MEZZANOTTE ──────────────────────────────────────────────────── */
+.avvisoModal {
+  background: var(--surface);
+  border: 2px solid var(--warn, #ffb830);
+  border-radius: 20px; padding: 40px 32px;
+  width: 100%; max-width: 400px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  animation: successPop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 60px rgba(255,184,48,0.2), 0 32px 80px rgba(0,0,0,0.5);
+}
+.avvisoIcona { font-size: 3rem; animation: tick 1s ease infinite; }
+@keyframes tick {
+  0%,100% { transform: rotate(-10deg) }
+  50% { transform: rotate(10deg) }
+}
+.avvisoTitolo {
+  font-family: 'Unbounded', sans-serif; font-size: 1.1rem; font-weight: 700;
+  color: #ffb830;
+}
+.avvisoSub { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.avvisoContatori {
+  display: flex; gap: 20px; font-size: 0.82rem; color: var(--text);
+  background: var(--surface2); border-radius: 10px; padding: 10px 20px;
+}
+.avvisoBtn {
+  width: 100%; padding: 14px; border-radius: 12px;
+  border: none; background: #ffb830; color: #000;
+  font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; margin-top: 8px;
+}
+.avvisoBtn:hover { background: #ffd06b; box-shadow: 0 4px 20px rgba(255,184,48,0.4); }

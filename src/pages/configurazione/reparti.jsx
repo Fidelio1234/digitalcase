@@ -71,7 +71,7 @@ export default function RepartiPage() {
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
-    if (user.role !== 'owner') { router.replace('/cassa'); return }
+    if (user.role !== 'owner') { router.push('/configurazione'); return }
     setReparti(getReparti())
   }, [user, router])
 
@@ -193,11 +193,11 @@ export default function RepartiPage() {
     <div className={styles.page}>
 
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={() => router.replace('/cassa')}>
+        <button className={styles.backBtn} onClick={() => router.push('/configurazione')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-          Cassa
+          ← Configurazione
         </button>
         <div className={styles.headerTitle}>
           <span>Configurazione Reparti</span>

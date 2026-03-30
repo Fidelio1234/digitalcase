@@ -1,20 +1,18 @@
 import { useState, useCallback } from 'react'
 
-// Tutta la logica della cassa — separata dall'interfaccia
 export function useCassa() {
-  const [inputCents, setInputCents] = useState(0)      // importo digitato in centesimi
-  const [righe, setRighe] = useState([])               // battute dello scontrino
-  const [ultimaChiusa, setUltimaChiusa] = useState(null) // ultima riga dopo chiusura
-  const [errore, setErrore] = useState('')             // messaggio errore
+  const [inputCents, setInputCents] = useState(0)
+  const [righe, setRighe] = useState([])
+  const [ultimaChiusa, setUltimaChiusa] = useState(null)
+  const [errore, setErrore] = useState('')
 
-  // ── Tastiera ───────────────────────────────────────────────────────────────
   const pressDigit = useCallback((digit) => {
     setErrore('')
-    setUltimaChiusa(null) // sparisce al primo tasto
+    setUltimaChiusa(null)
     setInputCents(prev => {
       const str = String(prev) + String(digit)
       const val = parseInt(str, 10)
-      return val > 9999999 ? prev : val // max 99.999,99€
+      return val > 9999999 ? prev : val
     })
   }, [])
 
@@ -33,37 +31,24 @@ export function useCassa() {
     setErrore('')
   }, [])
 
-  // ── Aggiungi riga (quando si clicca reparto) ───────────────────────────────
   const aggiungiRiga = useCallback((reparto, sottoreparto = null) => {
     const importo = sottoreparto ? sottoreparto.prezzoFisso : inputCents
     const nome = sottoreparto ? sottoreparto.nome : reparto.nome
     const iva = sottoreparto?.ivaOverride ?? reparto.iva
-    const massimoImporto = sottoreparto
-      ? sottoreparto.massimoImporto
-      : reparto.massimoImporto
-    const minimoImporto = sottoreparto
-      ? sottoreparto.minimoImporto
-      : reparto.minimoImporto
+    const massimoImporto = sottoreparto ? sottoreparto.massimoImporto : reparto.massimoImporto
+    const minimoImporto = sottoreparto ? sottoreparto.minimoImporto : reparto.minimoImporto
 
-    // Validazione importo
-    if (importo <= 0) {
-      setErrore('Importo non valido')
-      return false
-    }
+    if (importo <= 0) { setErrore('Importo non valido'); return false }
     if (importo > massimoImporto) {
-      setErrore(`Importo supera il massimo di €${fmt(massimoImporto)} per ${nome}`)
-      return false
+      setErrore(`Supera il massimo €${fmt(massimoImporto)} per ${nome}`); return false
     }
     if (importo < minimoImporto) {
-      setErrore(`Importo inferiore al minimo di €${fmt(minimoImporto)} per ${nome}`)
-      return false
+      setErrore(`Sotto il minimo €${fmt(minimoImporto)} per ${nome}`); return false
     }
 
     const nuovaRiga = {
       id: Date.now() + Math.random(),
-      nome,
-      importo,
-      iva,
+      nome, importo, iva,
       colore: reparto.colore,
       icona: reparto.icona,
       repartoId: reparto.id,
@@ -71,18 +56,17 @@ export function useCassa() {
     }
 
     setRighe(prev => {
-      // Raggruppa se stessa voce
-      const esistente = prev.findIndex(r =>
+      const idx = prev.findIndex(r =>
         r.nome === nuovaRiga.nome &&
         r.importo === nuovaRiga.importo &&
         r.repartoId === nuovaRiga.repartoId
       )
-      if (esistente >= 0) {
+      if (idx >= 0) {
         const aggiornato = [...prev]
-        aggiornato[esistente] = {
-          ...aggiornato[esistente],
-          quantita: (aggiornato[esistente].quantita || 1) + 1,
-          totaleRiga: ((aggiornato[esistente].quantita || 1) + 1) * nuovaRiga.importo
+        aggiornato[idx] = {
+          ...aggiornato[idx],
+          quantita: (aggiornato[idx].quantita || 1) + 1,
+          totaleRiga: ((aggiornato[idx].quantita || 1) + 1) * nuovaRiga.importo
         }
         return aggiornato
       }
@@ -94,7 +78,6 @@ export function useCassa() {
     return true
   }, [inputCents])
 
-  // ── Annulla ultima riga ────────────────────────────────────────────────────
   const annullaUltima = useCallback(() => {
     setRighe(prev => {
       if (prev.length === 0) return prev
@@ -113,7 +96,11 @@ export function useCassa() {
     })
   }, [])
 
-  // ── Annulla tutto ──────────────────────────────────────────────────────────
+  // Elimina riga specifica per id
+  const eliminaRiga = useCallback((id) => {
+    setRighe(prev => prev.filter(r => r.id !== id))
+  }, [])
+
   const annullaTutto = useCallback(() => {
     setRighe([])
     setInputCents(0)
@@ -121,7 +108,11 @@ export function useCassa() {
     setUltimaChiusa(null)
   }, [])
 
-  // ── Chiudi scontrino ───────────────────────────────────────────────────────
+  const ripristinaRighe = useCallback((righeBackup) => {
+    setRighe(righeBackup)
+    setInputCents(0)
+  }, [])
+
   const chiudiScontrino = useCallback(() => {
     if (righe.length === 0) return null
     const scontrino = {
@@ -136,7 +127,6 @@ export function useCassa() {
     return scontrino
   }, [righe])
 
-  // ── Subtotale ──────────────────────────────────────────────────────────────
   const totale = righe.reduce((s, r) => s + r.totaleRiga, 0)
   const subtotalePerIva = righe.reduce((acc, r) => {
     const k = String(r.iva)
@@ -145,23 +135,13 @@ export function useCassa() {
   }, {})
 
   return {
-    inputCents,
-    righe,
-    ultimaChiusa,
-    errore,
-    totale,
-    subtotalePerIva,
-    pressDigit,
-    pressDoubleZero,
-    pressClear,
-    aggiungiRiga,
-    annullaUltima,
-    annullaTutto,
-    chiudiScontrino,
+    inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
+    pressDigit, pressDoubleZero, pressClear,
+    aggiungiRiga, annullaUltima, eliminaRiga, annullaTutto,
+    chiudiScontrino, ripristinaRighe
   }
 }
 
-// helper interno
 function fmt(cents) {
   return (cents / 100).toFixed(2).replace('.', ',')
 }
