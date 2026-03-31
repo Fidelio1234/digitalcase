@@ -30,11 +30,10 @@ export default function LoginPage() {
   const [locked, setLocked] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [dotState, setDotState] = useState('idle')
-  const [success, setSuccess] = useState(false)
+  const [benvenuto, setBenvenuto] = useState(null) // { nome, ruolo }
   const [techMode, setTechMode] = useState(false)
   const [techPin, setTechPin] = useState('')
   const [techError, setTechError] = useState('')
-  const [techSuccess, setTechSuccess] = useState(false)
   const longPressTimer = useRef(null)
   const [logoPressed, setLogoPressed] = useState(false)
 
@@ -66,10 +65,12 @@ export default function LoginPage() {
 
   const submitPin = useCallback((currentPin) => {
     if (locked) return
+    const u = utenti.find(u => u.id === selectedUserId)
     const result = login(selectedUserId, currentPin)
     if (result.ok) {
-      setSuccess(true)
-      setTimeout(() => router.replace('/cassa'), 1200)
+      // Mostra benvenuto per 3 secondi poi vai in cassa
+      setBenvenuto({ nome: u?.nome, ruolo: u?.ruolo })
+      setTimeout(() => router.replace('/cassa'), 3000)
     } else {
       const newAttempts = attempts + 1
       setAttempts(newAttempts)
@@ -84,10 +85,10 @@ export default function LoginPage() {
         setErrorMsg(`PIN errato — ${rimasti} ${rimasti === 1 ? 'tentativo rimasto' : 'tentativi rimasti'}`)
       }
     }
-  }, [locked, attempts, selectedUserId, login, router])
+  }, [locked, attempts, selectedUserId, login, router, utenti])
 
   const pressKey = useCallback((k) => {
-    if (locked || success) return
+    if (locked || benvenuto) return
     setErrorMsg('')
     if (k === 'del') { setPin(prev => prev.slice(0,-1)); return }
     setPin(prev => {
@@ -96,51 +97,41 @@ export default function LoginPage() {
       if (next.length === 4) setTimeout(() => submitPin(next), 0)
       return next
     })
-  }, [locked, success, submitPin])
+  }, [locked, benvenuto, submitPin])
 
   useEffect(() => {
     const handler = (e) => {
-      if (techMode) return
+      if (techMode || benvenuto) return
       if (e.key >= '0' && e.key <= '9') pressKey(e.key)
       else if (e.key === 'Backspace') pressKey('del')
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [pressKey, techMode])
+  }, [pressKey, techMode, benvenuto])
 
   const selectUser = (id) => {
     setSelectedUserId(id)
     setPin(''); setAttempts(0); setErrorMsg(''); setDotState('idle')
   }
 
-  // ── Long press logo ────────────────────────────────────────────────────
   function handleLogoStart() {
     setLogoPressed(true)
     longPressTimer.current = setTimeout(() => {
-      setTechMode(true)
-      setTechPin('')
-      setTechError('')
-      setLogoPressed(false)
+      setTechMode(true); setTechPin(''); setTechError(''); setLogoPressed(false)
     }, 3000)
   }
-
   function handleLogoEnd() {
-    clearTimeout(longPressTimer.current)
-    setLogoPressed(false)
+    clearTimeout(longPressTimer.current); setLogoPressed(false)
   }
 
-  // ── Tech PIN submit ────────────────────────────────────────────────────
   function submitTechPin(p) {
     if (p === TECH_PIN) {
-      setTechSuccess(true)
-      setTimeout(() => router.push('/tech'), 1000)
+      setTimeout(() => router.push('/tech'), 500)
     } else {
-      setTechError('PIN tecnico errato')
-      setTechPin('')
+      setTechError('PIN tecnico errato'); setTechPin('')
       setTimeout(() => setTechError(''), 2000)
     }
   }
-
   function pressTechKey(k) {
     if (k === 'del') { setTechPin(prev => prev.slice(0,-1)); return }
     setTechPin(prev => {
@@ -151,42 +142,34 @@ export default function LoginPage() {
     })
   }
 
-  const selectedUser = utenti.find(u => u.id === selectedUserId)
-
   // ── TECH MODE ──────────────────────────────────────────────────────────
   if (techMode) {
     return (
       <div className={styles.screen}>
         <div className={styles.bgGrid} />
         <div className={styles.bgGlow} />
-
         <div className={styles.logoWrap}>
-          <div className={styles.logoMark} style={{borderColor:'rgba(255,184,48,0.4)', background:'rgba(255,184,48,0.1)', boxShadow:'0 0 32px rgba(255,184,48,0.2)'}}>
+          <div className={styles.logoMark} style={{borderColor:'rgba(255,184,48,0.4)',background:'rgba(255,184,48,0.1)',boxShadow:'0 0 32px rgba(255,184,48,0.2)'}}>
             <svg viewBox="0 0 24 24" fill="none" stroke="#ffb830" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
           <div>
             <div className={styles.logoName} style={{color:'#ffb830'}}>Accesso <span style={{color:'#ffb830'}}>Tecnico</span></div>
-            <div className={styles.logoSub}>Area riservata — inserisci PIN tecnico</div>
+            <div className={styles.logoSub}>Area riservata</div>
           </div>
         </div>
-
         <div className={styles.pinPanel}>
           <div className={styles.pinDisplay}>
             <div className={styles.pinHint}>PIN TECNICO (6 cifre)</div>
             <div className={styles.pinDots}>
               {[0,1,2,3,4,5].map(i => (
-                <div key={i} className={[
-                  styles.pinDot,
-                  i < techPin.length ? styles.filled : '',
-                  techError ? styles.error : ''
-                ].join(' ')} style={i < techPin.length ? {background:'#ffb830', borderColor:'#ffb830', boxShadow:'0 0 10px rgba(255,184,48,0.3)'} : {}} />
+                <div key={i} className={[styles.pinDot, i < techPin.length ? styles.filled : '', techError ? styles.error : ''].join(' ')}
+                  style={i < techPin.length ? {background:'#ffb830',borderColor:'#ffb830'} : {}} />
               ))}
             </div>
             <div className={styles.pinMsg}>{techError}</div>
           </div>
-
           <div className={styles.numpad}>
             {['1','2','3','4','5','6','7','8','9'].map(n => (
               <button key={n} className={styles.key} onClick={() => pressTechKey(n)}>
@@ -194,9 +177,7 @@ export default function LoginPage() {
               </button>
             ))}
             <div className={styles.keyEmpty} />
-            <button className={styles.key} onClick={() => pressTechKey('0')}>
-              <span className={styles.keyNum}>0</span>
-            </button>
+            <button className={styles.key} onClick={() => pressTechKey('0')}><span className={styles.keyNum}>0</span></button>
             <button className={`${styles.key} ${styles.keyDel}`} onClick={() => pressTechKey('del')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
@@ -204,42 +185,77 @@ export default function LoginPage() {
               </svg>
             </button>
           </div>
-
-          <button
-            onClick={() => setTechMode(false)}
-            style={{background:'transparent', border:'1px solid #252830', borderRadius:10, padding:'10px', color:'#5a5d6e', fontFamily:"'DM Mono',monospace", fontSize:'0.8rem', cursor:'pointer'}}
-          >
+          <button onClick={() => setTechMode(false)}
+            style={{background:'transparent',border:'1px solid #252830',borderRadius:10,padding:'10px',color:'#eef0f6',fontFamily:"'DM Mono',monospace",fontSize:'0.8rem',cursor:'pointer'}}>
             ← Torna al login
           </button>
         </div>
-
         <div className={styles.bottomBar}>Modalità tecnico — accesso riservato</div>
       </div>
     )
   }
 
-  // ── NORMAL LOGIN ───────────────────────────────────────────────────────
   return (
     <div className={styles.screen}>
       <div className={styles.bgGrid} />
       <div className={styles.bgGlow} />
-      {success && <div className={styles.flashOverlay} />}
+
+      {/* MODAL BENVENUTO — overlay separato */}
+      {benvenuto && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:200,
+          background:'rgba(8,9,12,0.92)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          flexDirection:'column', gap:20,
+          animation:'fadeIn 0.3s ease'
+        }}>
+          <div style={{
+            width:100, height:100, borderRadius:'50%',
+            background:'rgba(0,229,160,0.12)',
+            border:'2px solid #00e5a0',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            boxShadow:'0 0 48px rgba(0,229,160,0.3)',
+            animation:'circlePop 0.4s cubic-bezier(0.34,1.56,0.64,1)'
+          }}>
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div style={{fontSize:'0.75rem', color:'#5a5d6e', letterSpacing:3, textTransform:'uppercase', fontFamily:"'DM Mono',monospace"}}>
+            Benvenuto/a
+          </div>
+          <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'#00e5a0'}}>
+            {benvenuto.nome}
+          </div>
+          <div style={{fontSize:'0.82rem', color:'#5a5d6e', fontFamily:"'DM Mono',monospace"}}>
+            {benvenuto.ruolo === 'owner' ? '�� Titolare — Accesso Completo' : '👤 Cassiere — Solo Cassa'}
+          </div>
+          <div style={{width:200, height:3, background:'#1a1c24', borderRadius:2, overflow:'hidden', marginTop:8}}>
+            <div style={{
+              height:'100%', background:'#00e5a0', borderRadius:2,
+              animation:'loadBar 3s linear forwards'
+            }} />
+          </div>
+          <div style={{fontSize:'0.7rem', color:'#5a5d6e', fontFamily:"'DM Mono',monospace"}}>
+            Caricamento cassa…
+          </div>
+          <style>{`
+            @keyframes circlePop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+            @keyframes loadBar { from{width:0%} to{width:100%} }
+            @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+          `}</style>
+        </div>
+      )}
 
       <div className={styles.logoWrap}>
         <div
           className={styles.logoMark}
-          onMouseDown={handleLogoStart}
-          onMouseUp={handleLogoEnd}
-          onMouseLeave={handleLogoEnd}
-          onTouchStart={handleLogoStart}
-          onTouchEnd={handleLogoEnd}
-          style={{
-            cursor:'pointer',
-            transition:'all 0.3s',
+          onMouseDown={handleLogoStart} onMouseUp={handleLogoEnd}
+          onMouseLeave={handleLogoEnd} onTouchStart={handleLogoStart} onTouchEnd={handleLogoEnd}
+          style={{cursor:'pointer', transition:'all 0.3s',
             transform: logoPressed ? 'scale(0.92)' : 'scale(1)',
-            boxShadow: logoPressed ? '0 0 32px rgba(0,229,160,0.5)' : '0 0 32px rgba(0,229,160,0.25)',
+            boxShadow: logoPressed ? '0 0 32px rgba(0,229,160,0.5)' : '0 0 32px rgba(0,229,160,0.25)'
           }}
-          title="Tieni premuto per accesso tecnico"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
@@ -258,17 +274,15 @@ export default function LoginPage() {
           position:'fixed', top:20, left:'50%', transform:'translateX(-50%)',
           background:'rgba(255,184,48,0.15)', border:'1px solid #ffb830',
           borderRadius:10, padding:'8px 20px',
-          color:'#ffb830', fontSize:'0.78rem', fontFamily:"'DM Mono',monospace",
-          zIndex:100, animation:'fadeIn 0.2s ease'
+          color:'#ffb830', fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", zIndex:100
         }}>
-          ⏳ Tieni premuto ancora...
+          ⏳ Tieni premuto ancora…
         </div>
       )}
 
       <div className={styles.userSelector}>
         {utenti.map(u => (
-          <button
-            key={u.id}
+          <button key={u.id}
             className={`${styles.userBtn} ${selectedUserId === u.id ? styles.active : ''}`}
             onClick={() => selectUser(u.id)}
           >
@@ -283,57 +297,37 @@ export default function LoginPage() {
         ))}
       </div>
 
-      <div className={`${styles.pinPanel} ${success ? styles.pinSuccess : ''}`}>
-        {!success ? (
-          <>
-            <div className={styles.pinDisplay}>
-              <div className={styles.pinHint}>Inserisci PIN</div>
-              <div className={styles.pinDots}>
-                {[0,1,2,3].map(i => (
-                  <div key={i} className={[
-                    styles.pinDot,
-                    i < pin.length ? styles.filled : '',
-                    dotState === 'error' ? styles.error : ''
-                  ].join(' ')} />
-                ))}
-              </div>
-              <div className={styles.pinMsg}>{errorMsg}</div>
-            </div>
-            <div className={styles.numpad}>
-              {['1','2','3','4','5','6','7','8','9'].map(n => (
-                <button key={n} className={styles.key} onClick={() => pressKey(n)} disabled={locked}>
-                  <span className={styles.keyNum}>{n}</span>
-                </button>
-              ))}
-              <div className={styles.keyEmpty} />
-              <button className={styles.key} onClick={() => pressKey('0')} disabled={locked}>
-                <span className={styles.keyNum}>0</span>
-              </button>
-              <button className={`${styles.key} ${styles.keyDel}`} onClick={() => pressKey('del')} disabled={locked}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
-                  <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
-                </svg>
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className={styles.successState}>
-            <div className={styles.successIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <div className={styles.successName}>{selectedUser?.nome}</div>
-            <div className={styles.successRole}>
-              {selectedUser?.ruolo === 'owner' ? '● Accesso Completo' : '● Accesso Cassa'}
-            </div>
-            <div className={styles.loadBar}>
-              <div className={`${styles.loadBarFill} ${styles.animating}`} />
-            </div>
-            <div className={styles.loadingText}>Caricamento cassa…</div>
+      <div className={styles.pinPanel}>
+        <div className={styles.pinDisplay}>
+          <div className={styles.pinHint}>Inserisci PIN</div>
+          <div className={styles.pinDots}>
+            {[0,1,2,3].map(i => (
+              <div key={i} className={[
+                styles.pinDot,
+                i < pin.length ? styles.filled : '',
+                dotState === 'error' ? styles.error : ''
+              ].join(' ')} />
+            ))}
           </div>
-        )}
+          <div className={styles.pinMsg}>{errorMsg}</div>
+        </div>
+        <div className={styles.numpad}>
+          {['1','2','3','4','5','6','7','8','9'].map(n => (
+            <button key={n} className={styles.key} onClick={() => pressKey(n)} disabled={locked}>
+              <span className={styles.keyNum}>{n}</span>
+            </button>
+          ))}
+          <div className={styles.keyEmpty} />
+          <button className={styles.key} onClick={() => pressKey('0')} disabled={locked}>
+            <span className={styles.keyNum}>0</span>
+          </button>
+          <button className={`${styles.key} ${styles.keyDel}`} onClick={() => pressKey('del')} disabled={locked}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+              <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className={styles.bottomBar}>DigitalCase v0.1 · © 2026</div>

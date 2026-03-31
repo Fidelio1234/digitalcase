@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
-import { getReparti, incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
+import { getReparti, incrementaScontrino, incrementaChiusura, getContatori, salvaScontrino } from '@/lib/storage'
 import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 
@@ -20,6 +20,7 @@ export default function CassaPage() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [reparti, setReparti] = useState([])
+  const [benvenuto, setBenvenuto] = useState(true)
   const [repartoAttivo, setRepartoAttivo] = useState(null)
   const [showChiusura, setShowChiusura] = useState(false)
   const [showConfirmAnnulla, setShowConfirmAnnulla] = useState(false)
@@ -42,6 +43,7 @@ export default function CassaPage() {
     setReparti(r)
     if (r.length > 0) setRepartoAttivo(r[0].id)
     setContatori(getContatori())
+    setTimeout(() => setBenvenuto(false), 3000)
   }, [user, router])
 
   // ── Avviso mezzanotte ──────────────────────────────────────────────────
@@ -112,6 +114,18 @@ export default function CassaPage() {
   }
 
   function handleSuccesso(info) {
+    // Salva nello storico
+    salvaScontrino({
+      id: info.id,
+      timestamp: new Date().toISOString(),
+      righe: scontrinoCorrente?.righe || [],
+      totale: info.totale,
+      metodo: info.metodo,
+      resto: info.resto || 0,
+      contatto: info.contatto || null,
+      numeroScontrino: info.numeroScontrino,
+      numeroChiusure: info.numeroChiusure,
+    })
     setContatori(getContatori())
     setShowChiusura(false)
     setShowSuccesso(info)
@@ -138,15 +152,69 @@ export default function CassaPage() {
             <span title="Chiusure oggi">🔒 {contatori.chiusure}</span>
           </div>
           {user?.role === 'owner' && (
-            <button className={styles.cfgBtn} onClick={() => router.push('/configurazione')}>
-              ⚙️ Config
-            </button>
+            <>
+              <button className={styles.cfgBtn} onClick={() => router.push('/storico')}>
+                📋 Storico
+              </button>
+              <button className={styles.cfgBtn} onClick={() => router.push('/configurazione')}>
+                ⚙️ Config
+              </button>
+            </>
           )}
           <button className={styles.logoutBtn} onClick={() => { logout(); router.replace('/login') }}>
             Esci
           </button>
         </div>
       </header>
+
+      {/* BENVENUTO */}
+      {benvenuto && user && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:500,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          pointerEvents:'none',
+          animation:'benvenutoFade 3s ease forwards',
+        }}>
+          <div style={{
+            background:'#111318', border:'1px solid #00e5a0',
+            borderRadius:24, padding:'48px 72px',
+            display:'flex', flexDirection:'column', alignItems:'center', gap:16,
+            boxShadow:'0 0 64px rgba(0,229,160,0.2), 0 32px 80px rgba(0,0,0,0.7)',
+            animation:'benvenutoIn 0.5s cubic-bezier(0.34,1.56,0.64,1)',
+          }}>
+            <div style={{
+              width:88, height:88, borderRadius:'50%',
+              background:'rgba(0,229,160,0.12)', border:'2px solid #00e5a0',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              boxShadow:'0 0 32px rgba(0,229,160,0.35)',
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:4, fontFamily:"'DM Mono',monospace", textTransform:'uppercase'}}>
+              Benvenuto/a
+            </div>
+            <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'#00e5a0', letterSpacing:'-0.5px'}}>
+              {user.name}
+            </div>
+            <div style={{fontSize:'0.82rem', color:'#5a5d6e', fontFamily:"'DM Mono',monospace"}}>
+              {user.role === 'owner' ? '👑 Titolare — Accesso Completo' : '👤 Cassiere — Solo Cassa'}
+            </div>
+          </div>
+          <style>{`
+            @keyframes benvenutoIn {
+              from { transform:scale(0.7); opacity:0 }
+              to   { transform:scale(1);   opacity:1 }
+            }
+            @keyframes benvenutoFade {
+              0%   { opacity:1 }
+              70%  { opacity:1 }
+              100% { opacity:0 }
+            }
+          `}</style>
+        </div>
+      )}
 
       <div className={styles.main}>
 

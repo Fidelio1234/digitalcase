@@ -235,3 +235,29 @@
   .pinPanel { max-width: 360px; }
   .keyNum { font-size: 1.4rem; }
 }
+
+/* ─── BENVENUTO ──────────────────────────────────────────────────────────── */
+.successCircle {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--accent-dim);
+  border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 40px var(--accent-glow);
+  color: var(--accent);
+  animation: circlePop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes circlePop {
+  from { transform: scale(0); opacity: 0 }
+  to   { transform: scale(1); opacity: 1 }
+}
+.successCircle svg { width: 36px; height: 36px; }
+
+.benvenuto {
+  font-size: 0.75rem; color: var(--muted);
+  letter-spacing: 3px; text-transform: uppercase;
+  animation: fadeUp 0.4s 0.1s ease both;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(8px) }
+  to   { opacity:1; transform:none }
+}

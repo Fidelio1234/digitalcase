@@ -197,3 +197,47 @@ export function saveUtenti(utenti) {
     return false
   }
 }
+
+// ─── STORICO SCONTRINI ────────────────────────────────────────────────────
+const KEY_STORICO = 'sd_storico'
+
+export function getStorico() {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(KEY_STORICO)
+    if (!raw) return []
+    return JSON.parse(raw)
+  } catch { return [] }
+}
+
+export function salvaScontrino(scontrino) {
+  if (typeof window === 'undefined') return
+  try {
+    const storico = getStorico()
+    storico.unshift(scontrino) // più recente prima
+    // max 1000 scontrini in localStorage
+    if (storico.length > 1000) storico.pop()
+    localStorage.setItem(KEY_STORICO, JSON.stringify(storico))
+  } catch {}
+}
+
+// ─── CHIUSURE FISCALI ─────────────────────────────────────────────────────
+const KEY_CHIUSURE = 'sd_chiusure'
+
+export function getChiusure() {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(KEY_CHIUSURE)
+    if (!raw) return []
+    return JSON.parse(raw)
+  } catch { return [] }
+}
+
+export function salvaChiusura(chiusura) {
+  if (typeof window === 'undefined') return
+  try {
+    const chiusure = getChiusure()
+    chiusure.unshift(chiusura)
+    localStorage.setItem(KEY_CHIUSURE, JSON.stringify(chiusure))
+  } catch {}
+}
