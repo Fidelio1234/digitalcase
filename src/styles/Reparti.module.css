@@ -33,7 +33,7 @@
   display: flex; align-items: center; gap: 6px;
   background: transparent; border: 1px solid var(--border);
   border-radius: 10px; padding: 8px 14px;
-  color: var(--muted); font-family: 'DM Mono', monospace;
+  color: var(--text); font-family: 'DM Mono', monospace;
   font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
 }
 .backBtn:hover { border-color: var(--accent); color: var(--accent); }

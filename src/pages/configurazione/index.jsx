@@ -33,18 +33,7 @@ export default function ConfigurazioneIndex() {
       <div className={styles.content}>
         <div className={styles.navCards}>
 
-          <button className={styles.navCard} onClick={() => router.push('/configurazione/negozio')}>
-            <span>🏪</span>
-            <div>
-              <div className={styles.navCardTitle}>Impostazioni Negozio</div>
-              <div className={styles.navCardSub}>Ragione sociale, P.IVA, indirizzo, RT</div>
-            </div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-
-          <button className={styles.navCard} onClick={() => router.push('/configurazione/reparti')}>
+<button className={styles.navCard} onClick={() => router.push('/configurazione/reparti')}>
             <span>🗂️</span>
             <div>
               <div className={styles.navCardTitle}>Reparti e Prodotti</div>
