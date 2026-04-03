@@ -7,21 +7,8 @@ const MAX_ATTEMPTS = 3
 const LOCK_SECONDS = 30
 const TECH_PIN = '080576'
 
-function getUtenti() {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = localStorage.getItem('sd_utenti')
-    if (!raw) return [
-      { id: 'owner', nome: 'Titolare', pin: '1234', ruolo: 'owner', abilitato: true },
-      { id: 'staff1', nome: 'Cassiere 1', pin: '0000', ruolo: 'staff', abilitato: true },
-      { id: 'staff2', nome: 'Cassiere 2', pin: '1111', ruolo: 'staff', abilitato: true },
-    ]
-    return JSON.parse(raw).filter(u => u.abilitato)
-  } catch { return [] }
-}
-
 export default function LoginPage() {
-  const { login, user } = useAuth()
+  const { login, user, utenti: utentiDb, loading } = useAuth()
   const router = useRouter()
   const [utenti, setUtenti] = useState([])
   const [selectedUserId, setSelectedUserId] = useState('')
@@ -30,7 +17,8 @@ export default function LoginPage() {
   const [locked, setLocked] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [dotState, setDotState] = useState('idle')
-  const [benvenuto, setBenvenuto] = useState(null) // { nome, ruolo }
+  const [success, setSuccess] = useState(false)
+  const [loggedUser, setLoggedUser] = useState(null)
   const [techMode, setTechMode] = useState(false)
   const [techPin, setTechPin] = useState('')
   const [techError, setTechError] = useState('')
@@ -41,11 +29,13 @@ export default function LoginPage() {
     if (user) router.replace('/cassa')
   }, [user, router])
 
+  // Aggiorna utenti quando arrivano da Supabase
   useEffect(() => {
-    const u = getUtenti()
-    setUtenti(u)
-    if (u.length > 0) setSelectedUserId(u[0].id)
-  }, [])
+    if (utentiDb.length > 0) {
+      setUtenti(utentiDb)
+      if (!selectedUserId) setSelectedUserId(utentiDb[0].id)
+    }
+  }, [utentiDb])
 
   useEffect(() => {
     if (!locked) return
@@ -63,14 +53,14 @@ export default function LoginPage() {
     return () => clearInterval(interval)
   }, [locked])
 
-  const submitPin = useCallback((currentPin) => {
+  const submitPin = useCallback(async (currentPin) => {
     if (locked) return
-    const u = utenti.find(u => u.id === selectedUserId)
-    const result = login(selectedUserId, currentPin)
+    const result = await login(selectedUserId, currentPin)
     if (result.ok) {
-      // Mostra benvenuto per 3 secondi poi vai in cassa
-      setBenvenuto({ nome: u?.nome, ruolo: u?.ruolo })
-      setTimeout(() => router.replace('/cassa'), 3000)
+      const u = utenti.find(u => u.id === selectedUserId)
+      setLoggedUser(u)
+      setSuccess(true)
+      setTimeout(() => router.replace('/cassa'), 1000)
     } else {
       const newAttempts = attempts + 1
       setAttempts(newAttempts)
@@ -88,7 +78,7 @@ export default function LoginPage() {
   }, [locked, attempts, selectedUserId, login, router, utenti])
 
   const pressKey = useCallback((k) => {
-    if (locked || benvenuto) return
+    if (locked || success) return
     setErrorMsg('')
     if (k === 'del') { setPin(prev => prev.slice(0,-1)); return }
     setPin(prev => {
@@ -97,17 +87,17 @@ export default function LoginPage() {
       if (next.length === 4) setTimeout(() => submitPin(next), 0)
       return next
     })
-  }, [locked, benvenuto, submitPin])
+  }, [locked, success, submitPin])
 
   useEffect(() => {
     const handler = (e) => {
-      if (techMode || benvenuto) return
+      if (techMode || success) return
       if (e.key >= '0' && e.key <= '9') pressKey(e.key)
       else if (e.key === 'Backspace') pressKey('del')
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [pressKey, techMode, benvenuto])
+  }, [pressKey, techMode, success])
 
   const selectUser = (id) => {
     setSelectedUserId(id)
@@ -142,7 +132,6 @@ export default function LoginPage() {
     })
   }
 
-  // ── TECH MODE ──────────────────────────────────────────────────────────
   if (techMode) {
     return (
       <div className={styles.screen}>
@@ -199,53 +188,7 @@ export default function LoginPage() {
     <div className={styles.screen}>
       <div className={styles.bgGrid} />
       <div className={styles.bgGlow} />
-
-      {/* MODAL BENVENUTO — overlay separato */}
-      {benvenuto && (
-        <div style={{
-          position:'fixed', inset:0, zIndex:200,
-          background:'rgba(8,9,12,0.92)',
-          display:'flex', alignItems:'center', justifyContent:'center',
-          flexDirection:'column', gap:20,
-          animation:'fadeIn 0.3s ease'
-        }}>
-          <div style={{
-            width:100, height:100, borderRadius:'50%',
-            background:'rgba(0,229,160,0.12)',
-            border:'2px solid #00e5a0',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            boxShadow:'0 0 48px rgba(0,229,160,0.3)',
-            animation:'circlePop 0.4s cubic-bezier(0.34,1.56,0.64,1)'
-          }}>
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </div>
-          <div style={{fontSize:'0.75rem', color:'#5a5d6e', letterSpacing:3, textTransform:'uppercase', fontFamily:"'DM Mono',monospace"}}>
-            Benvenuto/a
-          </div>
-          <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'#00e5a0'}}>
-            {benvenuto.nome}
-          </div>
-          <div style={{fontSize:'0.82rem', color:'#5a5d6e', fontFamily:"'DM Mono',monospace"}}>
-            {benvenuto.ruolo === 'owner' ? '�� Titolare — Accesso Completo' : '👤 Cassiere — Solo Cassa'}
-          </div>
-          <div style={{width:200, height:3, background:'#1a1c24', borderRadius:2, overflow:'hidden', marginTop:8}}>
-            <div style={{
-              height:'100%', background:'#00e5a0', borderRadius:2,
-              animation:'loadBar 3s linear forwards'
-            }} />
-          </div>
-          <div style={{fontSize:'0.7rem', color:'#5a5d6e', fontFamily:"'DM Mono',monospace"}}>
-            Caricamento cassa…
-          </div>
-          <style>{`
-            @keyframes circlePop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
-            @keyframes loadBar { from{width:0%} to{width:100%} }
-            @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-          `}</style>
-        </div>
-      )}
+      {success && <div className={styles.flashOverlay} />}
 
       <div className={styles.logoWrap}>
         <div
@@ -265,7 +208,9 @@ export default function LoginPage() {
         </div>
         <div>
           <div className={styles.logoName}>Scontrino<span>Digitale</span></div>
-          <div className={styles.logoSub}>Punto cassa</div>
+          <div className={styles.logoSub}>
+            {loading ? 'Caricamento...' : 'Punto cassa'}
+          </div>
         </div>
       </div>
 
@@ -298,36 +243,56 @@ export default function LoginPage() {
       </div>
 
       <div className={styles.pinPanel}>
-        <div className={styles.pinDisplay}>
-          <div className={styles.pinHint}>Inserisci PIN</div>
-          <div className={styles.pinDots}>
-            {[0,1,2,3].map(i => (
-              <div key={i} className={[
-                styles.pinDot,
-                i < pin.length ? styles.filled : '',
-                dotState === 'error' ? styles.error : ''
-              ].join(' ')} />
-            ))}
+        {!success ? (
+          <>
+            <div className={styles.pinDisplay}>
+              <div className={styles.pinHint}>{loading ? '⏳ Caricamento utenti...' : 'Inserisci PIN'}</div>
+              <div className={styles.pinDots}>
+                {[0,1,2,3].map(i => (
+                  <div key={i} className={[
+                    styles.pinDot,
+                    i < pin.length ? styles.filled : '',
+                    dotState === 'error' ? styles.error : ''
+                  ].join(' ')} />
+                ))}
+              </div>
+              <div className={styles.pinMsg}>{errorMsg}</div>
+            </div>
+            <div className={styles.numpad}>
+              {['1','2','3','4','5','6','7','8','9'].map(n => (
+                <button key={n} className={styles.key} onClick={() => pressKey(n)} disabled={locked || loading}>
+                  <span className={styles.keyNum}>{n}</span>
+                </button>
+              ))}
+              <div className={styles.keyEmpty} />
+              <button className={styles.key} onClick={() => pressKey('0')} disabled={locked || loading}>
+                <span className={styles.keyNum}>0</span>
+              </button>
+              <button className={`${styles.key} ${styles.keyDel}`} onClick={() => pressKey('del')} disabled={locked || loading}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                  <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
+                </svg>
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className={styles.successState}>
+            <div className={styles.successIcon}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div className={styles.successName}>{loggedUser?.nome}</div>
+            <div className={styles.successRole}>
+              {loggedUser?.ruolo === 'owner' ? '● Accesso Completo' : '● Accesso Cassa'}
+            </div>
+            <div className={styles.loadBar}>
+              <div className={`${styles.loadBarFill} ${styles.animating}`} />
+            </div>
+            <div className={styles.loadingText}>Caricamento cassa…</div>
           </div>
-          <div className={styles.pinMsg}>{errorMsg}</div>
-        </div>
-        <div className={styles.numpad}>
-          {['1','2','3','4','5','6','7','8','9'].map(n => (
-            <button key={n} className={styles.key} onClick={() => pressKey(n)} disabled={locked}>
-              <span className={styles.keyNum}>{n}</span>
-            </button>
-          ))}
-          <div className={styles.keyEmpty} />
-          <button className={styles.key} onClick={() => pressKey('0')} disabled={locked}>
-            <span className={styles.keyNum}>0</span>
-          </button>
-          <button className={`${styles.key} ${styles.keyDel}`} onClick={() => pressKey('del')} disabled={locked}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
-              <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
-            </svg>
-          </button>
-        </div>
+        )}
       </div>
 
       <div className={styles.bottomBar}>DigitalCase v0.1 · © 2026</div>

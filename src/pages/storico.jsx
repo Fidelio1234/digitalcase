@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
-import { getStorico, getChiusure, salvaChiusura, getNegozio, getContatori } from '@/lib/storage'
+import { getNegozio, getContatori } from '@/lib/storage'
+import { getStoricoDb, salvaChiusuraDb, getChiusureDb } from '@/lib/supabase-db'
+import { NEGOZIO_ID } from '@/lib/config'
 import styles from '@/styles/Storico.module.css'
 
 function fmt(cents) {
@@ -14,7 +16,7 @@ function fmtData(iso) {
 }
 
 export default function StoricoPage() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [storico, setStorico] = useState([])
   const [chiusure, setChiusure] = useState([])
@@ -28,10 +30,10 @@ export default function StoricoPage() {
   const [toast, setToast] = useState('')
 
   useEffect(() => {
-    if (!user) { router.replace('/login'); return }
-    if (user.role !== 'owner') { router.replace('/cassa'); return }
-    setStorico(getStorico())
-    setChiusure(getChiusure())
+    if (!user) { if (!loading) router.replace('/login'); return }
+    if (user?.role !== 'owner') { router.replace('/cassa'); return }
+    getStoricoDb(NEGOZIO_ID).then(s => setStorico(s))
+    getChiusureDb(NEGOZIO_ID).then(c => setChiusure(c))
     setNegozio(getNegozio())
   }, [user, router])
 
@@ -65,7 +67,7 @@ export default function StoricoPage() {
   }, {})
 
   // Chiusura fiscale
-  function eseguiChiusura() {
+  async function eseguiChiusura() {
     const contatori = getContatori()
     const chiusura = {
       id: 'CF' + Date.now(),
@@ -79,8 +81,8 @@ export default function StoricoPage() {
       negozio,
       scontrini: scontriniFiltrati.map(s => s.id),
     }
-    salvaChiusura(chiusura)
-    setChiusure(getChiusure())
+    await salvaChiusuraDb(NEGOZIO_ID, chiusura)
+    getChiusureDb(NEGOZIO_ID).then(c => setChiusure(c))
     setShowChiusuraModal(false)
     showToast('✓ Chiusura fiscale eseguita')
     setTab('chiusure')

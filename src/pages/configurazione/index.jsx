@@ -4,12 +4,12 @@ import { useAuth } from '@/context/AuthContext'
 import styles from '@/styles/Negozio.module.css'
 
 export default function ConfigurazioneIndex() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!user) { router.replace('/login'); return }
-    if (user.role !== 'owner') { router.replace('/cassa'); return }
+    if (!user && !loading) { router.replace('/login'); return }
+    if (user?.role !== 'owner') { router.replace('/cassa'); return }
   }, [user, router])
 
   if (!user) return null

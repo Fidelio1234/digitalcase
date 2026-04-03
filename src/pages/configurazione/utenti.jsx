@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
+import { supabase } from '@/lib/supabase'
+import { NEGOZIO_ID } from '@/lib/config'
 import { useAuth } from '@/context/AuthContext'
+import { useRouter } from 'next/router'
 import { getUtenti, saveUtenti, generateId } from '@/lib/storage'
 import styles from '@/styles/Utenti.module.css'
 
@@ -28,8 +30,22 @@ export default function UtentiPage() {
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
-    if (user.role !== 'owner') { router.replace('/cassa'); return }
-    setUtenti(getUtenti())
+    if (user?.role !== 'owner') { router.replace('/cassa'); return }
+    supabase
+      .from('utenti')
+      .select('*')
+      .eq('negozio_id', NEGOZIO_ID)
+      .order('created_at')
+      .then(({ data }) => {
+        if (data) {
+          const sorted = [...data].sort((a,b) => {
+            if (a.ruolo === 'owner') return -1
+            if (b.ruolo === 'owner') return 1
+            return a.nome.localeCompare(b.nome)
+          })
+          setUtenti(sorted)
+        }
+      })
   }, [user, router])
 
   function showToast(msg) {
@@ -76,29 +92,49 @@ export default function UtentiPage() {
     }
   }
 
-  function salva() {
+  async function salva() {
     if (!form.nome?.trim()) { setErrore('Inserisci il nome'); return }
     const pin = pinInput.join('')
     const confirm = pinConfirm.join('')
     if (pin.length < 4) { setErrore('Il PIN deve essere di 4 cifre'); return }
     if (pin !== confirm) { setErrore('I PIN non coincidono'); return }
 
-    // Controlla PIN duplicato (escludendo se stesso in edit)
-    const duplicato = utenti.find(u =>
-      u.pin === pin && u.id !== form.id
-    )
+    const duplicato = utenti.find(u => u.pin === pin && u.id !== form.id)
     if (duplicato) { setErrore(`PIN già usato da ${duplicato.nome}`); return }
 
-    let updated
     if (modal === 'add') {
-      updated = [...utenti, { ...form, id: generateId(), pin }]
+      const { error } = await supabase.from('utenti').insert({
+        negozio_id: NEGOZIO_ID,
+        nome: form.nome,
+        pin,
+        ruolo: form.ruolo,
+        abilitato: form.abilitato ?? true,
+      })
+      if (error) { setErrore('Errore salvataggio: ' + error.message); return }
     } else {
-      updated = utenti.map(u => u.id === form.id ? { ...form, pin } : u)
+      const { error } = await supabase.from('utenti')
+        .update({ nome: form.nome, pin, ruolo: form.ruolo, abilitato: form.abilitato })
+        .eq('id', form.id)
+        .select()
+      if (error) { setErrore('Errore salvataggio: ' + error.message); return }
     }
-    setUtenti(updated)
-    saveUtenti(updated)
+
+    // Ricarica utenti da Supabase
+    const { data } = await supabase.from('utenti').select('*').eq('negozio_id', NEGOZIO_ID).order('created_at')
+    if (data) {
+      const sorted = [...data].sort((a,b) => a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome))
+      setUtenti(sorted)
+    }
+    // Ricarica utenti localmente
+    const { data: nuoviUtenti } = await supabase.from('utenti').select('*').eq('negozio_id', NEGOZIO_ID).order('created_at')
+    if (nuoviUtenti) {
+      const sorted = [...nuoviUtenti].sort((a,b) => a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome))
+      setUtenti(sorted)
+    }
     showToast(modal === 'add' ? 'Utente aggiunto ✓' : 'Utente salvato ✓')
     closeModal()
+    // Forza reload AuthContext
+    window.location.reload()
   }
 
   function elimina(id) {
@@ -111,20 +147,22 @@ export default function UtentiPage() {
     setConfirmElimina(target)
   }
 
-  function confermaElimina() {
-    const updated = utenti.filter(u => u.id !== confirmElimina.id)
-    setUtenti(updated)
-    saveUtenti(updated)
+  async function confermaElimina() {
+    await supabase.from('utenti').delete().eq('id', confirmElimina.id)
+    const { data } = await supabase.from('utenti').select('*').eq('negozio_id', NEGOZIO_ID).order('created_at')
+    if (data) {
+      const sorted = [...data].sort((a,b) => a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome))
+      setUtenti(sorted)
+    }
     showToast('Utente eliminato')
     setConfirmElimina(null)
   }
 
-  function toggleAbilitato(id) {
+  async function toggleAbilitato(id) {
     const target = utenti.find(u => u.id === id)
     if (target?.ruolo === 'owner') { showToast('⚠ Non puoi disabilitare il titolare'); return }
-    const updated = utenti.map(u => u.id === id ? { ...u, abilitato: !u.abilitato } : u)
-    setUtenti(updated)
-    saveUtenti(updated)
+    await supabase.from('utenti').update({ abilitato: !target.abilitato }).eq('id', id).select()
+    setUtenti(prev => prev.map(u => u.id === id ? { ...u, abilitato: !u.abilitato } : u))
   }
 
   const PinBoxes = ({ which, values, setValues, show }) => {

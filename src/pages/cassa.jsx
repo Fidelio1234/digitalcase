@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
-import { getReparti, incrementaScontrino, incrementaChiusura, getContatori, salvaScontrino } from '@/lib/storage'
+import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
+import { salvaScontrinoDb } from '@/lib/supabase-db'
+import { getRepartiDb } from '@/lib/supabase-db'
+import { NEGOZIO_ID } from '@/lib/config'
 import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 
@@ -17,10 +20,10 @@ function fmt(cents) {
 }
 
 export default function CassaPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, loading } = useAuth()
   const router = useRouter()
   const [reparti, setReparti] = useState([])
-  const [benvenuto, setBenvenuto] = useState(true)
+  const [benvenuto, setBenvenuto] = useState(false)
   const [repartoAttivo, setRepartoAttivo] = useState(null)
   const [showChiusura, setShowChiusura] = useState(false)
   const [showConfirmAnnulla, setShowConfirmAnnulla] = useState(false)
@@ -38,10 +41,13 @@ export default function CassaPage() {
   } = useCassa()
 
   useEffect(() => {
-    if (!user) { router.replace('/login'); return }
-    const r = getReparti().filter(r => r.abilitato)
+    if (!user && !loading) { router.replace('/login'); return }
+    async function loadReparti() {
+      const r = (await getRepartiDb(NEGOZIO_ID)).filter(r => r.abilitato)
     setReparti(r)
-    if (r.length > 0) setRepartoAttivo(r[0].id)
+      if (r.length > 0) setRepartoAttivo(r[0].id)
+    }
+    loadReparti()
     setContatori(getContatori())
     setTimeout(() => setBenvenuto(false), 3000)
   }, [user, router])
@@ -98,7 +104,8 @@ export default function CassaPage() {
     const sc = chiudiScontrino()
     const c = incrementaScontrino()
     setContatori(getContatori())
-    setScontrinoCorrente({ ...sc, numeroScontrino: c.scontrini, numeroChiusure: c.chiusure })
+    const scConNumeri = { ...sc, numeroScontrino: c.scontrini, numeroChiusure: c.chiusure }
+    setScontrinoCorrente(scConNumeri)
     setShowChiusura(true)
   }
 
@@ -114,17 +121,15 @@ export default function CassaPage() {
   }
 
   function handleSuccesso(info) {
-    // Salva nello storico
-    salvaScontrino({
-      id: info.id,
+    // Salva nello storico su Supabase
+    salvaScontrinoDb(NEGOZIO_ID, {
       timestamp: new Date().toISOString(),
       righe: scontrinoCorrente?.righe || [],
       totale: info.totale,
       metodo: info.metodo,
       resto: info.resto || 0,
       contatto: info.contatto || null,
-      numeroScontrino: info.numeroScontrino,
-      numeroChiusure: info.numeroChiusure,
+      numeroScontrino: scontrinoCorrente?.numeroScontrino || 1,
     })
     setContatori(getContatori())
     setShowChiusura(false)

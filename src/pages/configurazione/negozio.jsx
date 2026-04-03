@@ -25,7 +25,7 @@ export default function NegozioPage() {
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
-    if (user.role !== 'owner') { router.push('/configurazione'); return }
+    if (user?.role !== 'owner') { router.push('/configurazione'); return }
     setForm(getNegozio())
   }, [user, router])
 

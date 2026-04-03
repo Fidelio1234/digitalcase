@@ -8,7 +8,7 @@ export async function getNegozioDb(negozioId) {
     .select('*')
     .eq('id', negozioId)
     .single()
-  if (error) return null
+  if (error) { console.log('saveRepartoDb error:', error); return null }
   return {
     ragioneSociale: data.ragione_sociale,
     indirizzo: data.indirizzo,
@@ -114,7 +114,7 @@ export async function saveRepartoDb(negozioId, reparto) {
   const { data, error } = await supabase
     .from('reparti')
     .upsert({
-      id: reparto.id || undefined,
+      id: reparto.id && reparto.id.includes('-') ? reparto.id : undefined,
       negozio_id: negozioId,
       nome: reparto.nome,
       colore: reparto.colore,
@@ -135,7 +135,7 @@ export async function saveProdottoDb(negozioId, repartoId, prodotto) {
   const { error } = await supabase
     .from('prodotti')
     .upsert({
-      id: prodotto.id || undefined,
+      id: prodotto.id && prodotto.id.includes('-') ? prodotto.id : undefined,
       negozio_id: negozioId,
       reparto_id: repartoId,
       nome: prodotto.nome,

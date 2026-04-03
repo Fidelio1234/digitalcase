@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
-import { formatEuro, parseEuro } from '@/lib/storage'
+import { generateId, formatEuro, parseEuro } from '@/lib/storage'
 import { getRepartiDb, saveRepartoDb, saveProdottoDb, deleteRepartoDb, deleteProdottoDb } from '@/lib/supabase-db'
 import { NEGOZIO_ID } from '@/lib/config'
 import styles from '@/styles/Reparti.module.css'
@@ -10,9 +10,9 @@ const IVA_OPTIONS = [4, 10, 22]
 
 const ICONE = {
   coffee:'☕', cake:'🍰', food:'🍽️', drink:'🥤', beer:'🍺',
-  wine:'🍷', pizza:'🍕', sandwich:'🥪', ice_cream:'🍦', candy:'🍬',
-  bread:'🥐', fruit:'🍎', salad:'🥗', fish:'🐟', meat:'🥩',
-  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️', box:'��',
+  wine:'🍷', pizza:'🍕', sandwich:'🥪', ice_cream:'��', candy:'🍬',
+  bread:'🥐', fruit:'🍎', salad:'��', fish:'🐟', meat:'🥩',
+  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️', box:'📦',
 }
 
 const COLORI = [
@@ -22,26 +22,32 @@ const COLORI = [
 ]
 
 const emptyReparto = () => ({
-  nome:'', colore:COLORI[0], icona:'coffee',
+  id:'', nome:'', colore:COLORI[0], icona:'coffee',
   iva:10, minimoImporto:0, massimoImporto:5000,
   abilitato:true, ordine:0, sottoreparti:[]
 })
 
 const emptySottoreparto = (ivaParent) => ({
-  nome:'', prezzoFisso:0,
+  id:'', nome:'', prezzoFisso:0,
   ivaOverride:null, minimoImporto:0, massimoImporto:5000,
   abilitato:true, ordine:0, _ivaParent:ivaParent
 })
 
+// Input euro che permette digitazione libera e salva in centesimi al blur
 function EuroInput({ valueCents, onChange, placeholder }) {
   const [raw, setRaw] = useState('')
   const [focused, setFocused] = useState(false)
+
   useEffect(() => {
-    if (!focused) setRaw(valueCents ? formatEuro(valueCents) : '')
+    if (!focused) {
+      setRaw(valueCents ? formatEuro(valueCents) : '')
+    }
   }, [valueCents, focused])
+
   return (
     <input
-      type="text" inputMode="decimal"
+      type="text"
+      inputMode="decimal"
       placeholder={placeholder || '0,00'}
       value={raw}
       onChange={e => setRaw(e.target.value)}
@@ -57,25 +63,19 @@ function EuroInput({ valueCents, onChange, placeholder }) {
 }
 
 export default function RepartiPage() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [reparti, setReparti] = useState([])
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
   const [expandedId, setExpandedId] = useState(null)
   const [toast, setToast] = useState('')
-  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!user) { if (true) router.replace('/login'); return }
-    if (user?.role !== 'owner') { router.replace('/cassa'); return }
-    loadReparti()
+    if (!user) { if (!loading) router.replace('/login'); return }
+    if (user?.role !== 'owner') { router.push('/configurazione'); return }
+    getRepartiDb(NEGOZIO_ID).then(r => setReparti(r))
   }, [user, router])
-
-  async function loadReparti() {
-    const r = await getRepartiDb(NEGOZIO_ID)
-    setReparti(r)
-  }
 
   function showToast(msg) {
     setToast(msg)
@@ -111,85 +111,85 @@ export default function RepartiPage() {
 
   async function saveReparto() {
     if (!form.nome?.trim()) { showToast('Inserisci il nome del reparto'); return }
-    setSaving(true)
     try {
-      const data = {
-        nome: form.nome,
-        colore: form.colore,
-        icona: form.icona,
-        iva: form.iva,
-        minimoImporto: form.minimoImporto,
-        massimoImporto: form.massimoImporto,
-        abilitato: form.abilitato,
-        ordine: form.ordine,
-      }
-      if (modal.mode === 'edit') data.id = modal.id
-      await saveRepartoDb(NEGOZIO_ID, data)
-      await loadReparti()
+      const repartoData = { ...form }
+      if (modal.mode === 'add') delete repartoData.id
+      else repartoData.id = modal.id
+      const result = await saveRepartoDb(NEGOZIO_ID, repartoData)
+      console.log('saveRepartoDb result:', result)
+      const updated = await getRepartiDb(NEGOZIO_ID)
+      setReparti(updated)
       showToast(modal.mode === 'add' ? 'Reparto aggiunto ✓' : 'Reparto salvato ✓')
       closeModal()
     } catch(e) {
-      showToast('⚠ Errore salvataggio')
+      console.log('errore saveReparto:', e)
+      showToast('⚠ Errore: ' + e.message)
     }
-    setSaving(false)
   }
 
-  async function saveSottoreparto() {
+  function saveSottoreparto() {
     if (!form.nome?.trim()) { showToast('Inserisci il nome del prodotto'); return }
-    setSaving(true)
-    try {
-      const data = {
-        nome: form.nome,
-        prezzoFisso: form.prezzoFisso,
-        ivaOverride: form.ivaOverride,
-        minimoImporto: form.minimoImporto,
-        massimoImporto: form.massimoImporto,
-        abilitato: form.abilitato,
-        ordine: form.ordine,
+    const updated = reparti.map(r => {
+      if (r.id !== modal.parentId) return r
+      let subs
+      if (modal.mode === 'add') {
+        const nuovo = { ...form, id:generateId() }
+        delete nuovo._ivaParent
+        subs = [...r.sottoreparti, nuovo]
+      } else {
+        subs = r.sottoreparti.map(sr => {
+          if (sr.id !== modal.id) return sr
+          const saved = { ...form }
+          delete saved._ivaParent
+          return saved
+        })
       }
-      if (modal.mode === 'edit') data.id = modal.id
-      await saveProdottoDb(NEGOZIO_ID, modal.parentId, data)
-      await loadReparti()
-      showToast(modal.mode === 'add' ? 'Prodotto aggiunto ✓' : 'Prodotto salvato ✓')
-      closeModal()
-    } catch(e) {
-      showToast('⚠ Errore salvataggio')
-    }
-    setSaving(false)
+      return { ...r, sottoreparti:subs }
+    })
+    setReparti(updated)
+    showToast(modal.mode === 'add' ? 'Prodotto aggiunto ✓' : 'Prodotto salvato ✓')
+    closeModal()
   }
 
-  async function deleteReparto(id) {
+  function deleteReparto(id) {
     if (!confirm('Eliminare questo reparto e tutti i suoi prodotti?')) return
-    await deleteRepartoDb(id)
-    await loadReparti()
+    const updated = reparti.filter(r => r.id !== id)
+    setReparti(updated)
     showToast('Reparto eliminato')
   }
 
-  async function deleteSottoreparto(srId) {
+  function deleteSottoreparto(parentId, srId) {
     if (!confirm('Eliminare questo prodotto?')) return
-    await deleteProdottoDb(srId)
-    await loadReparti()
+    const updated = reparti.map(r => {
+      if (r.id !== parentId) return r
+      return { ...r, sottoreparti:r.sottoreparti.filter(sr => sr.id !== srId) }
+    })
+    setReparti(updated)
     showToast('Prodotto eliminato')
   }
 
-  async function toggleReparto(r) {
-    await saveRepartoDb(NEGOZIO_ID, { ...r, abilitato: !r.abilitato })
-    await loadReparti()
+  function toggleReparto(id) {
+    const updated = reparti.map(r => r.id === id ? { ...r, abilitato:!r.abilitato } : r)
+    setReparti(updated)
   }
 
-  async function toggleSottoreparto(parentId, sr, ivaParent) {
-    await saveProdottoDb(NEGOZIO_ID, parentId, { ...sr, abilitato: !sr.abilitato })
-    await loadReparti()
+  function toggleSottoreparto(parentId, srId) {
+    const updated = reparti.map(r => {
+      if (r.id !== parentId) return r
+      return { ...r, sottoreparti:r.sottoreparti.map(sr =>
+        sr.id === srId ? { ...sr, abilitato:!sr.abilitato } : sr
+      )}
+    })
+    setReparti(updated)
   }
 
-  async function moveReparto(id, dir) {
+  function moveReparto(id, dir) {
     const idx = reparti.findIndex(r => r.id === id)
-    const arr = [...reparti]
+    const newArr = [...reparti]
     const swap = idx + dir
-    if (swap < 0 || swap >= arr.length) return
-    ;[arr[idx], arr[swap]] = [arr[swap], arr[idx]]
-    await Promise.all(arr.map((r, i) => saveRepartoDb(NEGOZIO_ID, { ...r, ordine: i + 1 })))
-    await loadReparti()
+    if (swap < 0 || swap >= newArr.length) return
+    ;[newArr[idx], newArr[swap]] = [newArr[swap], newArr[idx]]
+    setReparti(newArr)
   }
 
   const ivaEffettiva = modal?.tipo === 'sottoreparto'
@@ -198,6 +198,7 @@ export default function RepartiPage() {
 
   return (
     <div className={styles.page}>
+
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={() => router.push('/configurazione')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -247,7 +248,7 @@ export default function RepartiPage() {
                 </div>
               </div>
               <div className={styles.repartoActions}>
-                <button className={`${styles.toggleBtn} ${r.abilitato ? styles.on : styles.off}`} onClick={() => toggleReparto(r)}>
+                <button className={`${styles.toggleBtn} ${r.abilitato ? styles.on : styles.off}`} onClick={() => toggleReparto(r.id)}>
                   {r.abilitato ? 'ON' : 'OFF'}
                 </button>
                 <button className={styles.iconBtn} onClick={() => openEditReparto(r)}>
@@ -287,8 +288,7 @@ export default function RepartiPage() {
                       </div>
                     </div>
                     <div className={styles.srActions}>
-                      <button className={`${styles.toggleBtn} ${styles.sm} ${sr.abilitato ? styles.on : styles.off}`}
-                        onClick={() => toggleSottoreparto(r.id, sr, r.iva)}>
+                      <button className={`${styles.toggleBtn} ${styles.sm} ${sr.abilitato ? styles.on : styles.off}`} onClick={() => toggleSottoreparto(r.id, sr.id)}>
                         {sr.abilitato ? 'ON' : 'OFF'}
                       </button>
                       <button className={styles.iconBtn} onClick={() => openEditSottoreparto(sr, r.id, r.iva)}>
@@ -297,7 +297,7 @@ export default function RepartiPage() {
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
-                      <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => deleteSottoreparto(sr.id)}>
+                      <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => deleteSottoreparto(r.id, sr.id)}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -332,9 +332,11 @@ export default function RepartiPage() {
             </div>
 
             <div className={styles.modalBody}>
+
               <div className={styles.field}>
                 <label>Nome {modal.tipo === 'reparto' ? 'reparto' : 'prodotto'}</label>
-                <input type="text"
+                <input
+                  type="text"
                   placeholder={modal.tipo === 'reparto' ? 'Es. Caffetteria' : 'Es. Caffè'}
                   value={form.nome || ''}
                   onChange={e => setForm(f => ({ ...f, nome:e.target.value }))}
@@ -366,9 +368,12 @@ export default function RepartiPage() {
                 </label>
                 {modal.tipo === 'sottoreparto' && (
                   <label className={styles.checkRow}>
-                    <input type="checkbox"
+                    <input
+                      type="checkbox"
                       checked={form.ivaOverride !== null && form.ivaOverride !== undefined}
-                      onChange={e => setForm(f => ({ ...f, ivaOverride: e.target.checked ? f._ivaParent : null }))}
+                      onChange={e => setForm(f => ({
+                        ...f, ivaOverride: e.target.checked ? f._ivaParent : null
+                      }))}
                     />
                     Personalizza IVA per questo prodotto
                   </label>
@@ -376,7 +381,8 @@ export default function RepartiPage() {
                 {(modal.tipo === 'reparto' || (form.ivaOverride !== null && form.ivaOverride !== undefined)) && (
                   <div className={styles.ivaGroup}>
                     {IVA_OPTIONS.map(v => (
-                      <button key={v}
+                      <button
+                        key={v}
                         className={`${styles.ivaBtn} ${ivaEffettiva === v ? styles.ivaActive : ''}`}
                         onClick={() => {
                           if (modal.tipo === 'reparto') setForm(f => ({ ...f, iva:v }))
@@ -414,7 +420,8 @@ export default function RepartiPage() {
                   <label>Colore</label>
                   <div className={styles.colorGrid}>
                     {COLORI.map(c => (
-                      <button key={c}
+                      <button
+                        key={c}
                         className={`${styles.colorDot} ${form.colore === c ? styles.colorActive : ''}`}
                         style={{ background:c }}
                         onClick={() => setForm(f => ({ ...f, colore:c }))}
@@ -429,7 +436,8 @@ export default function RepartiPage() {
                   <label>Icona</label>
                   <div className={styles.iconGrid}>
                     {Object.entries(ICONE).map(([k,v]) => (
-                      <button key={k}
+                      <button
+                        key={k}
                         className={`${styles.iconChoice} ${form.icona === k ? styles.iconActive : ''}`}
                         onClick={() => setForm(f => ({ ...f, icona:k }))}
                       >
@@ -442,22 +450,21 @@ export default function RepartiPage() {
 
               <div className={styles.field}>
                 <label className={styles.checkRow}>
-                  <input type="checkbox"
+                  <input
+                    type="checkbox"
                     checked={form.abilitato ?? true}
                     onChange={e => setForm(f => ({ ...f, abilitato:e.target.checked }))}
                   />
                   {modal.tipo === 'reparto' ? 'Reparto abilitato' : 'Prodotto abilitato'}
                 </label>
               </div>
+
             </div>
 
             <div className={styles.modalFooter}>
               <button className={styles.cancelBtn} onClick={closeModal}>Annulla</button>
-              <button className={styles.saveBtn}
-                onClick={modal.tipo === 'reparto' ? saveReparto : saveSottoreparto}
-                disabled={saving}
-              >
-                {saving ? '⏳ Salvataggio...' : modal.mode === 'add' ? 'Aggiungi' : 'Salva modifiche'}
+              <button className={styles.saveBtn} onClick={modal.tipo === 'reparto' ? saveReparto : saveSottoreparto}>
+                {modal.mode === 'add' ? 'Aggiungi' : 'Salva modifiche'}
               </button>
             </div>
           </div>
