@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
+import { supabase } from '@/lib/supabase'
+import { NEGOZIO_ID } from '@/lib/config'
 import styles from '@/styles/Login.module.css'
 
 const MAX_ATTEMPTS = 3
@@ -30,6 +32,22 @@ export default function LoginPage() {
   }, [user, router])
 
   // Aggiorna utenti quando arrivano da Supabase
+  // Carica utenti direttamente se AuthContext non li ha
+  useEffect(() => {
+    if (utenti.length === 0) {
+      supabase.from('utenti').select('*')
+        .eq('negozio_id', NEGOZIO_ID)
+        .eq('abilitato', true)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            const sorted = [...data].sort((a,b) => a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome))
+            setUtenti(sorted)
+            setSelectedUserId(sorted[0].id)
+          }
+        })
+    }
+  }, [])
+
   useEffect(() => {
     if (utentiDb.length > 0) {
       setUtenti(utentiDb)
