@@ -15,6 +15,14 @@ export function AuthProvider({ children }) {
       if (saved) setUser(JSON.parse(saved))
     } catch {}
     caricaUtenti()
+    // Retry dopo 3 secondi se utenti non caricati
+    const retry = setTimeout(() => {
+      setUtenti(prev => {
+        if (prev.length === 0) { caricaUtenti(); }
+        return prev
+      })
+    }, 3000)
+    return () => clearTimeout(retry)
   }, [])
 
   async function caricaUtenti() {
