@@ -246,7 +246,7 @@ export default function LoginPage() {
         {!success ? (
           <>
             <div className={styles.pinDisplay}>
-              <div className={styles.pinHint}>{loading ? '⏳ Caricamento utenti...' : 'Inserisci PIN'}</div>
+              <div className={styles.pinHint}>'Inserisci PIN'</div>
               <div className={styles.pinDots}>
                 {[0,1,2,3].map(i => (
                   <div key={i} className={[
@@ -260,15 +260,15 @@ export default function LoginPage() {
             </div>
             <div className={styles.numpad}>
               {['1','2','3','4','5','6','7','8','9'].map(n => (
-                <button key={n} className={styles.key} onClick={() => pressKey(n)} disabled={locked || loading}>
+                <button key={n} className={styles.key} onClick={() => pressKey(n)} disabled={locked}>
                   <span className={styles.keyNum}>{n}</span>
                 </button>
               ))}
               <div className={styles.keyEmpty} />
-              <button className={styles.key} onClick={() => pressKey('0')} disabled={locked || loading}>
+              <button className={styles.key} onClick={() => pressKey('0')} disabled={locked}>
                 <span className={styles.keyNum}>0</span>
               </button>
-              <button className={`${styles.key} ${styles.keyDel}`} onClick={() => pressKey('del')} disabled={locked || loading}>
+              <button className={`${styles.key} ${styles.keyDel}`} onClick={() => pressKey('del')} disabled={locked}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
                   <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
