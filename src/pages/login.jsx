@@ -13,7 +13,7 @@ export default function LoginPage() {
   const { login, user, utenti: utentiDb, loading } = useAuth()
   const router = useRouter()
   const [utenti, setUtenti] = useState([])
-  const [selectedUserId, setSelectedUserId] = useState('')
+  const [selectedUserId, setSelectedUserId] = useState('default')
   const [pin, setPin] = useState('')
   const [attempts, setAttempts] = useState(0)
   const [locked, setLocked] = useState(false)
@@ -244,6 +244,11 @@ export default function LoginPage() {
       )}
 
       <div className={styles.userSelector}>
+        {utenti.length === 0 && (
+          <div style={{color:'#5a5d6e', fontSize:'0.8rem', fontFamily:'monospace', padding:'10px'}}>
+            ⏳ Connessione...
+          </div>
+        )}
         {utenti.map(u => (
           <button key={u.id}
             className={`${styles.userBtn} ${selectedUserId === u.id ? styles.active : ''}`}
