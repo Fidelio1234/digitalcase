@@ -28,20 +28,9 @@ export function AuthProvider({ children }) {
   async function caricaUtenti() {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('utenti')
-        .select('*')
-        .eq('negozio_id', NEGOZIO_ID)
-        .eq('abilitato', true)
-      if (error) throw error
-      if (data) {
-        const sorted = [...data].sort((a,b) => {
-          if (a.ruolo === 'owner') return -1
-          if (b.ruolo === 'owner') return 1
-          return a.nome.localeCompare(b.nome)
-        })
-        setUtenti(sorted)
-      }
+      const res = await fetch('/api/utenti')
+      const data = await res.json()
+      if (Array.isArray(data)) setUtenti(data)
     } catch(e) {
       console.error('Errore caricamento utenti:', e)
     } finally {
