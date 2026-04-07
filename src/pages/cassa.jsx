@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
+import PannelloRT from '@/components/PannelloRT'
 import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
 import { salvaScontrinoDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { NEGOZIO_ID } from '@/lib/config'
+import { supabase } from '@/lib/supabase'
 import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 
@@ -24,6 +26,8 @@ export default function CassaPage() {
   const router = useRouter()
   const [reparti, setReparti] = useState([])
   const [benvenuto, setBenvenuto] = useState(false)
+  const [rtConfig, setRtConfig] = useState(null)
+  const [rtMappatura, setRtMappatura] = useState({})
   const [repartoAttivo, setRepartoAttivo] = useState(null)
   const [showChiusura, setShowChiusura] = useState(false)
   const [showConfirmAnnulla, setShowConfirmAnnulla] = useState(false)
@@ -44,13 +48,22 @@ export default function CassaPage() {
     if (!user && !loading) { router.replace('/login'); return }
     async function loadReparti() {
       const r = (await getRepartiDb(NEGOZIO_ID)).filter(r => r.abilitato)
-    setReparti(r)
+      setReparti(r)
       if (r.length > 0) setRepartoAttivo(r[0].id)
     }
     loadReparti()
     setContatori(getContatori())
     setTimeout(() => setBenvenuto(false), 3000)
   }, [user, router])
+
+  // Carica config RT separatamente
+  useEffect(() => {
+    supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single().then(({ data }) => {
+      console.log('RT config caricata:', JSON.stringify(data?.rt_config))
+      if (data?.rt_config?.config) setRtConfig(data.rt_config.config)
+      if (data?.rt_config?.mappatura) setRtMappatura(data.rt_config.mappatura)
+    })
+  }, [])
 
   // ── Avviso mezzanotte ──────────────────────────────────────────────────
   useEffect(() => {
@@ -446,6 +459,12 @@ export default function CassaPage() {
           </div>
         </div>
       )}
+
+      <PannelloRT
+        rtConfig={rtConfig}
+        mappatura={rtMappatura}
+        scontrino={showSuccesso}
+      />
     </div>
   )
 }

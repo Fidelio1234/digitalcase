@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import ImpostazioniRT from '@/components/ImpostazioniRT'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabase'
@@ -426,6 +427,15 @@ export default function TechPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* ── REGISTRATORE TELEMATICO ── */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>🖨️ Registratore Telematico</div>
+          <ImpostazioniRT
+            reparti={reparti}
+            showToast={showToast}
+          />
         </div>
 
         {/* ── RESET ── */}
