@@ -34,18 +34,15 @@ export default function LoginPage() {
   // Aggiorna utenti quando arrivano da Supabase
   // Carica utenti direttamente se AuthContext non li ha
   useEffect(() => {
-    if (utenti.length === 0) {
-      supabase.from('utenti').select('*')
-        .eq('negozio_id', NEGOZIO_ID)
-        .eq('abilitato', true)
-        .then(({ data }) => {
-          if (data && data.length > 0) {
-            const sorted = [...data].sort((a,b) => a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome))
-            setUtenti(sorted)
-            setSelectedUserId(sorted[0].id)
-          }
-        })
-    }
+    fetch('/api/utenti')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setUtenti(data)
+          setSelectedUserId(data[0].id)
+        }
+      })
+      .catch(e => console.error('Errore utenti:', e))
   }, [])
 
   useEffect(() => {
