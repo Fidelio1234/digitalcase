@@ -19,20 +19,26 @@ export function AuthProvider({ children }) {
 
   async function caricaUtenti() {
     setLoading(true)
-    const { data } = await supabase
-      .from('utenti')
-      .select('*')
-      .eq('negozio_id', NEGOZIO_ID)
-      .eq('abilitato', true)
-    if (data) {
-      const sorted = [...data].sort((a,b) => {
-        if (a.ruolo === 'owner') return -1
-        if (b.ruolo === 'owner') return 1
-        return a.nome.localeCompare(b.nome)
-      })
-      setUtenti(sorted)
+    try {
+      const { data, error } = await supabase
+        .from('utenti')
+        .select('*')
+        .eq('negozio_id', NEGOZIO_ID)
+        .eq('abilitato', true)
+      if (error) throw error
+      if (data) {
+        const sorted = [...data].sort((a,b) => {
+          if (a.ruolo === 'owner') return -1
+          if (b.ruolo === 'owner') return 1
+          return a.nome.localeCompare(b.nome)
+        })
+        setUtenti(sorted)
+      }
+    } catch(e) {
+      console.error('Errore caricamento utenti:', e)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   async function login(userId, pinInput) {
