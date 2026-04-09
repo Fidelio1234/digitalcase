@@ -120,8 +120,9 @@ export async function saveRepartoDb(negozioId, reparto) {
       colore: reparto.colore,
       icona: reparto.icona,
       iva: reparto.iva,
-      minimo_importo: reparto.minimoImporto,
+      minimo_importo: reparto.minimoImporto || 0,
       massimo_importo: reparto.massimoImporto,
+      natura_iva: reparto.natura_iva || '',
       abilitato: reparto.abilitato,
       ordine: reparto.ordine,
     })

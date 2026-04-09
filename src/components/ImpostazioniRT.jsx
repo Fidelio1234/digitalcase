@@ -15,10 +15,14 @@ import { NEGOZIO_ID } from '@/lib/config'
 
 // Aliquote IVA standard Ditron (configurabili sulla cassa)
 const IVA_DITRON_DEFAULT = [
-  { indice: 1, descrizione: 'IVA 10%', valore: 10 },
-  { indice: 2, descrizione: 'IVA 22%', valore: 22 },
-  { indice: 3, descrizione: 'IVA 4%', valore: 4 },
-  { indice: 4, descrizione: 'Esente', valore: 0 },
+  { indice: 1, descrizione: 'IVA 4%', valore: 4 },
+  { indice: 2, descrizione: 'IVA 10%', valore: 10 },
+  { indice: 3, descrizione: 'IVA 22%', valore: 22 },
+  { indice: 4, descrizione: 'Esente (N4)', valore: 0 },
+  { indice: 5, descrizione: 'N1 - Escluse art.15', valore: 0 },
+  { indice: 6, descrizione: 'N2 - Non soggette', valore: 0 },
+  { indice: 7, descrizione: 'N3 - Non imponibili', valore: 0 },
+  { indice: 8, descrizione: 'N5 - Regime margine', valore: 0 },
 ]
 
 export default function ImpostazioniRT({ reparti, onSave, showToast }) {
@@ -208,7 +212,7 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
                 <div style={{display:'flex', alignItems:'center', gap:8}}>
                   <div style={{width:8, height:8, borderRadius:'50%', background:r.colore, flexShrink:0}} />
                   <span style={{fontSize:'0.82rem'}}>{r.nome}</span>
-                  <span style={{fontSize:'0.7rem', color:'#5a5d6e'}}>IVA {r.iva}%</span>
+                  <span style={{fontSize:'0.7rem', color:'#5a5d6e'}}>IVA {r.iva}%{r.natura_iva ? ' · ' + r.natura_iva : ''}</span>
                 </div>
                 <div>
                   <label style={{fontSize:'0.65rem', color:'#5a5d6e', display:'block', marginBottom:2}}>N° REP. RT</label>

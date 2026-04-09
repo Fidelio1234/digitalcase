@@ -489,3 +489,79 @@
   cursor: pointer; transition: all 0.2s; margin-top: 8px;
 }
 .avvisoBtn:hover { background: #ffd06b; box-shadow: 0 4px 20px rgba(255,184,48,0.4); }
+
+
+/* ── LAYOUT COLONNA CENTRALE DIVISA ──────────────────────────────────── */
+.colCenterTop {
+  display: flex;
+  flex-direction: column;
+  height: 50%;
+  border-bottom: 1px solid #1a1c24;
+  overflow: hidden;
+}
+
+.colCenterBottom {
+  display: flex;
+  flex-direction: column;
+  height: 50%;
+  overflow: hidden;
+}
+
+.prodottiHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #5a5d6e;
+  border-bottom: 1px solid #1a1c24;
+  flex-shrink: 0;
+}
+
+.prodottiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.prodottoCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: #111318;
+  border: 1px solid #252830;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.prodottoCard:hover {
+  background: #1a1c24;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.prodottoCard:active {
+  transform: scale(0.96);
+}
+
+.prodottoNome {
+  font-size: 0.78rem;
+  color: #eef0f6;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.prodottoPrezzo {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+}

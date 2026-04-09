@@ -298,44 +298,86 @@ export default function CassaPage() {
 
         {/* CENTRO */}
         <div className={styles.colCenter}>
-          <div className={styles.displayHeader}>
-            <span className={styles.displayTitle}>Scontrino in corso</span>
-            <span className={styles.righeCount}>{righe.length} voci</span>
-          </div>
-          <div className={styles.righeList}>
-            {righe.length === 0 && (
-              <div className={styles.righeEmpty}>
-                <div style={{fontSize:'2rem'}}>🧾</div>
-                <div>Digita un importo e seleziona un reparto</div>
-                <div style={{fontSize:'0.75rem',marginTop:4}}>oppure clicca direttamente su un prodotto</div>
+          {/* SCONTRINO IN CORSO - metà superiore */}
+          <div className={styles.colCenterTop}>
+            <div className={styles.displayHeader}>
+              <span className={styles.displayTitle}>Scontrino in corso</span>
+              <span className={styles.righeCount}>{righe.length} voci</span>
+            </div>
+            <div className={styles.righeList}>
+              {righe.length === 0 && (
+                <div className={styles.righeEmpty}>
+                  <div style={{fontSize:'2rem'}}>🧾</div>
+                  <div>Digita un importo e seleziona un reparto</div>
+                  <div style={{fontSize:'0.75rem',marginTop:4}}>oppure clicca direttamente su un prodotto</div>
+                </div>
+              )}
+              {righe.map((r, i) => (
+                <div key={r.id} className={`${styles.riga} ${i === righe.length-1 ? styles.rigaLast : ''}`}>
+                  <div className={styles.rigaIcona} style={{background:r.colore+'22'}}>{ICONE[r.icona]||'📦'}</div>
+                  <div className={styles.rigaInfo}>
+                    <div className={styles.rigaNome}>
+                      {r.nome}
+                      {r.quantita > 1 && <span className={styles.rigaQty}>×{r.quantita}</span>}
+                    </div>
+                    <div className={styles.rigaMeta}>IVA {r.iva}% · €{fmt(r.importo)} cad.</div>
+                  </div>
+                  <div className={styles.rigaDestra}>
+                    <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
+                    <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {righe.length > 0 && (
+              <div className={styles.totaleBanner}>
+                <span>TOTALE</span>
+                <span className={styles.totaleVal}>€ {fmt(totale)}</span>
               </div>
             )}
-            {righe.map((r, i) => (
-              <div key={r.id} className={`${styles.riga} ${i === righe.length-1 ? styles.rigaLast : ''}`}>
-                <div className={styles.rigaIcona} style={{background:r.colore+'22'}}>{ICONE[r.icona]||'📦'}</div>
-                <div className={styles.rigaInfo}>
-                  <div className={styles.rigaNome}>
-                    {r.nome}
-                    {r.quantita > 1 && <span className={styles.rigaQty}>×{r.quantita}</span>}
-                  </div>
-                  <div className={styles.rigaMeta}>IVA {r.iva}% · €{fmt(r.importo)} cad.</div>
-                </div>
-                <div className={styles.rigaDestra}>
-                  <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
-                  <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
-          {righe.length > 0 && (
-            <div className={styles.totaleBanner}>
-              <span>TOTALE</span>
-              <span className={styles.totaleVal}>€ {fmt(totale)}</span>
+
+          {/* PRODOTTI REPARTO - metà inferiore */}
+          {repartoAttivo && (
+            <div className={styles.colCenterBottom}>
+              {(() => {
+                const rep = reparti.find(r => r.id === repartoAttivo)
+                const prodotti = rep?.sottoreparti?.filter(s => s.abilitato) || []
+                return (
+                  <>
+                    <div className={styles.prodottiHeader}>
+                      <span style={{color: rep?.colore}}>{ICONE[rep?.icona]||'📦'}</span>
+                      <span>{rep?.nome}</span>
+                      <span className={styles.righeCount}>{prodotti.length} prodotti</span>
+                    </div>
+                    {prodotti.length === 0 ? (
+                      <div className={styles.righeEmpty} style={{padding:20}}>
+                        <div style={{fontSize:'0.8rem', color:'#5a5d6e'}}>Nessun prodotto — digita importo e premi il reparto</div>
+                      </div>
+                    ) : (
+                      <div className={styles.prodottiGrid}>
+                        {prodotti.map(sr => (
+                          <button key={sr.id}
+                            className={styles.prodottoCard}
+                            style={{borderColor: rep?.colore + '66'}}
+                            onClick={() => handleSottorepartoClick(rep, sr)}
+                          >
+                            <div className={styles.prodottoNome}>{sr.nome}</div>
+                            <div className={styles.prodottoPrezzo} style={{color: rep?.colore}}>
+                              € {fmt(sr.prezzoFisso)}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </div>
           )}
         </div>
@@ -345,33 +387,22 @@ export default function CassaPage() {
           <div className={styles.repartiHeader}>REPARTI</div>
           <div className={styles.repartiList}>
             {reparti.map(r => (
-              <div key={r.id}>
-                <button
-                  className={`${styles.repartoBtn} ${repartoAttivo === r.id ? styles.repartoActive : ''}`}
-                  style={{borderColor: repartoAttivo === r.id ? r.colore : 'transparent'}}
-                  onClick={() => handleRepartoClick(r)}
-                >
-                  <span className={styles.repartoIcn}>{ICONE[r.icona]||'📦'}</span>
-                  <span className={styles.repartoNm}>{r.nome}</span>
-                  {inputCents > 0 && (
-                    <span className={styles.repartoEuro} style={{background:r.colore+'22',color:r.colore}}>
-                      + €{fmt(inputCents)}
-                    </span>
-                  )}
-                </button>
-                {repartoAttivo === r.id && r.sottoreparti.filter(s=>s.abilitato).length > 0 && (
-                  <div className={styles.srList}>
-                    {r.sottoreparti.filter(s=>s.abilitato).map(sr => (
-                      <button key={sr.id} className={styles.srBtn}
-                        style={{borderLeft:`3px solid ${r.colore}`}}
-                        onClick={() => handleSottorepartoClick(r, sr)}>
-                        <span className={styles.srNm}>{sr.nome}</span>
-                        <span className={styles.srPrezzo} style={{color:r.colore}}>€ {fmt(sr.prezzoFisso)}</span>
-                      </button>
-                    ))}
-                  </div>
+              <button key={r.id}
+                className={`${styles.repartoBtn} ${repartoAttivo === r.id ? styles.repartoActive : ''}`}
+                style={{
+                  borderColor: repartoAttivo === r.id ? r.colore : 'transparent',
+                  background: repartoAttivo === r.id ? r.colore + '15' : 'transparent',
+                }}
+                onClick={() => handleRepartoClick(r)}
+              >
+                <span className={styles.repartoIcn}>{ICONE[r.icona]||'📦'}</span>
+                <span className={styles.repartoNm}>{r.nome}</span>
+                {inputCents > 0 && (
+                  <span className={styles.repartoEuro} style={{background:r.colore+'22',color:r.colore}}>
+                    + €{fmt(inputCents)}
+                  </span>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -411,7 +442,8 @@ export default function CassaPage() {
       {/* MODAL SUCCESSO */}
       {showSuccesso && (
         <div className={styles.overlay} onClick={() => setShowSuccesso(null)}>
-          <div className={styles.successModal} onClick={e => e.stopPropagation()}>
+          <div className={styles.successModal} onClick={e => e.stopPropagation()}
+            ref={el => { if(el) setTimeout(() => setShowSuccesso(null), 1500) }}>
             <div className={styles.successCircle}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="20 6 9 17 4 12"/>
@@ -432,9 +464,7 @@ export default function CassaPage() {
               {showSuccesso.metodo === 'contanti' && showSuccesso.resto > 0 &&
                 ` · Resto €${fmt(showSuccesso.resto)}`}
             </div>
-            <button className={styles.successBtn} onClick={() => setShowSuccesso(null)}>
-              Nuovo scontrino
-            </button>
+
           </div>
         </div>
       )}

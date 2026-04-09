@@ -7,6 +7,16 @@ import { NEGOZIO_ID } from '@/lib/config'
 import styles from '@/styles/Reparti.module.css'
 
 const IVA_OPTIONS = [4, 10, 22]
+const NATURA_IVA_OPTIONS = [
+  { value: '', label: 'Nessuna (IVA standard)' },
+  { value: 'N1', label: 'N1 - Escluse ex art. 15' },
+  { value: 'N2', label: 'N2 - Non soggette' },
+  { value: 'N3', label: 'N3 - Non imponibili' },
+  { value: 'N4', label: 'N4 - Esenti' },
+  { value: 'N5', label: 'N5 - Regime del margine' },
+  { value: 'N6', label: 'N6 - Inversione contabile' },
+]
+
 
 const ICONE = {
   coffee:'☕', cake:'🍰', food:'🍽️', drink:'🥤', beer:'🍺',
@@ -24,7 +34,7 @@ const COLORI = [
 const emptyReparto = () => ({
   nome:'', colore:COLORI[0], icona:'coffee',
   iva:10, minimoImporto:0, massimoImporto:5000,
-  abilitato:true, ordine:0, sottoreparti:[]
+  natura_iva:'', abilitato:true, ordine:0, sottoreparti:[]
 })
 
 const emptySottoreparto = (ivaParent) => ({
@@ -90,7 +100,7 @@ export default function RepartiPage() {
   }
 
   function openEditReparto(r) {
-    setForm({ ...r })
+    setForm({ ...r, natura_iva: r.natura_iva || '' })
     setModal({ tipo:'reparto', mode:'edit', id:r.id })
   }
 
@@ -118,8 +128,9 @@ export default function RepartiPage() {
         colore: form.colore,
         icona: form.icona,
         iva: form.iva,
-        minimoImporto: form.minimoImporto,
+        minimoImporto: form.minimoImporto || 0,
         massimoImporto: form.massimoImporto,
+        natura_iva: form.natura_iva || '',
         abilitato: form.abilitato,
         ordine: form.ordine,
       }
@@ -242,7 +253,7 @@ export default function RepartiPage() {
                 <div>
                   <div className={styles.repartoNome}>{r.nome}</div>
                   <div className={styles.repartoMeta}>
-                    IVA {r.iva}% · max €{formatEuro(r.massimoImporto)} · {r.sottoreparti.length} prodotti
+                    {r.natura_iva ? <span style={{color:'#ffb830'}}>{r.natura_iva}</span> : `IVA ${r.iva}%`} · max €{formatEuro(r.massimoImporto)} · {r.sottoreparti.length} prodotti
                   </div>
                 </div>
               </div>
@@ -374,7 +385,7 @@ export default function RepartiPage() {
                   </label>
                 )}
                 {(modal.tipo === 'reparto' || (form.ivaOverride !== null && form.ivaOverride !== undefined)) && (
-                  <div className={styles.ivaGroup}>
+                  <div className={styles.ivaGroup} style={{opacity: form.natura_iva ? 0.3 : 1, pointerEvents: form.natura_iva ? 'none' : 'auto', transition:'opacity 0.2s'}}>
                     {IVA_OPTIONS.map(v => (
                       <button key={v}
                         className={`${styles.ivaBtn} ${ivaEffettiva === v ? styles.ivaActive : ''}`}
@@ -386,6 +397,11 @@ export default function RepartiPage() {
                         {v}%
                       </button>
                     ))}
+                  </div>
+                )}
+                {form.natura_iva && modal.tipo === 'reparto' && (
+                  <div style={{fontSize:'0.72rem', color:'#ffb830', marginTop:4}}>
+                    ⚠ Con natura {form.natura_iva} l'aliquota IVA non viene applicata
                   </div>
                 )}
               </div>
@@ -440,6 +456,34 @@ export default function RepartiPage() {
                 </div>
               )}
 
+              {modal.tipo === 'reparto' && (
+                <div className={styles.field}>
+                  <label>Natura IVA speciale (opzionale)</label>
+                  <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
+                    {NATURA_IVA_OPTIONS.map(n => (
+                      <button key={n.value}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, natura_iva: n.value }))}
+                        style={{
+                          padding:'5px 10px', borderRadius:8, border:'none', cursor:'pointer',
+                          fontSize:'0.72rem', fontFamily:"'DM Mono',monospace",
+                          background: (form.natura_iva || '') === n.value ? '#00e5a0' : '#1a1c24',
+                          color: (form.natura_iva || '') === n.value ? '#08090c' : '#eef0f6',
+                          fontWeight: (form.natura_iva || '') === n.value ? 700 : 400,
+                        }}
+                      >
+                        {n.value === '' ? '—' : n.value}
+                        {n.label !== 'Nessuna (IVA standard)' ? '' : ' std'}
+                      </button>
+                    ))}
+                  </div>
+                  {form.natura_iva && (
+                    <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:4}}>
+                      {NATURA_IVA_OPTIONS.find(n => n.value === form.natura_iva)?.label}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className={styles.field}>
                 <label className={styles.checkRow}>
                   <input type="checkbox"
