@@ -57,13 +57,11 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
   }
 
   async function salvaConfig() {
-    console.log('salvaConfig chiamato!', config)
     const { data: saveData, error } = await supabase
       .from('negozi')
       .update({ rt_config: { config, mappatura } })
       .eq('id', NEGOZIO_ID)
     
-    console.log('Risultato salvataggio:', saveData, error)
     if (error) { showToast('⚠ Errore: ' + error.message); return }
     showToast('✓ Configurazione RT salvata')
     if (onSave) onSave({ config, mappatura })

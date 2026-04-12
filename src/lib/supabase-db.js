@@ -265,6 +265,7 @@ export async function getChiusureDb(negozioId) {
     totaleContanti: c.totale_contanti,
     totaleIva: c.totale_iva,
     timestamp: c.timestamp_chiusura,
+    stato: c.stato || 'inviata',
   }))
 }
 

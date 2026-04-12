@@ -21,11 +21,10 @@ export default function StoricoPage() {
   const [storico, setStorico] = useState([])
   const [chiusure, setChiusure] = useState([])
   const [ricerca, setRicerca] = useState('')
-  const [filtroData, setFiltroData] = useState('')
+  const [filtroData, setFiltroData] = useState(new Date().toISOString().split('T')[0])
   const [filtroMetodo, setFiltroMetodo] = useState('tutti')
   const [selected, setSelected] = useState(null)
   const [tab, setTab] = useState('scontrini') // scontrini | chiusure
-  const [showChiusuraModal, setShowChiusuraModal] = useState(false)
   const [negozio, setNegozio] = useState({})
   const [toast, setToast] = useState('')
 
@@ -199,9 +198,7 @@ export default function StoricoPage() {
           <span>Storico Scontrini</span>
           <span className={styles.headerSub}>{storico.length} scontrini totali</span>
         </div>
-        <button className={styles.chiusuraBtn} onClick={() => setShowChiusuraModal(true)}>
-          🔒 Chiusura Fiscale
-        </button>
+        
       </header>
 
       {/* TABS */}
@@ -344,7 +341,19 @@ export default function StoricoPage() {
             {chiusure.map(c => (
               <div key={c.id} className={styles.chiusuraRow}>
                 <div className={styles.chiusuraLeft}>
-                  <div className={styles.chiusuraNum}>Chiusura #{c.numeroChiusura}</div>
+                  <div className={styles.chiusuraNum}>
+                    Chiusura #{c.numeroChiusura}
+                    {c.stato && c.stato !== 'inviata' && (
+                      <span style={{
+                        marginLeft:8, fontSize:'0.65rem', padding:'2px 8px',
+                        borderRadius:6,
+                        background: c.stato === 'non_inviata' ? 'rgba(255,184,48,0.15)' : 'rgba(100,130,255,0.15)',
+                        color: c.stato === 'non_inviata' ? '#ffb830' : '#6482ff'
+                      }}>
+                        {c.stato === 'non_inviata' ? '⚠ Non inviata RT' : '✎ Manuale'}
+                      </span>
+                    )}
+                  </div>
                   <div className={styles.chiusuraData}>{fmtData(c.timestamp)}</div>
                   <div className={styles.chiusuraMeta}>{c.numeroScontrini} scontrini</div>
                 </div>
@@ -370,50 +379,7 @@ export default function StoricoPage() {
       )}
 
       {/* MODAL CHIUSURA FISCALE */}
-      {showChiusuraModal && (
-        <div className={styles.overlay} onClick={() => setShowChiusuraModal(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <div className={styles.modalTitle}>🔒 Chiusura Fiscale</div>
-            </div>
-            <div className={styles.modalBody}>
-              <div className={styles.riepilogo}>
-                <div className={styles.riepilogoRow}>
-                  <span>Numero scontrini</span>
-                  <strong>{scontriniFiltrati.length}</strong>
-                </div>
-                <div className={styles.riepilogoRow}>
-                  <span>💳 Totale carte</span>
-                  <strong style={{color:'#6482ff'}}>€ {fmt(totaleCarte)}</strong>
-                </div>
-                <div className={styles.riepilogoRow}>
-                  <span>💵 Totale contanti</span>
-                  <strong style={{color:'#ff9f43'}}>€ {fmt(totaleContanti)}</strong>
-                </div>
-                {Object.entries(totaleIva).map(([iva, imp]) => (
-                  <div key={iva} className={styles.riepilogoRow}>
-                    <span>IVA {iva}%</span>
-                    <strong>€ {fmt(Math.round(imp * parseInt(iva) / (100 + parseInt(iva))))}</strong>
-                  </div>
-                ))}
-                <div className={styles.riepilogoTotale}>
-                  <span>TOTALE GIORNALIERO</span>
-                  <strong>€ {fmt(totaleGiornaliero)}</strong>
-                </div>
-              </div>
-              <div className={styles.modalNote}>
-                La chiusura verrà salvata nello storico e potrai stamparla o inviarla via email.
-              </div>
-            </div>
-            <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setShowChiusuraModal(false)}>Annulla</button>
-              <button className={styles.chiudiBtn} onClick={eseguiChiusura}>
-                ✓ Esegui chiusura
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {toast && <div className={styles.toast}>{toast}</div>}
     </div>
