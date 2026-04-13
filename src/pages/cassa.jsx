@@ -133,7 +133,7 @@ export default function CassaPage() {
     setShowConfirmAnnulla(false)
   }
 
-  function handleSuccesso(info) {
+  async function handleSuccesso(info) {
     // Salva nello storico su Supabase
     salvaScontrinoDb(NEGOZIO_ID, {
       timestamp: new Date().toISOString(),
@@ -148,6 +148,34 @@ export default function CassaPage() {
     setShowChiusura(false)
     setShowSuccesso(info)
     setRigheBackup([])
+
+    // Stampa su RT se configurato
+    if (rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0) {
+      try {
+        const righeConRt = scontrinoCorrente.righe.map(riga => ({
+          ...riga,
+          numeroRepartoRt: rtMappatura[riga.repartoId]?.numeroRt || 1,
+        }))
+        await fetch('/api/ditron', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ip: rtConfig.ip,
+            porta: rtConfig.porta,
+            azione: 'scontrino',
+            dati: {
+              righe: righeConRt,
+              metodo: info.metodo,
+              totale: info.totale,
+              resto: info.resto || 0,
+              contatto: info.contatto || null,
+            }
+          })
+        })
+      } catch(e) {
+        console.error('Errore stampa RT:', e)
+      }
+    }
   }
 
   return (
@@ -493,7 +521,8 @@ export default function CassaPage() {
       <PannelloRT
         rtConfig={rtConfig}
         mappatura={rtMappatura}
-        scontrino={showSuccesso}
+        scontrino={righe.length > 0 ? { righe, metodo: 'contanti', totale, resto: 0, contatto: null } : null}
+        onStampa={() => setShowChiusura(true)}
       />
     </div>
   )

@@ -41,6 +41,12 @@ export default function StoricoPage() {
     setTimeout(() => setToast(''), 2500)
   }
 
+  // Trova ultima chiusura del giorno selezionato
+  const chiusureDelGiorno = chiusure.filter(c => c.timestamp?.startsWith(filtroData))
+  const ultimaChiusuraDelGiorno = chiusureDelGiorno.length > 0
+    ? chiusureDelGiorno.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
+    : null
+
   // Filtra scontrini
   const scontriniFiltrati = storico.filter(s => {
     const dataOk = filtroData ? s.timestamp?.startsWith(filtroData) : true
@@ -50,7 +56,11 @@ export default function StoricoPage() {
         s.righe?.some(r => r.nome?.toLowerCase().includes(ricerca.toLowerCase())) ||
         s.contatto?.toLowerCase().includes(ricerca.toLowerCase())
       : true
-    return dataOk && metodoOk && testOk
+    // Mostra solo scontrini dopo l'ultima chiusura del giorno
+    const dopoChiusura = ultimaChiusuraDelGiorno
+      ? new Date(s.timestamp) > new Date(ultimaChiusuraDelGiorno.timestamp)
+      : true
+    return dataOk && metodoOk && testOk && dopoChiusura
   })
 
   // Totali filtrati
@@ -204,7 +214,7 @@ export default function StoricoPage() {
       {/* TABS */}
       <div className={styles.tabs}>
         <button className={`${styles.tab} ${tab === 'scontrini' ? styles.tabActive : ''}`} onClick={() => setTab('scontrini')}>
-          🧾 Scontrini ({storico.length})
+          🧾 Scontrini ({scontriniFiltrati.length})
         </button>
         <button className={`${styles.tab} ${tab === 'chiusure' ? styles.tabActive : ''}`} onClick={() => setTab('chiusure')}>
           🔒 Chiusure ({chiusure.length})

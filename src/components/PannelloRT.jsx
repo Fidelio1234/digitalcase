@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { NEGOZIO_ID } from '@/lib/config'
 
-export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose }) {
+export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, onStampa }) {
   const [loading, setLoading] = useState(false)
   const [conferma, setConferma] = useState(null)
   const [risultato, setRisultato] = useState(null)
@@ -30,7 +30,9 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose }) 
       setRisultato(data)
       return data
     } catch (e) {
-      setRisultato({ ok: false, error: e.message })
+      const result = { ok: false, error: e.message }
+      setRisultato(result)
+      return result
     } finally {
       setLoading(false)
     }
@@ -43,13 +45,17 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose }) 
       numeroRepartoRt: mappatura[riga.repartoId]?.numeroRt || 1,
       ivaIndice: mappatura[riga.repartoId]?.ivaIndice || 1,
     }))
-    await chiamaRT('scontrino', {
+    const res = await chiamaRT('scontrino', {
       righe: righeConRt,
       metodo: scontrino.metodo,
       totale: scontrino.totale,
       resto: scontrino.resto,
       contatto: scontrino.contatto,
     })
+    if (res?.ok && onStampa) {
+      setPannelloAperto(false)
+      onStampa()
+    }
   }
 
   function chiusuraFiscale(tipo) {
@@ -66,15 +72,27 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose }) 
   }
 
   async function salvaChiusura(stato) {
-    const oggi = new Date().toISOString().split('T')[0]
+    const ora = new Date().toISOString()
+    const oggi = ora.split('T')[0]
     
-    // Calcola totali scontrini di oggi
+    // Trova ultima chiusura per calcolare solo scontrini successivi
+    const { data: ultimaChiusura } = await supabase
+      .from('chiusure')
+      .select('timestamp_chiusura')
+      .eq('negozio_id', NEGOZIO_ID)
+      .order('timestamp_chiusura', { ascending: false })
+      .limit(1)
+      .single()
+
+    const dataFrom = ultimaChiusura?.timestamp_chiusura || (oggi + 'T00:00:00')
+
+    // Calcola totali scontrini dall'ultima chiusura
     const { data: scontrini } = await supabase
       .from('scontrini')
       .select('totale, metodo')
       .eq('negozio_id', NEGOZIO_ID)
-      .gte('timestamp_emissione', oggi + 'T00:00:00')
-      .lte('timestamp_emissione', oggi + 'T23:59:59')
+      .gt('timestamp_emissione', dataFrom)
+      .lte('timestamp_emissione', ora)
 
     const totaleGiornaliero = scontrini?.reduce((a, s) => a + s.totale, 0) || 0
     const totaleCarte = scontrini?.filter(s => s.metodo === 'carta').reduce((a, s) => a + s.totale, 0) || 0
@@ -94,7 +112,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose }) 
       negozio_id: NEGOZIO_ID,
       numero_chiusura: numChiusura,
       stato: stato,
-      timestamp_chiusura: new Date().toISOString(),
+      timestamp_chiusura: ora,
       numero_scontrini: numeroScontrini,
       totale_giornaliero: totaleGiornaliero,
       totale_carte: totaleCarte,
