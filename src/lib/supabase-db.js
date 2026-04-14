@@ -297,3 +297,82 @@ export async function incrementaContatore(negozioId, campo) {
     })
   return { ...contatori, [campo]: nuovoValore }
 }
+
+// ─── TAVOLI ──────────────────────────────────────────────────────────────────
+
+export async function getTavoliDb(negozioId) {
+  const { data, error } = await supabase
+    .from('tavoli')
+    .select('*')
+    .eq('negozio_id', negozioId)
+    .order('numero')
+  if (error) return []
+  return data.map(t => ({
+    id: t.id,
+    numero: t.numero,
+    stato: t.stato,
+    coperti: t.coperti || 0,
+    righe: t.righe || [],
+    ultimoOrdine: t.ultimo_ordine,
+    apertoAlle: t.aperto_alle,
+  }))
+}
+
+export async function salvaTavoloDb(negozioId, tavolo) {
+  const { error } = await supabase
+    .from('tavoli')
+    .upsert({
+      negozio_id: negozioId,
+      numero: tavolo.numero,
+      stato: tavolo.stato,
+      coperti: tavolo.coperti || 0,
+      righe: tavolo.righe || [],
+      ultimo_ordine: tavolo.ultimoOrdine || null,
+      aperto_alle: tavolo.apertoAlle || null,
+    }, { onConflict: 'negozio_id,numero' })
+  return !error
+}
+
+export async function chiudiTavoloDb(negozioId, numero) {
+  const { error } = await supabase
+    .from('tavoli')
+    .update({
+      stato: 'libero',
+      coperti: 0,
+      righe: [],
+      ultimo_ordine: null,
+      aperto_alle: null,
+    })
+    .eq('negozio_id', negozioId)
+    .eq('numero', numero)
+  return !error
+}
+
+export async function getImpostazioniDb(negozioId) {
+  const { data } = await supabase
+    .from('impostazioni_negozio')
+    .select('*')
+    .eq('negozio_id', negozioId)
+    .single()
+  return {
+    copertoAbilitato: data?.coperto_abilitato || false,
+    copertoImporto: data?.coperto_importo || 200,
+    numeroTavoli: data?.numero_tavoli || 10,
+  }
+}
+
+export async function salvaImpostazioniDb(negozioId, imp) {
+  const { error } = await supabase
+    .from('impostazioni_negozio')
+    .upsert({
+      negozio_id: negozioId,
+      coperto_abilitato: imp.copertoAbilitato,
+      coperto_importo: imp.copertoImporto,
+      numero_tavoli: imp.numeroTavoli,
+    }, { onConflict: 'negozio_id' })
+  return !error
+}
+
+// ─── TAVOLI ──────────────────────────────────────────────────────────────────
+
+

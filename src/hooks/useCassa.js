@@ -31,6 +31,10 @@ export function useCassa() {
     setErrore('')
   }, [])
 
+  const caricaRigheEsterne = useCallback((righeEserne) => {
+    setRighe(righeEserne)
+  }, [])
+
   const aggiungiRiga = useCallback((reparto, sottoreparto = null) => {
     const importo = sottoreparto ? sottoreparto.prezzoFisso : inputCents
     const nome = sottoreparto ? sottoreparto.nome : reparto.nome
@@ -137,7 +141,7 @@ export function useCassa() {
   return {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
-    aggiungiRiga, annullaUltima, eliminaRiga, annullaTutto,
+    aggiungiRiga, caricaRigheEsterne, annullaUltima, eliminaRiga, annullaTutto,
     chiudiScontrino, ripristinaRighe
   }
 }

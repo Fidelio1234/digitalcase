@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import ImpostazioniRT from '@/components/ImpostazioniRT'
+import ImpostazioniTavoli from '@/components/ImpostazioniTavoli'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabase'
@@ -427,6 +428,12 @@ export default function TechPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* ── TAVOLI ── */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>🍽️ Impostazioni Tavoli</div>
+          <ImpostazioniTavoli negozioId={NEGOZIO_ID} showToast={showToast} />
         </div>
 
         {/* ── REGISTRATORE TELEMATICO ── */}

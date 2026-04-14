@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import PannelloRT from '@/components/PannelloRT'
 import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
-import { salvaScontrinoDb } from '@/lib/supabase-db'
+import { salvaScontrinoDb, chiudiTavoloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { NEGOZIO_ID } from '@/lib/config'
 import { supabase } from '@/lib/supabase'
@@ -27,6 +27,8 @@ export default function CassaPage() {
   const [reparti, setReparti] = useState([])
   const [benvenuto, setBenvenuto] = useState(false)
   const [rtConfig, setRtConfig] = useState(null)
+  const tavoloCaricato = useRef(false)
+
   const [rtMappatura, setRtMappatura] = useState({})
   const [repartoAttivo, setRepartoAttivo] = useState(null)
   const [showChiusura, setShowChiusura] = useState(false)
@@ -40,7 +42,7 @@ export default function CassaPage() {
   const {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
-    aggiungiRiga, annullaUltima, annullaTutto, chiudiScontrino,
+    aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
     ripristinaRighe, eliminaRiga
   } = useCassa()
 
@@ -55,6 +57,19 @@ export default function CassaPage() {
     setContatori(getContatori())
     setTimeout(() => setBenvenuto(false), 3000)
   }, [user, router])
+
+  // Carica righe da tavolo quando la pagina si monta
+  useEffect(() => {
+    const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
+    console.log('Check tavolo:', tavoloDaChiudere)
+    if (tavoloDaChiudere) {
+      try {
+        const { righe } = JSON.parse(tavoloDaChiudere)
+        console.log('Righe tavolo trovate:', righe?.length)
+        setTimeout(() => caricaRigheEsterne(righe), 300)
+      } catch(e) { console.error(e) }
+    }
+  }, [])
 
   // Carica config RT separatamente
   useEffect(() => {
@@ -134,6 +149,16 @@ export default function CassaPage() {
   }
 
   async function handleSuccesso(info) {
+    // Chiudi tavolo su Supabase se scontrino viene da un tavolo
+    const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
+    if (tavoloDaChiudere) {
+      try {
+        const { numero } = JSON.parse(tavoloDaChiudere)
+        await chiudiTavoloDb(NEGOZIO_ID, numero)
+        sessionStorage.removeItem('tavolo_da_chiudere')
+      } catch(e) {}
+    }
+
     // Salva nello storico su Supabase
     salvaScontrinoDb(NEGOZIO_ID, {
       timestamp: new Date().toISOString(),
@@ -318,6 +343,17 @@ export default function CassaPage() {
             </div>
           )}
 
+          <button
+            onClick={() => router.push('/tavoli')}
+            style={{
+              padding:'8px 14px', background:'transparent',
+              border:'1px solid #252830', borderRadius:10,
+              color:'#5a5d6e', cursor:'pointer', fontSize:'0.78rem',
+              marginBottom:8, width:'100%'
+            }}
+          >
+            🍽️ Tavoli
+          </button>
           <button className={styles.chiudiBtn} onClick={handleChiudi} disabled={righe.length === 0}>
             Chiudi scontrino
             {righe.length > 0 && <span className={styles.chiudiBadge}>€ {fmt(totale)}</span>}
