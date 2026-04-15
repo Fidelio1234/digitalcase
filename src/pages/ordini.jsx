@@ -319,7 +319,7 @@ export default function OrdiniPage() {
         </button>
       </header>
 
-      <div style={{ padding:16, display:'flex', flexWrap:'wrap', gap:12 }}>
+      <div style={{ padding:16, display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(120px,1fr))', gap:12 }}>
         {tavoli.map(t => {
           const occupato = t.stato === 'occupato'
           const tempo = t.ultimoOrdine ? tempoTrascorso(t.ultimoOrdine) : null
