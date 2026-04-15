@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getTavoliDb, salvaTavoloDb, chiudiTavoloDb, getImpostazioniDb, getRepartiDb } from '@/lib/supabase-db'
+import { supabase } from '@/lib/supabase'
 import { NEGOZIO_ID } from '@/lib/config'
 
 const ICONE = {
@@ -37,6 +38,10 @@ export default function TavoliPage() {
   const [timer, setTimer] = useState(0)
   const [modalCoperti, setModalCoperti] = useState(null) // numero tavolo
   const [numCoperti, setNumCoperti] = useState(2)
+  const [modalElimina, setModalElimina] = useState(null) // numero tavolo
+  const [pinElimina, setPinElimina] = useState('')
+  const [pinErrore, setPinErrore] = useState(false)
+  const longPressTimer = useRef(null)
 
   useEffect(() => {
     if (!user && !loading) { router.replace('/login'); return }
@@ -64,6 +69,43 @@ export default function TavoliPage() {
     setImpostazioni(imp)
     setReparti(r.filter(r => r.abilitato))
     if (r.length > 0) setRepartoAttivo(r[0].id)
+  }
+
+  function startLongPress(tavolo) {
+    if (tavolo.stato !== 'occupato') return
+    longPressTimer.current = setTimeout(() => {
+      setModalElimina(tavolo.numero)
+      setPinElimina('')
+      setPinErrore(false)
+    }, 2000)
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  async function verificaPinEdElimina(pin) {
+    const { data: utenti } = await supabase
+      .from('utenti')
+      .select('pin, ruolo')
+      .eq('negozio_id', NEGOZIO_ID)
+      .eq('ruolo', 'owner')
+      .single()
+
+    if (!utenti || utenti.pin !== pin) {
+      setPinErrore(true)
+      setPinElimina('')
+      setTimeout(() => setPinErrore(false), 1500)
+      return
+    }
+
+    await chiudiTavoloDb(NEGOZIO_ID, modalElimina)
+    setModalElimina(null)
+    setPinElimina('')
+    await carica()
   }
 
   function apriTavolo(tavolo) {
@@ -211,12 +253,9 @@ export default function TavoliPage() {
           <div style={{ textAlign:'center', padding:'12px', background:'#1a1c24', borderRadius:12, marginBottom:8 }}>
             <div style={{ fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:2 }}>TAVOLO</div>
             <div style={{ fontSize:'2rem', fontWeight:700, color:'#00e5a0' }}>{tavoloAttivo}</div>
-            {impostazioni.copertoAbilitato && (
+            {impostazioni.copertoAbilitato && tavoloCorrente?.coperti > 0 && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:8 }}>
-                <span style={{ fontSize:'0.7rem', color:'#5a5d6e' }}>Coperti:</span>
-                <button onClick={() => { const t = tavoli.find(x => x.numero === tavoloAttivo); if(t && t.coperti > 0) { const updated = tavoli.map(x => x.numero === tavoloAttivo ? {...x, coperti: x.coperti - 1} : x); setTavoli(updated) }}} style={{ background:'#252830', border:'none', borderRadius:6, color:'#eef0f6', width:24, height:24, cursor:'pointer' }}>-</button>
-                <span style={{ fontSize:'0.9rem', fontWeight:700 }}>{tavoloCorrente?.coperti || 0}</span>
-                <button onClick={() => { const updated = tavoli.map(x => x.numero === tavoloAttivo ? {...x, coperti: (x.coperti||0) + 1} : x); setTavoli(updated) }} style={{ background:'#252830', border:'none', borderRadius:6, color:'#eef0f6', width:24, height:24, cursor:'pointer' }}>+</button>
+                <span style={{ fontSize:'0.7rem', color:'#5a5d6e' }}>👤 {tavoloCorrente.coperti} coperti</span>
               </div>
             )}
           </div>
@@ -272,7 +311,7 @@ export default function TavoliPage() {
                       <div style={{ fontSize:'0.7rem', color:'#5a5d6e' }}>€ {fmt(r.importo)} cad.</div>
                     </div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:600 }}>€ {fmt(r.totaleRiga)}</div>
-                    <button onClick={() => eliminaRiga(r.id)} style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>✕</button>
+                    {r.id !== 'coperto' && <button onClick={() => eliminaRiga(r.id)} style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>✕</button>}
                   </div>
                 ))}
                 <div style={{ display:'flex', justifyContent:'space-between', padding:'12px 0', fontWeight:700, fontSize:'0.9rem' }}>
@@ -368,6 +407,58 @@ export default function TavoliPage() {
     )
   }
 
+  // MODAL ELIMINA COMANDA
+  if (modalElimina !== null) {
+    return (
+      <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600 }}>
+        <div style={{
+          background:'#111318', border:'1px solid #ff4d6a44',
+          borderRadius:20, padding:28, width:320,
+          display:'flex', flexDirection:'column', gap:16, alignItems:'center'
+        }}>
+          <div style={{ fontSize:'1rem', fontWeight:700, color:'#ff4d6a' }}>🗑️ Elimina Tavolo {modalElimina}</div>
+          <div style={{ fontSize:'0.82rem', color:'#5a5d6e', textAlign:'center' }}>Inserisci il PIN del titolare per eliminare la comanda</div>
+
+          {/* Display PIN */}
+          <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
+            {[0,1,2,3].map(i => (
+              <div key={i} style={{
+                width:12, height:12, borderRadius:'50%',
+                background: i < pinElimina.length ? (pinErrore ? '#ff4d6a' : '#00e5a0') : '#252830',
+                transition:'background 0.2s'
+              }} />
+            ))}
+          </div>
+
+          {pinErrore && <div style={{ fontSize:'0.78rem', color:'#ff4d6a' }}>PIN errato</div>}
+
+          {/* Tastiera */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, width:'100%' }}>
+            {[1,2,3,4,5,6,7,8,9].map(n => (
+              <button key={n}
+                onClick={() => { if(pinElimina.length < 4) { const nuovo = pinElimina + n; setPinElimina(nuovo); if(nuovo.length === 4) setTimeout(() => verificaPinEdElimina(nuovo), 100) }}}
+                style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>
+                {n}
+              </button>
+            ))}
+            <button onClick={() => setModalElimina(null)}
+              style={{ padding:'14px', background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#5a5d6e', fontSize:'0.8rem', cursor:'pointer' }}>
+              ✕
+            </button>
+            <button onClick={() => { if(pinElimina.length < 4) { const nuovo = pinElimina + '0'; setPinElimina(nuovo); if(nuovo.length === 4) setTimeout(() => verificaPinEdElimina(nuovo), 100) }}}
+              style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>
+              0
+            </button>
+            <button onClick={() => setPinElimina(p => p.slice(0,-1))}
+              style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'0.9rem', cursor:'pointer' }}>
+              ⌫
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // VISTA GRIGLIA TAVOLI
   return (
     <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans', sans-serif" }}>
@@ -388,7 +479,13 @@ export default function TavoliPage() {
             const tempo = t.ultimoOrdine ? tempoTrascorso(t.ultimoOrdine) : null
             const totTavolo = t.righe?.reduce((s, r) => s + r.totaleRiga, 0) || 0
             return (
-              <button key={t.numero} onClick={() => apriTavolo(t)}
+              <button key={t.numero}
+                onClick={() => { cancelLongPress(); apriTavolo(t) }}
+                onMouseDown={() => startLongPress(t)}
+                onMouseUp={cancelLongPress}
+                onMouseLeave={cancelLongPress}
+                onTouchStart={() => startLongPress(t)}
+                onTouchEnd={() => { cancelLongPress(); apriTavolo(t) }}
                 style={{
                   padding:16, borderRadius:16, cursor:'pointer', textAlign:'left',
                   background: occupato ? 'rgba(255,77,106,0.1)' : 'rgba(0,229,160,0.05)',

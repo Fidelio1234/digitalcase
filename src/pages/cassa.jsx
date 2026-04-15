@@ -346,13 +346,16 @@ export default function CassaPage() {
           <button
             onClick={() => router.push('/tavoli')}
             style={{
-              padding:'8px 14px', background:'transparent',
-              border:'1px solid #252830', borderRadius:10,
-              color:'#5a5d6e', cursor:'pointer', fontSize:'0.78rem',
-              marginBottom:8, width:'100%'
+              width:60, height:60, background:'#ffffff',
+              border:'none', borderRadius:10,
+              color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem',
+              fontWeight:700, marginBottom:8,
+              display:'flex', flexDirection:'column',
+              alignItems:'center', justifyContent:'center', gap:2,
             }}
           >
-            🍽️ Tavoli
+            <span style={{fontSize:'1.4rem'}}>🍽️</span>
+            <span>Tavoli</span>
           </button>
           <button className={styles.chiudiBtn} onClick={handleChiudi} disabled={righe.length === 0}>
             Chiudi scontrino
