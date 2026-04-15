@@ -234,7 +234,7 @@ export default function OrdiniPage() {
         {/* Header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderBottom:'1px solid #1a1c24', position:'sticky', top:0, zIndex:100 }}>
           <button onClick={() => { setVista('griglia'); carica() }}
-            style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#5a5d6e', padding:'8px 14px', cursor:'pointer', fontSize:'0.82rem' }}>
+            style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 14px', cursor:'pointer', fontSize:'0.82rem' }}>
             ← Tavoli
           </button>
           <div style={{ fontWeight:700 }}>🍽️ Tavolo {tavoloAttivo}</div>
@@ -261,7 +261,7 @@ export default function OrdiniPage() {
               <button key={sr.id} onClick={() => aggiungiProdotto(repAttivo, sr)}
                 style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, active:{transform:'scale(0.95)'} }}>
                 <div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500, textAlign:'center', lineHeight:1.2 }}>{sr.nome}</div>
-                <div style={{ fontSize:'0.82rem', fontWeight:700, color:repAttivo.colore }}>€ {fmt(sr.prezzoFisso)}</div>
+
               </button>
             ))}
           </div>
@@ -276,7 +276,7 @@ export default function OrdiniPage() {
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:'0.85rem', display:'flex', alignItems:'center', gap:6 }}>
                     {r.nome}
-                    {r.quantita > 1 && <span style={{ color:'#5a5d6e', fontSize:'0.75rem' }}>×{r.quantita}</span>}
+                    {r.quantita > 1 && <span style={{ color:'#ffffff', fontSize:'0.85rem', fontWeight:600 }}>×{r.quantita}</span>}
                     <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
                       style={{ background:'transparent', border:'none', cursor:'pointer', fontSize:'0.8rem', color: r.nota ? '#ffb830' : '#5a5d6e', padding:'0 4px' }}
                       title="Aggiungi nota">
@@ -290,16 +290,13 @@ export default function OrdiniPage() {
                     style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
                   <button onClick={() => aggiornaQuantita(r.id, 1)}
                     style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
-                  <div style={{ fontSize:'0.82rem', fontFamily:"'DM Mono',monospace", minWidth:50, textAlign:'right' }}>€ {fmt(r.totaleRiga)}</div>
+
                   {r.id !== 'coperto' && <button onClick={() => eliminaRiga(r.id)}
-                    style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>✕</button>}
+                    style={{ background:'transparent', border:'none', color:'#ffffff', cursor:'pointer', fontSize:'1rem' }}>✕</button>}
                 </div>
               </div>
             ))}
-            <div style={{ display:'flex', justifyContent:'space-between', padding:'10px 0 0', fontWeight:700 }}>
-              <span style={{ color:'#5a5d6e', fontSize:'0.82rem' }}>TOTALE</span>
-              <span style={{ color:'#00e5a0', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totale)}</span>
-            </div>
+
           </div>
         )}
       </div>
