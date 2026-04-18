@@ -160,9 +160,17 @@ export default function OrdiniPage() {
 
     // Calcola solo le nuove righe
     const righeVecchie = tavoloCorrente?.righe || []
-    const righeNuove = righeComanda.filter(r =>
-      !righeVecchie.some(v => v.id === r.id)
-    )
+    const righeNuove = righeComanda.filter(r => {
+      const vecchia = righeVecchie.find(v => v.id === r.id)
+      if (!vecchia) return true
+      if (r.id === 'coperto') return false
+      return r.quantita > vecchia.quantita
+    }).map(r => {
+      const vecchia = righeVecchie.find(v => v.id === r.id)
+      if (!vecchia) return r
+      const diff = r.quantita - vecchia.quantita
+      return { ...r, quantita: diff, totaleRiga: r.importo * diff }
+    })
 
     await salvaTavoloDb(NEGOZIO_ID, {
       numero: tavoloAttivo,

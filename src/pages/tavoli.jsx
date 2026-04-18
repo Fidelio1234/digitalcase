@@ -208,11 +208,20 @@ export default function TavoliPage() {
     const tavolo = tavoli.find(t => t.numero === tavoloAttivo)
     const ora = new Date().toISOString()
     
-    // Calcola solo le nuove righe (non già salvate)
+    // Calcola solo le righe nuove o con quantità aumentata
     const righeVecchie = tavolo.righe || []
-    const righeNuove = righeComanda.filter(r => 
-      !righeVecchie.some(v => v.id === r.id)
-    )
+    const righeNuove = righeComanda.filter(r => {
+      const vecchia = righeVecchie.find(v => v.id === r.id)
+      if (!vecchia) return true // riga nuova
+      if (r.id === 'coperto') return false // coperto non si ristampa
+      return r.quantita > vecchia.quantita // quantità aumentata
+    }).map(r => {
+      const vecchia = righeVecchie.find(v => v.id === r.id)
+      if (!vecchia) return r
+      // Stampa solo la differenza di quantità
+      const diff = r.quantita - vecchia.quantita
+      return { ...r, quantita: diff, totaleRiga: r.importo * diff }
+    })
 
     const aggiornato = {
       ...tavolo,
