@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getTavoliDb, salvaTavoloDb, chiudiTavoloDb, getImpostazioniDb, getRepartiDb } from '@/lib/supabase-db'
+import { stampaComanda } from '@/lib/stampante'
 import { supabase } from '@/lib/supabase'
 import { NEGOZIO_ID } from '@/lib/config'
-
 const ICONE = {
   coffee:'☕', beer:'🍺', wine:'🍷', cocktail:'🍹', pizza:'🍕',
   sandwich:'🥪', icecream:'🍦', candy:'🍬', croissant:'🥐',
@@ -207,6 +207,13 @@ export default function TavoliPage() {
   async function inviaComanda() {
     const tavolo = tavoli.find(t => t.numero === tavoloAttivo)
     const ora = new Date().toISOString()
+    
+    // Calcola solo le nuove righe (non già salvate)
+    const righeVecchie = tavolo.righe || []
+    const righeNuove = righeComanda.filter(r => 
+      !righeVecchie.some(v => v.id === r.id)
+    )
+
     const aggiornato = {
       ...tavolo,
       numero: tavoloAttivo,
@@ -216,9 +223,19 @@ export default function TavoliPage() {
       apertoAlle: tavolo.apertoAlle || ora,
     }
     await salvaTavoloDb(NEGOZIO_ID, aggiornato)
+
+    // Stampa comanda solo con le nuove righe
+    if (righeNuove.length > 0) {
+      await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti)
+    }
+
     await carica()
     setVista('griglia')
     setTavoloAttivo(null)
+  }
+
+  async function stampaPreconto() {
+    await stampaComanda(tavoloAttivo, righeComanda, 'preconto', reparti)
   }
 
   async function chiudiTavolo() {
@@ -280,9 +297,14 @@ export default function TavoliPage() {
           {/* Bottoni azione */}
           <div style={{ marginTop:'auto', display:'flex', flexDirection:'column', gap:8 }}>
             {totale > 0 && (
-              <button onClick={chiudiTavolo} style={{ padding:'12px', background:'#ff4d6a', border:'none', borderRadius:12, color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
-                💳 Chiudi tavolo
-              </button>
+              <>
+                <button onClick={stampaPreconto} style={{ padding:'12px', background:'#ffb830', border:'none', borderRadius:12, color:'#08090c', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
+                  🧾 Preconto
+                </button>
+                <button onClick={chiudiTavolo} style={{ padding:'12px', background:'#ff4d6a', border:'none', borderRadius:12, color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
+                  💳 Chiudi tavolo
+                </button>
+              </>
             )}
             <button onClick={inviaComanda} disabled={righeComanda.length === 0} style={{ padding:'12px', background: righeComanda.length === 0 ? '#1a1c24' : '#00e5a0', border:'none', borderRadius:12, color: righeComanda.length === 0 ? '#5a5d6e' : '#08090c', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.85rem' }}>
               ✓ Invia comanda

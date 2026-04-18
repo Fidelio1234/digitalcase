@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getTavoliDb, salvaTavoloDb, getRepartiDb, getImpostazioniDb } from '@/lib/supabase-db'
+import { stampaComanda } from '@/lib/stampante'
 import { NEGOZIO_ID } from '@/lib/config'
 
 const ICONE = {
@@ -41,9 +42,13 @@ export default function OrdiniPage() {
   const [timer, setTimer] = useState(0)
 
   useEffect(() => {
-    if (!user && !loading) { router.replace('/login'); return }
+    if (loading) return
+    if (!user) {
+      router.replace('/login')
+      return
+    }
     carica()
-  }, [user])
+  }, [user, loading])
 
   useEffect(() => {
     const interval = setInterval(() => setTimer(t => t + 1), 30000)
@@ -51,6 +56,7 @@ export default function OrdiniPage() {
   }, [])
 
   async function carica() {
+    console.log('Carico tavoli...')
     const [t, imp, r] = await Promise.all([
       getTavoliDb(NEGOZIO_ID),
       getImpostazioniDb(NEGOZIO_ID),
@@ -151,6 +157,13 @@ export default function OrdiniPage() {
   async function inviaComanda() {
     if (righeComanda.length === 0) return
     const ora = new Date().toISOString()
+
+    // Calcola solo le nuove righe
+    const righeVecchie = tavoloCorrente?.righe || []
+    const righeNuove = righeComanda.filter(r =>
+      !righeVecchie.some(v => v.id === r.id)
+    )
+
     await salvaTavoloDb(NEGOZIO_ID, {
       numero: tavoloAttivo,
       stato: 'occupato',
@@ -159,6 +172,12 @@ export default function OrdiniPage() {
       ultimoOrdine: ora,
       apertoAlle: tavoloCorrente?.apertoAlle || ora,
     })
+
+    // Stampa comanda
+    if (righeNuove.length > 0) {
+      await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti)
+    }
+
     setInvioOk(true)
     setTimeout(() => {
       setInvioOk(false)

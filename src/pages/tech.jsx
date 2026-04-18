@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import ImpostazioniRT from '@/components/ImpostazioniRT'
 import ImpostazioniTavoli from '@/components/ImpostazioniTavoli'
+import ImpostazioniStampanti from '@/components/ImpostazioniStampanti'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabase'
@@ -437,6 +438,10 @@ export default function TechPage() {
         </div>
 
         {/* ── REGISTRATORE TELEMATICO ── */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>🖨️ Stampanti Comande</div>
+          <ImpostazioniStampanti reparti={reparti} showToast={showToast} />
+        </div>
         <div className={styles.section}>
           <div className={styles.sectionTitle}>🖨️ Registratore Telematico</div>
           <ImpostazioniRT

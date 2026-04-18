@@ -34,7 +34,7 @@ const COLORI = [
 const emptyReparto = () => ({
   nome:'', colore:COLORI[0], icona:'coffee',
   iva:10, minimoImporto:0, massimoImporto:5000,
-  natura_iva:'', abilitato:true, ordine:0, sottoreparti:[]
+  natura_iva:'', uscita:1, abilitato:true, ordine:0, sottoreparti:[]
 })
 
 const emptySottoreparto = (ivaParent) => ({
@@ -131,6 +131,7 @@ export default function RepartiPage() {
         minimoImporto: form.minimoImporto || 0,
         massimoImporto: form.massimoImporto,
         natura_iva: form.natura_iva || '',
+        uscita: form.uscita || 1,
         abilitato: form.abilitato,
         ordine: form.ordine,
       }
@@ -456,6 +457,25 @@ export default function RepartiPage() {
                 </div>
               )}
 
+              {modal.tipo === 'reparto' && (
+                <div className={styles.field}>
+                  <label>Uscita comanda</label>
+                  <div style={{display:'flex', gap:8}}>
+                    {[1,2,3].map(n => (
+                      <button key={n} type="button"
+                        onClick={() => setForm(f => ({...f, uscita: n}))}
+                        style={{
+                          flex:1, padding:'8px', borderRadius:8, border:'none', cursor:'pointer',
+                          background: (form.uscita || 1) === n ? '#00e5a0' : '#1a1c24',
+                          color: (form.uscita || 1) === n ? '#08090c' : '#eef0f6',
+                          fontSize:'0.82rem', fontWeight: (form.uscita || 1) === n ? 700 : 400,
+                        }}>
+                        {n}ª uscita
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {modal.tipo === 'reparto' && (
                 <div className={styles.field}>
                   <label>Natura IVA speciale (opzionale)</label>

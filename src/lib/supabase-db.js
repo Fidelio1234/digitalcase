@@ -123,6 +123,7 @@ export async function saveRepartoDb(negozioId, reparto) {
       minimo_importo: reparto.minimoImporto || 0,
       massimo_importo: reparto.massimoImporto,
       natura_iva: reparto.natura_iva || '',
+      uscita: reparto.uscita || 1,
       abilitato: reparto.abilitato,
       ordine: reparto.ordine,
     })
@@ -319,17 +320,29 @@ export async function getTavoliDb(negozioId) {
 }
 
 export async function salvaTavoloDb(negozioId, tavolo) {
-  const { error } = await supabase
+  const payload = {
+    negozio_id: negozioId,
+    numero: tavolo.numero,
+    stato: tavolo.stato,
+    coperti: tavolo.coperti || 0,
+    righe: tavolo.righe || [],
+    ultimo_ordine: tavolo.ultimoOrdine || null,
+    aperto_alle: tavolo.apertoAlle || null,
+  }
+
+  // Prova UPDATE prima, se non trova righe fa INSERT
+  const { data: updated, error: updateError } = await supabase
     .from('tavoli')
-    .upsert({
-      negozio_id: negozioId,
-      numero: tavolo.numero,
-      stato: tavolo.stato,
-      coperti: tavolo.coperti || 0,
-      righe: tavolo.righe || [],
-      ultimo_ordine: tavolo.ultimoOrdine || null,
-      aperto_alle: tavolo.apertoAlle || null,
-    }, { onConflict: 'negozio_id,numero' })
+    .update(payload)
+    .eq('negozio_id', negozioId)
+    .eq('numero', tavolo.numero)
+    .select('id')
+
+  let error = updateError
+  if (!updateError && (!updated || updated.length === 0)) {
+    const res = await supabase.from('tavoli').insert({ ...payload })
+    error = res.error
+  }
   return !error
 }
 
