@@ -54,6 +54,18 @@ export function NegozioProvider({ children }) {
         return
       }
 
+      // Controlla scadenza licenza
+      if (data.data_scadenza) {
+        const scadenza = new Date(data.data_scadenza)
+        const ora = new Date()
+        if (scadenza < ora) {
+          data.scaduto = true
+        } else {
+          data.scaduto = false
+          // Calcola giorni rimanenti
+          data.giorniRimanenti = Math.ceil((scadenza - ora) / (1000 * 60 * 60 * 24))
+        }
+      }
       setNegozio(data)
     } catch(e) {
       setErrore(e.message)

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
+import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
 import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
 import { salvaScontrinoDb, chiudiTavoloDb } from '@/lib/supabase-db'
@@ -23,6 +24,7 @@ function fmt(cents) {
 
 export default function CassaPage() {
   const NEGOZIO_ID = useNegozioId()
+  const { negozio } = useNegozio() || {}
   const { user, logout, loading } = useAuth()
   const router = useRouter()
   const [reparti, setReparti] = useState([])
@@ -207,6 +209,16 @@ export default function CassaPage() {
   return (
     <div className={styles.page}>
 
+      {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
+        <div style={{
+          background:'#ffb83022', borderBottom:'2px solid #ffb830',
+          padding:'10px 16px', textAlign:'center',
+          fontSize:'0.82rem', color:'#ffb830',
+          fontFamily:"'DM Mono',monospace"
+        }}>
+          ⚠️ Licenza in scadenza tra <strong>{negozio.giorniRimanenti} giorni</strong> ({new Date(negozio.data_scadenza).toLocaleDateString('it-IT')}) — contatta il rivenditore
+        </div>
+      )}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.logoMark}>🧾</div>
