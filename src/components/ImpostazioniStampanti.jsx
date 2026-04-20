@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 
 const GRUPPI_DEFAULT = [
   { id: 'tutto', label: 'Tutto' },
@@ -10,6 +10,7 @@ const GRUPPI_DEFAULT = [
 ]
 
 export default function ImpostazioniStampanti({ reparti, showToast }) {
+  const NEGOZIO_ID = useNegozioId()
   const [stampanti, setStampanti] = useState([])
   const [loading, setLoading] = useState(true)
 

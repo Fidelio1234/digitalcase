@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { getTavoliDb, salvaTavoloDb, chiudiTavoloDb, getImpostazioniDb, getRepartiDb } from '@/lib/supabase-db'
 import { stampaComanda } from '@/lib/stampante'
 import { supabase } from '@/lib/supabase'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 const ICONE = {
   coffee:'☕', beer:'🍺', wine:'🍷', cocktail:'🍹', pizza:'🍕',
   sandwich:'🥪', icecream:'🍦', candy:'🍬', croissant:'🥐',
@@ -25,6 +25,7 @@ function tempoTrascorso(iso) {
 }
 
 export default function TavoliPage() {
+  const NEGOZIO_ID = useNegozioId()
   const { user, loading } = useAuth()
   const router = useRouter()
   const [tavoli, setTavoli] = useState([])

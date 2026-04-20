@@ -11,7 +11,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 
 // Aliquote IVA standard Ditron (configurabili sulla cassa)
 const IVA_DITRON_DEFAULT = [
@@ -26,6 +26,7 @@ const IVA_DITRON_DEFAULT = [
 ]
 
 export default function ImpostazioniRT({ reparti, onSave, showToast }) {
+  const NEGOZIO_ID = useNegozioId()
   const [config, setConfig] = useState({
     marca: 'ditron',
     ip: '',

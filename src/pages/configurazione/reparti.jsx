@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { formatEuro, parseEuro } from '@/lib/storage'
 import { getRepartiDb, saveRepartoDb, saveProdottoDb, deleteRepartoDb, deleteProdottoDb } from '@/lib/supabase-db'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Reparti.module.css'
 
 const IVA_OPTIONS = [4, 10, 22]
@@ -67,6 +67,7 @@ function EuroInput({ valueCents, onChange, placeholder }) {
 }
 
 export default function RepartiPage() {
+  const NEGOZIO_ID = useNegozioId()
   const { user } = useAuth()
   const router = useRouter()
   const [reparti, setReparti] = useState([])

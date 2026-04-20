@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getTavoliDb, salvaTavoloDb, getRepartiDb, getImpostazioniDb } from '@/lib/supabase-db'
 import { stampaComanda } from '@/lib/stampante'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 
 const ICONE = {
   coffee:'☕', beer:'🍺', wine:'🍷', cocktail:'🍹', pizza:'🍕',
@@ -25,6 +25,7 @@ function tempoTrascorso(iso) {
 }
 
 export default function OrdiniPage() {
+  const NEGOZIO_ID = useNegozioId()
   const { user, loading } = useAuth()
   const router = useRouter()
   const [tavoli, setTavoli] = useState([])

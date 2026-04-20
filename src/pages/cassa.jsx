@@ -5,7 +5,7 @@ import PannelloRT from '@/components/PannelloRT'
 import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
 import { salvaScontrinoDb, chiudiTavoloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
 import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
@@ -22,6 +22,7 @@ function fmt(cents) {
 }
 
 export default function CassaPage() {
+  const NEGOZIO_ID = useNegozioId()
   const { user, logout, loading } = useAuth()
   const router = useRouter()
   const [reparti, setReparti] = useState([])

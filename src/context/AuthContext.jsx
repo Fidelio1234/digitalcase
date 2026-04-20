@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { NEGOZIO_ID } from '@/lib/config'
+import { NEGOZIO_ID as NEGOZIO_ID_DEFAULT } from '@/lib/config'
 
 const AuthContext = createContext(null)
 
-export function AuthProvider({ children }) {
+export function AuthProvider({ children, negozioId }) {
+  const NEGOZIO_ID = negozioId || NEGOZIO_ID_DEFAULT
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [utenti, setUtenti] = useState([])

@@ -5,10 +5,11 @@ import ImpostazioniStampanti from '@/components/ImpostazioniStampanti'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabase'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Tech.module.css'
 
 export default function TechPage() {
+  const NEGOZIO_ID = useNegozioId()
   const router = useRouter()
   const { loadUtenti } = useAuth()
   const [utenti, setUtenti] = useState([])

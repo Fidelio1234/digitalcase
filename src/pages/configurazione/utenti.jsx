@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/router'
 import { getUtenti, saveUtenti, generateId } from '@/lib/storage'
@@ -16,6 +16,7 @@ const emptyUtente = () => ({
 })
 
 export default function UtentiPage() {
+  const NEGOZIO_ID = useNegozioId()
   const { user, login } = useAuth()
   const router = useRouter()
   const [utenti, setUtenti] = useState([])

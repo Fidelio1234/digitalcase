@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getNegozio, getContatori } from '@/lib/storage'
 import { getStoricoDb, salvaChiusuraDb, getChiusureDb } from '@/lib/supabase-db'
-import { NEGOZIO_ID } from '@/lib/config'
+import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Storico.module.css'
 
 function fmt(cents) {
@@ -16,6 +16,7 @@ function fmtData(iso) {
 }
 
 export default function StoricoPage() {
+  const NEGOZIO_ID = useNegozioId()
   const { user, loading } = useAuth()
   const router = useRouter()
   const [storico, setStorico] = useState([])
