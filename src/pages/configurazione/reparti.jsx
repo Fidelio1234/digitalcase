@@ -132,6 +132,7 @@ export default function RepartiPage() {
         minimoImporto: form.minimoImporto || 0,
         massimoImporto: form.massimoImporto,
         natura_iva: form.natura_iva || '',
+        barcode: form.barcode || '',
         uscita: form.uscita || 1,
         abilitato: form.abilitato,
         ordine: form.ordine,
@@ -427,6 +428,21 @@ export default function RepartiPage() {
                 </div>
               </div>
 
+              {modal.tipo === 'sottoreparto' && (
+                <div className={styles.field}>
+                  <label>Codice a barre (opzionale)</label>
+                  <input
+                    id="barcode-input"
+                    type="text"
+                    value={form.barcode || ''}
+                    onChange={e => setForm(f => ({...f, barcode: e.target.value}))}
+                    onFocus={e => e.target.select()}
+                    placeholder="Scansiona con lo scanner o inserisci manualmente"
+                    className={styles.input}
+                    style={{fontFamily:"'DM Mono',monospace", letterSpacing:2}}
+                  />
+                </div>
+              )}
               {modal.tipo === 'reparto' && (
                 <div className={styles.field}>
                   <label>Colore</label>

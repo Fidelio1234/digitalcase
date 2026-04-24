@@ -54,7 +54,7 @@ function buildComanda(tavolo, righe, tipo = 'comanda', uscita = null, totaleUsci
     doc += LEFT + '--------------------------------\n'
     doc += CENTER + '\n'
     doc += BOLD_ON + '*** RITIRARE LO SCONTRINO ALLA CASSA ***\n'
-    doc +=  + BOLD_OFF
+    doc += + BOLD_OFF
   }
 
   doc += FEED + FEED + FEED

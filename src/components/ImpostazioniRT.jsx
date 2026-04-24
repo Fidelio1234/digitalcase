@@ -115,6 +115,8 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
             style={{width:'100%', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem'}}
           >
             <option value="ditron">Ditron</option>
+            <option value="rch">RCH Print!F/RT</option>
+            <option value="3i">3i Solution RT</option>
             <option value="rch">RCH Print F</option>
             <option value="3i">3i Solution</option>
           </select>

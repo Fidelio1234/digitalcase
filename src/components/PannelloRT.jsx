@@ -21,11 +21,43 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
     setLoading(true)
     setRisultato(null)
     try {
-      const res = await fetch('/api/ditron', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta, azione, dati })
-      })
+      let res
+
+      if (rtConfig.marca === 'rch') {
+        // RCH — costruisci comandi XML
+        let comandi = []
+        if (azione === 'chiusura_fiscale') {
+          comandi = ['=C3', '=C10']
+        } else if (azione === 'lettura_x') {
+          comandi = ['=C2', '=C10']
+        } else if (azione === 'annullo') {
+          comandi = ['=a']
+        } else if (azione === 'scontrino' && dati?.righe) {
+          const mappatura = rtConfig.mappatura || {}
+          for (const riga of dati.righe) {
+            const ivaIndice = mappatura[riga.repartoId]?.ivaIndice || 1
+            const importoCents = Math.round(riga.importo)
+            const descr = (riga.nome || '').replace(/[()\/]/g, ' ').substring(0, 36)
+            if (riga.quantita > 1) comandi.push(`=R${ivaIndice}/$${importoCents}/*${riga.quantita}/(${descr})`)
+            else comandi.push(`=R${ivaIndice}/$${importoCents}/(${descr})`)
+          }
+          if (dati.metodo === 'carta') comandi.push('=T4')
+          else comandi.push('=T1')
+        }
+        res = await fetch('/api/rch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
+        })
+      } else {
+        // Ditron — TCP
+        res = await fetch('/api/ditron', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta, azione, dati })
+        })
+      }
+
       const data = await res.json()
       setRisultato(data)
       return data

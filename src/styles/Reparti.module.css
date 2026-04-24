@@ -193,7 +193,7 @@
 }
 .modalTitle { font-family: 'Unbounded', sans-serif; font-size: 0.9rem; font-weight: 700; }
 .modalClose {
-  background: transparent; border: none; color: var(--muted);
+  background: transparent; border: none; color: red;
   cursor: pointer; font-size: 1rem; padding: 4px 8px;
   transition: color 0.2s;
 }
@@ -266,7 +266,7 @@
 .cancelBtn {
   flex: 1; padding: 12px; border-radius: 10px;
   border: 1px solid var(--border); background: transparent;
-  color: var(--muted); font-family: 'DM Mono', monospace;
+  color: red; font-family: 'DM Mono', monospace;
   font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
 }
 .cancelBtn:hover { border-color: var(--text); color: var(--text); }
@@ -288,3 +288,32 @@
   animation: toastIn 0.3s ease;
 }
 @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px) } to { opacity: 1; transform: translateX(-50%) translateY(0) } }
+
+.input {
+  background: #1a1c24;
+  border: 1px solid #252830;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-family: 'DM Mono', monospace;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input:focus {
+  border-color: #00e5a0;
+}
+.input::placeholder {
+  color: #5a5d6e;
+}
+
+.field label {
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 6px;
+}

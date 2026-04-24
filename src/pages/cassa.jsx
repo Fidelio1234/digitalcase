@@ -49,6 +49,46 @@ export default function CassaPage() {
     ripristinaRighe, eliminaRiga
   } = useCassa()
 
+  // Intercetta scanner barcode (input rapido da tastiera)
+  useEffect(() => {
+    let buffer = ''
+    let timer = null
+
+    function handleKeyDown(e) {
+      // Ignora se si sta scrivendo in un input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+
+      if (e.key === 'Enter') {
+        if (buffer.length > 3) {
+          cercaProdottoBarcode(buffer)
+        }
+        buffer = ''
+        if (timer) clearTimeout(timer)
+        return
+      }
+
+      if (e.key.length === 1) {
+        buffer += e.key
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => { buffer = '' }, 100)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [reparti])
+
+  function cercaProdottoBarcode(barcode) {
+    for (const reparto of reparti) {
+      const prodotto = reparto.sottoreparti?.find(p => p.barcode === barcode)
+      if (prodotto) {
+        aggiungiRiga(reparto, prodotto)
+        return
+      }
+    }
+    console.warn('Barcode non trovato:', barcode)
+  }
+
   useEffect(() => {
     if (!user && !loading) { router.replace('/login'); return }
     async function loadReparti() {
@@ -180,26 +220,73 @@ export default function CassaPage() {
     // Stampa su RT se configurato
     if (rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0) {
       try {
-        const righeConRt = scontrinoCorrente.righe.map(riga => ({
-          ...riga,
-          numeroRepartoRt: rtMappatura[riga.repartoId]?.numeroRt || 1,
-        }))
-        await fetch('/api/ditron', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ip: rtConfig.ip,
-            porta: rtConfig.porta,
-            azione: 'scontrino',
-            dati: {
-              righe: righeConRt,
-              metodo: info.metodo,
-              totale: info.totale,
-              resto: info.resto || 0,
-              contatto: info.contatto || null,
+        if (rtConfig.marca === '3i') {
+          // 3i Solution — TCP/IP XON/XOFF
+          let cmd = ''
+          const mappatura = rtMappatura || {}
+          for (const riga of scontrinoCorrente.righe) {
+            const reparto = mappatura[riga.repartoId]?.numeroRt || 1
+            const importoCents = Math.round(riga.importo)
+            const descr = (riga.nome || '').replace(/"/g, '').substring(0, 38)
+            if (riga.quantita > 1) {
+              cmd += `"${descr}"${riga.quantita}*${importoCents}H${reparto}R`
+            } else {
+              cmd += `"${descr}"${importoCents}H${reparto}R`
             }
+          }
+          if (info.metodo === 'carta') cmd += '3T'
+          else cmd += '1T'
+
+          await fetch('/api/ditron', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
           })
-        })
+        } else if (rtConfig.marca === 'rch') {
+          // RCH Print!F — HTTP XML
+          const comandi = []
+          for (const riga of scontrinoCorrente.righe) {
+            const ivaIndice = rtMappatura[riga.repartoId]?.ivaIndice || 1
+            const importoCents = Math.round(riga.importo)
+            const descr = (riga.nome || '').replace(/[()\/]/g, ' ').substring(0, 36)
+            if (riga.quantita > 1) {
+              comandi.push(`=R${ivaIndice}/$${importoCents}/*${riga.quantita}/(${descr})`)
+            } else {
+              comandi.push(`=R${ivaIndice}/$${importoCents}/(${descr})`)
+            }
+          }
+          // Pagamento
+          if (info.metodo === 'carta') comandi.push('=T4')
+          else comandi.push('=T1')
+
+          await fetch('/api/rch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
+          })
+        } else {
+          // Ditron — TCP
+          const righeConRt = scontrinoCorrente.righe.map(riga => ({
+            ...riga,
+            numeroRepartoRt: rtMappatura[riga.repartoId]?.numeroRt || 1,
+          }))
+          await fetch('/api/ditron', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ip: rtConfig.ip,
+              porta: rtConfig.porta,
+              azione: 'scontrino',
+              dati: {
+                righe: righeConRt,
+                metodo: info.metodo,
+                totale: info.totale,
+                resto: info.resto || 0,
+                contatto: info.contatto || null,
+              }
+            })
+          })
+        }
       } catch(e) {
         console.error('Errore stampa RT:', e)
       }

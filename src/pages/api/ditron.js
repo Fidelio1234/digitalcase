@@ -85,6 +85,13 @@ export default async function handler(req, res) {
         comando = `dgfe tipo=160, datada=${dati.dataInizio}, dataa=${dati.dataFine}, nda=${dati.dalNumero}, na=${dati.alNumero}`
         break
       default:
+      case 'raw': {
+        // Comando grezzo per 3i XON/XOFF
+        const cmd = dati?.cmd || ''
+        if (!cmd) return res.status(400).json({ error: 'Comando raw mancante' })
+        const risposta = await inviaTCP(ip, porta, cmd)
+        return res.json({ ok: true, risposta })
+      }
         return res.status(400).json({ error: `Azione non riconosciuta: ${azione}` })
     }
 
