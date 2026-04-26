@@ -40,6 +40,7 @@ export default function CassaPage() {
   const [showAvvisoMezzanotte, setShowAvvisoMezzanotte] = useState(false)
   const [scontrinoCorrente, setScontrinoCorrente] = useState(null)
   const [righeBackup, setRigheBackup] = useState([])
+  const [barcodeVal, setBarcodeVal] = useState('')
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
 
   const {
@@ -49,34 +50,9 @@ export default function CassaPage() {
     ripristinaRighe, eliminaRiga
   } = useCassa()
 
-  // Intercetta scanner barcode (input rapido da tastiera)
-  useEffect(() => {
-    let buffer = ''
-    let timer = null
 
-    function handleKeyDown(e) {
-      // Ignora se si sta scrivendo in un input
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
 
-      if (e.key === 'Enter') {
-        if (buffer.length > 3) {
-          cercaProdottoBarcode(buffer)
-        }
-        buffer = ''
-        if (timer) clearTimeout(timer)
-        return
-      }
 
-      if (e.key.length === 1) {
-        buffer += e.key
-        if (timer) clearTimeout(timer)
-        timer = setTimeout(() => { buffer = '' }, 100)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [reparti])
 
   function cercaProdottoBarcode(barcode) {
     for (const reparto of reparti) {
@@ -475,7 +451,33 @@ export default function CassaPage() {
           {/* SCONTRINO IN CORSO - metà superiore */}
           <div className={styles.colCenterTop}>
             <div className={styles.displayHeader}>
-              <span className={styles.displayTitle}>Scontrino in corso</span>
+              <div style={{display:'flex', alignItems:'center', gap:8, flex:1}}>
+                <span style={{fontSize:'1rem'}}>📷</span>
+                <input
+                  type="text"
+                  placeholder="Scansiona codice a barre..."
+                  autoFocus
+                  value={barcodeVal}
+                  onBlur={e => { if (!showChiusura && !showConfirmAnnulla && !showSuccesso && !showAvvisoMezzanotte) setTimeout(() => { try { e.target.focus() } catch(x){} }, 50) }}
+                  onChange={e => setBarcodeVal(e.target.value)}
+                  onKeyDown={e => {
+                    e.stopPropagation()
+                    if (e.key === 'Enter') {
+                      const val = barcodeVal.trim()
+                      if (val.length > 0) {
+                        cercaProdottoBarcode(val)
+                        setBarcodeVal('')
+                      }
+                    }
+                  }}
+                  style={{
+                    flex:1, background:'transparent', border:'none',
+                    borderBottom:'1px solid #252830', color:'#eef0f6',
+                    fontSize:'0.85rem', padding:'4px 8px', outline:'none',
+                    fontFamily:"'DM Mono',monospace"
+                  }}
+                />
+              </div>
               <span className={styles.righeCount}>{righe.length} voci</span>
             </div>
             <div className={styles.righeList}>

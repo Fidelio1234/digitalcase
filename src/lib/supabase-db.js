@@ -104,6 +104,7 @@ export async function getRepartiDb(negozioId) {
       ivaOverride: p.iva_override,
       minimoImporto: p.minimo_importo,
       massimoImporto: p.massimo_importo,
+      barcode: p.barcode || null,
       abilitato: p.abilitato,
       ordine: p.ordine,
     })).sort((a,b) => a.ordine - b.ordine)
@@ -147,6 +148,7 @@ export async function saveProdottoDb(negozioId, repartoId, prodotto) {
       massimo_importo: prodotto.massimoImporto,
       abilitato: prodotto.abilitato,
       ordine: prodotto.ordine,
+      barcode: prodotto.barcode || null,
     })
   return !error
 }

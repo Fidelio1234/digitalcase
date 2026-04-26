@@ -158,6 +158,7 @@ export default function RepartiPage() {
         ivaOverride: form.ivaOverride,
         minimoImporto: form.minimoImporto,
         massimoImporto: form.massimoImporto,
+        barcode: form.barcode || null,
         abilitato: form.abilitato,
         ordine: form.ordine,
       }
