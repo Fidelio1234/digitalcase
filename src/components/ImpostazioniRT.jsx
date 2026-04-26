@@ -29,6 +29,7 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
   const NEGOZIO_ID = useNegozioId()
   const [config, setConfig] = useState({
     marca: 'ditron',
+    modalita: 'MF',
     ip: '',
     porta: '7081',
     matricola: '',
@@ -76,7 +77,7 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
       const res = await fetch('/api/ditron', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ip: config.ip, porta: config.porta, azione: 'ping', dati: {} })
+        body: JSON.stringify({ ip: config.ip, porta: config.porta, azione: 'ping', dati: {}, marca: config.marca })
       })
       const data = await res.json()
       if (data.ok) {
@@ -117,10 +118,27 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
             <option value="ditron">Ditron</option>
             <option value="rch">RCH Print!F/RT</option>
             <option value="3i">3i Solution RT</option>
-            <option value="rch">RCH Print F</option>
-            <option value="3i">3i Solution</option>
           </select>
         </div>
+        {config.marca === '3i' && (
+          <div>
+            <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>MODALITÀ</label>
+            <div style={{display:'flex', gap:8}}>
+              {['MF','RT'].map(m => (
+                <button key={m} type="button"
+                  onClick={() => setConfig(c => ({...c, modalita: m}))}
+                  style={{
+                    flex:1, padding:'8px', borderRadius:8, border:'none', cursor:'pointer',
+                    background: (config.modalita || 'MF') === m ? '#00e5a0' : '#1a1c24',
+                    color: (config.modalita || 'MF') === m ? '#08090c' : '#eef0f6',
+                    fontSize:'0.82rem', fontWeight: (config.modalita || 'MF') === m ? 700 : 400,
+                  }}>
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{display:'flex', alignItems:'center', gap:8, paddingTop:20}}>
           <label style={{fontSize:'0.82rem', color:'#5a5d6e'}}>RT Attivo</label>
@@ -239,6 +257,25 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
                     ))}
                   </select>
                 </div>
+        {config.marca === '3i' && (
+          <div>
+            <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>MODALITÀ</label>
+            <div style={{display:'flex', gap:8}}>
+              {['MF','RT'].map(m => (
+                <button key={m} type="button"
+                  onClick={() => setConfig(c => ({...c, modalita: m}))}
+                  style={{
+                    flex:1, padding:'8px', borderRadius:8, border:'none', cursor:'pointer',
+                    background: (config.modalita || 'MF') === m ? '#00e5a0' : '#1a1c24',
+                    color: (config.modalita || 'MF') === m ? '#08090c' : '#eef0f6',
+                    fontSize:'0.82rem', fontWeight: (config.modalita || 'MF') === m ? 700 : 400,
+                  }}>
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
               </div>
             ))}
           </div>

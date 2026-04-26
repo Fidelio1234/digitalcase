@@ -54,7 +54,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
         res = await fetch('/api/ditron', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta, azione, dati })
+          body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta, azione, dati, marca: rtConfig.marca, modalita: rtConfig.modalita || 'MF' })
         })
       }
 

@@ -1,6 +1,6 @@
 const net = require('net')
 
-async function inviaTCP(ip, porta, comando) {
+async function inviaTCP(ip, porta, comando, marca = 'ditron') {
   return new Promise((resolve, reject) => {
     const client = new net.Socket()
     let risposta = ''
@@ -8,7 +8,8 @@ async function inviaTCP(ip, porta, comando) {
     client.setTimeout(8000)
 
     client.connect(parseInt(porta), ip, () => {
-      client.write(comando + '\r\n')
+      const terminatore = marca === '3i' ? '\r' : '\r\n'
+      client.write(comando + terminatore)
     })
 
     client.on('data', (data) => {
@@ -32,7 +33,12 @@ async function inviaTCP(ip, porta, comando) {
 
     client.on('error', (err) => {
       client.destroy()
-      reject(err)
+      // ECONNRESET è normale per casse 3i che chiudono dopo la risposta
+      if (err.code === 'ECONNRESET' || err.code === 'EPIPE') {
+        resolve(risposta || 'OK')
+      } else {
+        reject(err)
+      }
     })
 
     // Chiudi dopo 2 secondi se non arriva end
@@ -48,7 +54,7 @@ async function inviaTCP(ip, porta, comando) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Metodo non consentito' })
 
-  const { ip, porta = 1471, azione, dati } = req.body
+  const { ip, porta = 1471, azione, dati, marca = 'ditron', modalita = 'MF' } = req.body
   if (!ip) return res.status(400).json({ error: 'IP mancante' })
 
   try {
@@ -56,11 +62,13 @@ export default async function handler(req, res) {
 
     switch (azione) {
       case 'ping':
+        comando = marca === '3i' ? 'K' : 'report num=2'
+        break
       case 'lettura_x':
-        comando = 'report num=2'
+        comando = marca === '3i' ? '1F' : 'report num=2'
         break
       case 'chiusura_fiscale':
-        comando = `azzgio tipo=${dati?.tipo || 1}`
+        comando = marca === '3i' ? '9F' : `azzgio tipo=${dati?.tipo || 1}`
         break
       case 'scontrino': {
         const lines = []
@@ -89,13 +97,13 @@ export default async function handler(req, res) {
         // Comando grezzo per 3i XON/XOFF
         const cmd = dati?.cmd || ''
         if (!cmd) return res.status(400).json({ error: 'Comando raw mancante' })
-        const risposta = await inviaTCP(ip, porta, cmd)
+        const risposta = await inviaTCP(ip, porta, cmd, marca)
         return res.json({ ok: true, risposta })
       }
         return res.status(400).json({ error: `Azione non riconosciuta: ${azione}` })
     }
 
-    const risposta = await inviaTCP(ip, porta, comando)
+    const risposta = await inviaTCP(ip, porta, comando, marca)
     return res.json({ ok: true, risposta, comando })
 
   } catch (err) {
