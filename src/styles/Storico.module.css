@@ -127,19 +127,18 @@
 
 .scontrinoLeft { min-width: 80px; }
 .scontrinoNum { font-family: 'Unbounded', sans-serif; font-size: 0.82rem; font-weight: 700; color: var(--accent); }
-.scontrinoData { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+.scontrinoData { font-size: 0.7rem; color: var(--accent); margin-top: 3px; }
 .scontrinoCenter { flex: 1; min-width: 0; }
 .scontrinoRighe { display: flex; gap: 6px; flex-wrap: wrap; }
 .righeTag {
   background: var(--surface2); border-radius: 4px;
-  padding: 2px 8px; font-size: 0.72rem; color: var(--muted);
+  padding: 2px 8px; font-size: 0.72rem; color: white;
 }
-.contatto { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.contatto { font-size: 0.72rem; color: white; margin-top: 4px; }
 .scontrinoRight { display: flex; align-items: center; gap: 10px; }
 .scontrinoTotale { font-family: 'Unbounded', sans-serif; font-size: 0.95rem; font-weight: 700; }
 .scontrinoMetodo { font-size: 1.1rem; }
-.carta { }
-.contanti { }
+
 
 /* ─── DETTAGLIO ──────────────────────────────────────────────────────────── */
 .dettaglio {
@@ -167,8 +166,8 @@
 .chiusuraRow:hover { border-color: #ffb830; }
 .chiusuraLeft { min-width: 140px; }
 .chiusuraNum { font-family: 'Unbounded', sans-serif; font-size: 0.85rem; font-weight: 700; color: #ffb830; }
-.chiusuraData { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
-.chiusuraMeta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.chiusuraData { font-size: 0.7rem; color: var(--accent); margin-top: 3px; }
+.chiusuraMeta { font-size: 0.72rem; color: var(--accent); margin-top: 2px; }
 .chiusuraCenter { flex: 1; }
 .chiusuraTotale { font-family: 'Unbounded', sans-serif; font-size: 1.1rem; font-weight: 700; color: #ffb830; }
 .chiusuraSplit { display: flex; gap: 16px; font-size: 0.78rem; margin-top: 4px; }

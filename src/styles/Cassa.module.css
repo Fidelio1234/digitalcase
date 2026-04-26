@@ -116,7 +116,7 @@
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 10px 8px; border-radius: 10px;
   border: 1px solid var(--border); background: var(--surface2);
-  color: var(--muted); font-family: 'DM Mono', monospace;
+  color: var(--accent); font-family: 'DM Mono', monospace;
   font-size: 0.7rem; cursor: pointer; transition: all 0.2s;
 }
 .fnBtn svg { width: 16px; height: 16px; }
@@ -164,7 +164,7 @@
   flex-shrink: 0;
 }
 .displayTitle { font-family: 'Unbounded', sans-serif; font-size: 0.82rem; font-weight: 700; }
-.righeCount { font-size: 0.72rem; color: var(--muted); }
+.righeCount { font-size: 0.82rem; color: white; }
 
 .righeList {
   flex: 1; overflow-y: auto; padding: 12px 16px;
@@ -220,7 +220,7 @@
 }
 .repartiHeader {
   padding: 14px 16px;
-  font-size: 0.65rem; color: var(--muted);
+  font-size: 0.75rem; color: white;
   letter-spacing: 2px; text-transform: uppercase;
   border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
@@ -350,7 +350,7 @@
 .cancelBtn {
   flex: 1; padding: 12px; border-radius: 10px;
   border: 1px solid var(--border); background: transparent;
-  color: var(--muted); font-family: 'DM Mono', monospace;
+  color: var(--append); font-family: 'DM Mono', monospace;
   font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
 }
 .cancelBtn:hover { border-color: var(--text); color: var(--text); }
@@ -373,7 +373,7 @@
 }
 .confirmIcona { font-size: 2.5rem; }
 .confirmTitolo { font-family: 'Unbounded', sans-serif; font-size: 1.1rem; font-weight: 700; }
-.confirmSub { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+.confirmSub { font-size: 0.8rem; color: var(--accent); line-height: 1.6; }
 .confirmBtns { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
 .confirmDangerBtn {
   flex: 1; padding: 12px; border-radius: 10px;

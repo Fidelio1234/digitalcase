@@ -478,7 +478,7 @@ export default function CassaPage() {
                   }}
                 />
               </div>
-              <span className={styles.righeCount}>{righe.length} voci</span>
+              <span className={styles.righeCount}>{righe.length} Voci</span>
             </div>
             <div className={styles.righeList}>
               {righe.length === 0 && (
