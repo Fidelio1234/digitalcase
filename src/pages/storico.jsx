@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getNegozio, getContatori } from '@/lib/storage'
@@ -25,7 +25,7 @@ export default function StoricoPage() {
   const [filtroData, setFiltroData] = useState(new Date().toISOString().split('T')[0])
   const [filtroMetodo, setFiltroMetodo] = useState('tutti')
   const [selected, setSelected] = useState(null)
-  const [tab, setTab] = useState('scontrini') // scontrini | chiusure
+  const [tab, setTab] = useState('scontrini')
   const [negozio, setNegozio] = useState({})
   const [toast, setToast] = useState('')
 
@@ -42,13 +42,11 @@ export default function StoricoPage() {
     setTimeout(() => setToast(''), 2500)
   }
 
-  // Trova ultima chiusura del giorno selezionato
   const chiusureDelGiorno = chiusure.filter(c => c.timestamp?.startsWith(filtroData))
   const ultimaChiusuraDelGiorno = chiusureDelGiorno.length > 0
     ? chiusureDelGiorno.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
     : null
 
-  // Filtra scontrini
   const scontriniFiltrati = storico.filter(s => {
     const dataOk = filtroData ? s.timestamp?.startsWith(filtroData) : true
     const metodoOk = filtroMetodo === 'tutti' ? true : s.metodo === filtroMetodo
@@ -57,14 +55,12 @@ export default function StoricoPage() {
         s.righe?.some(r => r.nome?.toLowerCase().includes(ricerca.toLowerCase())) ||
         s.contatto?.toLowerCase().includes(ricerca.toLowerCase())
       : true
-    // Mostra solo scontrini dopo l'ultima chiusura del giorno
     const dopoChiusura = ultimaChiusuraDelGiorno
       ? new Date(s.timestamp) > new Date(ultimaChiusuraDelGiorno.timestamp)
       : true
     return dataOk && metodoOk && testOk && dopoChiusura
   })
 
-  // Totali filtrati
   const totaleGiornaliero = scontriniFiltrati.reduce((s, x) => s + (x.totale || 0), 0)
   const totaleCarte = scontriniFiltrati.filter(x => x.metodo === 'carta').reduce((s, x) => s + (x.totale || 0), 0)
   const totaleContanti = scontriniFiltrati.filter(x => x.metodo === 'contanti').reduce((s, x) => s + (x.totale || 0), 0)
@@ -76,24 +72,17 @@ export default function StoricoPage() {
     return acc
   }, {})
 
-  // Chiusura fiscale
   async function eseguiChiusura() {
-    const contatori = getContatori()
     const chiusura = {
       id: 'CF' + Date.now(),
       timestamp: new Date().toISOString(),
       numeroChiusura: (chiusure.length + 1),
       numeroScontrini: scontriniFiltrati.length,
-      totaleGiornaliero,
-      totaleCarte,
-      totaleContanti,
-      totaleIva,
-      negozio,
+      totaleGiornaliero, totaleCarte, totaleContanti, totaleIva, negozio,
       scontrini: scontriniFiltrati.map(s => s.id),
     }
     await salvaChiusuraDb(NEGOZIO_ID, chiusura)
     getChiusureDb(NEGOZIO_ID).then(c => setChiusure(c))
-    setShowChiusuraModal(false)
     showToast('✓ Chiusura fiscale eseguita')
     setTab('chiusure')
   }
@@ -109,9 +98,7 @@ export default function StoricoPage() {
       })
       if (res.ok) showToast('✓ Email chiusura inviata')
       else showToast('⚠ Errore invio email')
-    } catch {
-      showToast('⚠ Errore invio email')
-    }
+    } catch { showToast('⚠ Errore invio email') }
   }
 
   function buildChiusuraHtml(c, neg) {
@@ -119,7 +106,6 @@ export default function StoricoPage() {
       `<tr><td style="padding:8px 16px;color:#5a5d6e">IVA ${iva}% su €${fmt(imp)}</td>
        <td style="padding:8px 16px;text-align:right;font-family:monospace">€ ${fmt(Math.round(imp * parseInt(iva) / (100 + parseInt(iva))))}</td></tr>`
     ).join('')
-
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
 <body style="background:#08090c;font-family:monospace;padding:32px">
 <div style="max-width:560px;margin:0 auto">
@@ -160,26 +146,9 @@ export default function StoricoPage() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #08090c; font-family: 'Courier New', monospace; }
         .no-print { display: flex; gap: 12px; justify-content: center; padding: 24px; }
-        .btn-stampa {
-          background: #ffb830; border: none; border-radius: 10px;
-          padding: 14px 40px; font-size: 1rem; font-weight: 700;
-          cursor: pointer; letter-spacing: 1px;
-        }
-        .btn-chiudi {
-          background: transparent; border: 2px solid #444;
-          border-radius: 10px; padding: 14px 40px;
-          font-size: 1rem; color: #aaa; cursor: pointer;
-        }
-        .btn-chiudi:hover { border-color: #fff; color: #fff; }
-        @media print {
-          .no-print { display: none !important; }
-          body { background: white !important; }
-          * { color: black !important; border-color: #ddd !important; background: white !important; }
-          [style*="color:#00e5a0"] { color: black !important; }
-          [style*="color:#ffb830"] { color: black !important; font-weight: bold !important; }
-          [style*="color:#6482ff"] { color: black !important; }
-          [style*="color:#ff9f43"] { color: black !important; }
-        }
+        .btn-stampa { background: #ffb830; border: none; border-radius: 10px; padding: 14px 40px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+        .btn-chiudi { background: transparent; border: 2px solid #444; border-radius: 10px; padding: 14px 40px; font-size: 1rem; color: #aaa; cursor: pointer; }
+        @media print { .no-print { display: none !important; } body { background: white !important; } * { color: black !important; border-color: #ddd !important; background: white !important; } }
       </style>
     </head><body>
       <div class="no-print">
@@ -187,17 +156,12 @@ export default function StoricoPage() {
         <button class="btn-chiudi" onclick="window.close()">✕ Chiudi</button>
       </div>
       ${chiusuraHtml}
-      <div class="no-print">
-        <button class="btn-stampa" onclick="window.print()">🖨️ Stampa / Salva PDF</button>
-        <button class="btn-chiudi" onclick="window.close()">✕ Chiudi</button>
-      </div>
     </body></html>`)
     w.document.close()
   }
 
   return (
     <div className={styles.page}>
-
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={() => router.replace('/cassa')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -209,10 +173,8 @@ export default function StoricoPage() {
           <span>Storico Scontrini</span>
           <span className={styles.headerSub}>{storico.length} scontrini totali</span>
         </div>
-        
       </header>
 
-      {/* TABS */}
       <div className={styles.tabs}>
         <button className={`${styles.tab} ${tab === 'scontrini' ? styles.tabActive : ''}`} onClick={() => setTab('scontrini')}>
           🧾 Scontrini ({scontriniFiltrati.length})
@@ -224,33 +186,22 @@ export default function StoricoPage() {
 
       {tab === 'scontrini' && (
         <div className={styles.main}>
-
-          {/* FILTRI */}
           <div className={styles.filtri}>
-            <input
-              type="text" placeholder="🔍 Cerca per numero, prodotto, email..."
-              value={ricerca} onChange={e => setRicerca(e.target.value)}
-              className={styles.searchInput}
-            />
-            <input
-              type="date" value={filtroData}
-              onChange={e => setFiltroData(e.target.value)}
-              className={styles.dateInput}
-            />
+            <input type="text" placeholder="🔍 Cerca per numero, prodotto, email..."
+              value={ricerca} onChange={e => setRicerca(e.target.value)} className={styles.searchInput} />
+            <input type="date" value={filtroData}
+              onChange={e => setFiltroData(e.target.value)} className={styles.dateInput} />
             <div className={styles.metodoFiltro}>
               {['tutti','carta','contanti'].map(m => (
-                <button
-                  key={m}
+                <button key={m}
                   className={`${styles.metodoBtn} ${filtroMetodo === m ? styles.metodoActive : ''}`}
-                  onClick={() => setFiltroMetodo(m)}
-                >
-                  {m === 'tutti' ? 'Tutti' : m === 'carta' ? '�� Carta' : '💵 Contanti'}
+                  onClick={() => setFiltroMetodo(m)}>
+                  {m === 'tutti' ? 'Tutti' : m === 'carta' ? '💳 Carta' : '💵 Contanti'}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* TOTALI */}
           <div className={styles.totaliRow}>
             <div className={styles.totaleCard}>
               <div className={styles.totaleLabel}>Totale</div>
@@ -270,7 +221,6 @@ export default function StoricoPage() {
             </div>
           </div>
 
-          {/* LISTA */}
           <div className={styles.lista}>
             {scontriniFiltrati.length === 0 && (
               <div className={styles.empty}>
@@ -279,63 +229,62 @@ export default function StoricoPage() {
               </div>
             )}
             {scontriniFiltrati.map(s => (
-              <div
-                key={s.id}
-                className={`${styles.scontrinoRow} ${selected?.id === s.id ? styles.selected : ''}`}
-                onClick={() => setSelected(selected?.id === s.id ? null : s)}
-              >
-                <div className={styles.scontrinoLeft}>
-                  <div className={styles.scontrinoNum}>#{s.numeroScontrino || s.id?.slice(-4)}</div>
-                  <div className={styles.scontrinoData}>{fmtData(s.timestamp)}</div>
+              <React.Fragment key={s.id}>
+                <div
+                  className={`${styles.scontrinoRow} ${selected?.id === s.id ? styles.selected : ''}`}
+                  onClick={() => setSelected(selected?.id === s.id ? null : s)}
+                >
+                  <div className={styles.scontrinoLeft}>
+                    <div className={styles.scontrinoNum}>#{s.numeroScontrino || s.id?.slice(-4)}</div>
+                    <div className={styles.scontrinoData}>{fmtData(s.timestamp)}</div>
+                  </div>
+                  <div className={styles.scontrinoCenter}>
+                    <div className={styles.scontrinoRighe}>
+                      {s.righe?.slice(0,2).map((r,i) => (
+                        <span key={i} className={styles.righeTag}>{r.nome}{r.quantita > 1 ? ` x${r.quantita}` : ''}</span>
+                      ))}
+                      {s.righe?.length > 2 && <span className={styles.righeTag}>+{s.righe.length - 2}</span>}
+                    </div>
+                    {s.contatto && <div className={styles.contatto}>📧 {s.contatto}</div>}
+                  </div>
+                  <div className={styles.scontrinoRight}>
+                    <div className={styles.scontrinoTotale}>€ {fmt(s.totale)}</div>
+                    <div className={`${styles.scontrinoMetodo} ${s.metodo === 'carta' ? styles.carta : styles.contanti}`}>
+                      {s.metodo === 'carta' ? '💳' : '💵'}
+                    </div>
+                  </div>
                 </div>
-                <div className={styles.scontrinoCenter}>
-                  <div className={styles.scontrinoRighe}>
-                    {s.righe?.slice(0,2).map((r,i) => (
-                      <span key={i} className={styles.righeTag}>{r.nome}{r.quantita > 1 ? ` x${r.quantita}` : ''}</span>
+                {selected?.id === s.id && (
+                  <div className={styles.dettaglio}>
+                    <div className={styles.dettaglioHeader}>
+                      Dettaglio scontrino #{s.numeroScontrino}
+                    </div>
+                    {s.righe?.map((r, i) => (
+                      <div key={i} className={styles.dettaglioRiga}>
+                        <span>{r.nome} {r.quantita > 1 ? `×${r.quantita}` : ''}</span>
+                        <span>€ {fmt(r.totaleRiga)}</span>
+                      </div>
                     ))}
-                    {s.righe?.length > 2 && <span className={styles.righeTag}>+{s.righe.length - 2}</span>}
+                    <div className={styles.dettaglioTotale}>
+                      <span>TOTALE</span>
+                      <span>€ {fmt(s.totale)}</span>
+                    </div>
+                    {Object.entries(
+                      s.righe?.reduce((acc, r) => {
+                        const k = String(r.iva)
+                        acc[k] = (acc[k] || 0) + r.totaleRiga
+                        return acc
+                      }, {}) || {}
+                    ).map(([iva, imp]) => (
+                      <div key={iva} className={styles.dettaglioIva}>
+                        <span>IVA {iva}%</span>
+                        <span>€ {fmt(Math.round(imp * parseInt(iva) / (100 + parseInt(iva))))}</span>
+                      </div>
+                    ))}
                   </div>
-                  {s.contatto && <div className={styles.contatto}>📧 {s.contatto}</div>}
-                </div>
-                <div className={styles.scontrinoRight}>
-                  <div className={styles.scontrinoTotale}>€ {fmt(s.totale)}</div>
-                  <div className={`${styles.scontrinoMetodo} ${s.metodo === 'carta' ? styles.carta : styles.contanti}`}>
-                    {s.metodo === 'carta' ? '💳' : '💵'}
-                  </div>
-                </div>
-              </div>
+                )}
+              </React.Fragment>
             ))}
-
-            {/* DETTAGLIO ESPANSO */}
-            {selected && (
-              <div className={styles.dettaglio}>
-                <div className={styles.dettaglioHeader}>
-                  Dettaglio scontrino #{selected.numeroScontrino}
-                </div>
-                {selected.righe?.map((r, i) => (
-                  <div key={i} className={styles.dettaglioRiga}>
-                    <span>{r.nome} {r.quantita > 1 ? `×${r.quantita}` : ''}</span>
-                    <span>€ {fmt(r.totaleRiga)}</span>
-                  </div>
-                ))}
-                <div className={styles.dettaglioTotale}>
-                  <span>TOTALE</span>
-                  <span>€ {fmt(selected.totale)}</span>
-                </div>
-                {Object.entries(
-                  selected.righe?.reduce((acc, r) => {
-                    const k = String(r.iva)
-                    acc[k] = (acc[k] || 0) + r.totaleRiga
-                    return acc
-                  }, {}) || {}
-                ).map(([iva, imp]) => (
-                  <div key={iva} className={styles.dettaglioIva}>
-                    <span>IVA {iva}%</span>
-                    <span>€ {fmt(Math.round(imp * parseInt(iva) / (100 + parseInt(iva))))}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -355,12 +304,9 @@ export default function StoricoPage() {
                   <div className={styles.chiusuraNum}>
                     Chiusura #{c.numeroChiusura}
                     {c.stato && c.stato !== 'inviata' && (
-                      <span style={{
-                        marginLeft:8, fontSize:'0.65rem', padding:'2px 8px',
-                        borderRadius:6,
+                      <span style={{marginLeft:8, fontSize:'0.65rem', padding:'2px 8px', borderRadius:6,
                         background: c.stato === 'non_inviata' ? 'rgba(255,184,48,0.15)' : 'rgba(100,130,255,0.15)',
-                        color: c.stato === 'non_inviata' ? '#ffb830' : '#6482ff'
-                      }}>
+                        color: c.stato === 'non_inviata' ? '#ffb830' : '#6482ff'}}>
                         {c.stato === 'non_inviata' ? '⚠ Non inviata RT' : '✎ Manuale'}
                       </span>
                     )}
@@ -376,21 +322,14 @@ export default function StoricoPage() {
                   </div>
                 </div>
                 <div className={styles.chiusuraActions}>
-                  <button className={styles.actionBtn} onClick={() => stampaPDF(c)} title="Stampa PDF">
-                    🖨️
-                  </button>
-                  <button className={styles.actionBtn} onClick={() => inviaChiusuraEmail(c)} title="Invia email">
-                    📧
-                  </button>
+                  <button className={styles.actionBtn} onClick={() => stampaPDF(c)} title="Stampa PDF">🖨️</button>
+                  <button className={styles.actionBtn} onClick={() => inviaChiusuraEmail(c)} title="Invia email">📧</button>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* MODAL CHIUSURA FISCALE */}
-
 
       {toast && <div className={styles.toast}>{toast}</div>}
     </div>
