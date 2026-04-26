@@ -3,6 +3,10 @@
     {
       "path": "/api/check-licenze",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/pulizia-storico",
+      "schedule": "0 3 1 * *"
     }
   ]
 }

@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
 import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
-import { salvaScontrinoDb, chiudiTavoloDb } from '@/lib/supabase-db'
+import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
@@ -197,6 +197,13 @@ export default function CassaPage() {
     if (tavoloDaChiudere) {
       try {
         const { numero } = JSON.parse(tavoloDaChiudere)
+        // Salva storico tavolo
+        await salvaStoricoTavolo(NEGOZIO_ID, {
+          numero,
+          righe: JSON.parse(tavoloDaChiudere).righe || [],
+          coperti: JSON.parse(tavoloDaChiudere).coperti || 0,
+          apertoAlle: JSON.parse(tavoloDaChiudere).apertoAlle || null,
+        })
         await chiudiTavoloDb(NEGOZIO_ID, numero)
         sessionStorage.removeItem('tavolo_da_chiudere')
       } catch(e) {}

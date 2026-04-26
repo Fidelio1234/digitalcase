@@ -346,6 +346,22 @@ export async function salvaTavoloDb(negozioId, tavolo) {
   return !error
 }
 
+export async function salvaStoricoTavolo(negozioId, tavolo) {
+  const totale = (tavolo.righe || []).reduce((s, r) => s + (r.totaleRiga || 0), 0)
+  const { error } = await supabase
+    .from('storico_tavoli')
+    .insert({
+      negozio_id: negozioId,
+      numero_tavolo: tavolo.numero,
+      aperto_alle: tavolo.apertoAlle || null,
+      chiuso_alle: new Date().toISOString(),
+      coperti: tavolo.coperti || 0,
+      righe: tavolo.righe || [],
+      totale,
+    })
+  if (error) console.error('Errore storico tavolo:', error)
+}
+
 export async function chiudiTavoloDb(negozioId, numero) {
   const { error } = await supabase
     .from('tavoli')

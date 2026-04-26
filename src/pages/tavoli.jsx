@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
-import { getTavoliDb, salvaTavoloDb, chiudiTavoloDb, getImpostazioniDb, getRepartiDb } from '@/lib/supabase-db'
+import { getTavoliDb, salvaTavoloDb, chiudiTavoloDb, getImpostazioniDb, getRepartiDb, salvaStoricoTavolo } from '@/lib/supabase-db'
 import { stampaComanda } from '@/lib/stampante'
 import { supabase } from '@/lib/supabase'
 import { useNegozioId } from '@/hooks/useNegozioId'
@@ -497,6 +497,9 @@ export default function TavoliPage() {
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 20px', background:'#111318', borderBottom:'1px solid #1a1c24' }}>
         <button onClick={() => router.replace('/cassa')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
           ← Cassa
+        </button>
+        <button onClick={() => router.replace('/storico-tavoli')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
+          📋 Storico
         </button>
         <div style={{ fontWeight:700, fontSize:'1rem' }}>🍽️ Tavoli</div>
         <button onClick={carica} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
