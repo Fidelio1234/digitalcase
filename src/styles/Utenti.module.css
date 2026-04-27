@@ -100,12 +100,12 @@
   width: 34px; height: 34px; border-radius: 8px;
   background: transparent; border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.2s; color: var(--muted);
+  cursor: pointer; transition: all 0.2s; color: var(--accent);
 }
 .iconBtn svg { width: 15px; height: 15px; }
 .iconBtn:hover { border-color: var(--accent); color: var(--accent); }
 .iconBtn.danger:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-dim); }
-
+.danger {color: var(--danger);}
 /* ─── MODAL ──────────────────────────────────────────────────────────────── */
 .overlay {
   position: fixed; inset: 0; z-index: 50;

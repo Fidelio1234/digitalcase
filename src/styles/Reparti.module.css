@@ -108,7 +108,7 @@
 }
 
 .repartoNome { font-size: 0.95rem; font-weight: 500; }
-.repartoMeta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.repartoMeta { font-size: 0.72rem; color: var(--append); margin-top: 2px; }
 
 .repartoActions { display: flex; align-items: center; gap: 8px; }
 
@@ -125,12 +125,13 @@
   width: 34px; height: 34px; border-radius: 8px;
   background: transparent; border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.2s; color: var(--muted);
+  cursor: pointer; transition: all 0.2s; color: var(--accent);
 }
 .iconBtn svg { width: 15px; height: 15px; }
 .iconBtn:hover { border-color: var(--accent); color: var(--accent); }
 .iconBtn.danger:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-dim); }
 
+.danger {color: var(--danger);}
 /* ─── SOTTOREPARTI ───────────────────────────────────────────────────────── */
 .sottorepartiWrap {
   border-top: 1px solid var(--border);
@@ -150,14 +151,14 @@
 .srLeft { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
 .srDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .srNome { font-size: 0.85rem; }
-.srMeta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.srMeta { font-size: 0.7rem; color: var(--append); margin-top: 2px; }
 .srActions { display: flex; align-items: center; gap: 6px; }
 
 .addSrBtn {
   display: flex; align-items: center; justify-content: center; gap: 6px;
   background: transparent; border: 1px dashed var(--border);
   border-radius: 10px; padding: 10px;
-  color: var(--muted); font-family: 'DM Mono', monospace;
+  color: var(--accent); font-family: 'DM Mono', monospace;
   font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
   margin-top: 4px;
 }
