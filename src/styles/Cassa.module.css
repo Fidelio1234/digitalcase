@@ -60,7 +60,7 @@
 .main {
   flex: 1;
   display: grid;
-  grid-template-columns: 280px 1fr 260px;
+  grid-template-columns: 280px 1fr 320px;
   gap: 0;
   overflow: hidden;
 }
@@ -150,7 +150,7 @@
 .chiudiBtn:disabled { opacity: 0.3; cursor: default; }
 .chiudiBadge {
   background: rgba(0,0,0,0.2); border-radius: 6px;
-  padding: 2px 8px; font-size: 0.8rem;
+  padding: 4px 9px; font-size: 1rem;
 }
 
 /* ─── COLONNA CENTRO: Display battute ───────────────────────────────────── */

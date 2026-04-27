@@ -429,7 +429,7 @@ export default function CassaPage() {
           <button
             onClick={() => router.push('/tavoli')}
             style={{
-              width:60, height:60, background:'#ffffff',
+              width:60, height:60, background:'black',
               border:'none', borderRadius:10,
               color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem',
               fontWeight:700, marginBottom:8,
@@ -510,12 +510,6 @@ export default function CassaPage() {
                 </div>
               ))}
             </div>
-            {righe.length > 0 && (
-              <div className={styles.totaleBanner}>
-                <span>TOTALE</span>
-                <span className={styles.totaleVal}>€ {fmt(totale)}</span>
-              </div>
-            )}
           </div>
 
           {/* PRODOTTI REPARTO - metà inferiore */}
