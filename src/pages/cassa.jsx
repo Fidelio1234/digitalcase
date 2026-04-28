@@ -378,7 +378,9 @@ export default function CassaPage() {
         <div className={styles.colLeft}>
           <div className={styles.displayImporto}>
             <div className={styles.displayLabel}>IMPORTO</div>
-            <div className={styles.displayValue}>€ {fmt(inputCents)}</div>
+            <div className={styles.displayValue}>
+              {inputCents > 0 ? `€ ${fmt(inputCents)}` : righe.length > 0 ? `€ ${fmt(totale)}` : '€ 0,00'}
+            </div>
             {ultimaChiusa && righe.length === 0 && (
               <div className={styles.ultimaChiusa}>
                 Ultimo: {ultimaChiusa.nome} €{fmt(ultimaChiusa.importo)}
