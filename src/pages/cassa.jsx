@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
 import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
-import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo } from '@/lib/supabase-db'
+import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
@@ -41,6 +41,7 @@ export default function CassaPage() {
   const [scontrinoCorrente, setScontrinoCorrente] = useState(null)
   const [righeBackup, setRigheBackup] = useState([])
   const [barcodeVal, setBarcodeVal] = useState('')
+  const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: true })
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
 
   const {
@@ -73,6 +74,7 @@ export default function CassaPage() {
       if (r.length > 0) setRepartoAttivo(r[0].id)
     }
     loadReparti()
+    getImpostazioniDb(NEGOZIO_ID).then(imp => setImpostazioni(imp))
     setContatori(getContatori())
     setTimeout(() => setBenvenuto(false), 3000)
   }, [user, router])
@@ -426,6 +428,7 @@ export default function CassaPage() {
             </div>
           )}
 
+          {impostazioni.tavoliAbilitati !== false && (
           <button
             onClick={() => router.push('/tavoli')}
             style={{
@@ -440,6 +443,7 @@ export default function CassaPage() {
             <span style={{fontSize:'1.4rem'}}>🍽️</span>
             <span>Tavoli</span>
           </button>
+          )}
           <button className={styles.chiudiBtn} onClick={handleChiudi} disabled={righe.length === 0}>
             Chiudi scontrino
             {righe.length > 0 && <span className={styles.chiudiBadge}>€ {fmt(totale)}</span>}

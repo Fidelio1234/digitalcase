@@ -389,6 +389,7 @@ export async function getImpostazioniDb(negozioId) {
     copertoAbilitato: data?.coperto_abilitato || false,
     copertoImporto: data?.coperto_importo || 200,
     numeroTavoli: data?.numero_tavoli || 10,
+    tavoliAbilitati: data?.tavoli_abilitati !== false,
   }
 }
 
@@ -400,6 +401,7 @@ export async function salvaImpostazioniDb(negozioId, imp) {
       coperto_abilitato: imp.copertoAbilitato,
       coperto_importo: imp.copertoImporto,
       numero_tavoli: imp.numeroTavoli,
+      tavoli_abilitati: imp.tavoliAbilitati !== false,
     }, { onConflict: 'negozio_id' })
   return !error
 }

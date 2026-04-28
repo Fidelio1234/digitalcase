@@ -1,5 +1,32 @@
 const net = require('net')
 
+async function inviaTCP3i(ip, porta, comandi) {
+  // Per 3i mandiamo comandi separati con pausa
+  let rispostaFinale = ''
+  for (const cmd of comandi) {
+    const risposta = await new Promise((resolve, reject) => {
+      const client = new net.Socket()
+      let risposta = ''
+      client.setTimeout(3000)
+      client.connect(parseInt(porta), ip, () => {
+        client.write(cmd + '\r')
+      })
+      client.on('data', d => risposta += d.toString())
+      client.on('end', () => { client.destroy(); resolve(risposta || 'OK') })
+      client.on('close', () => { client.destroy(); resolve(risposta || 'OK') })
+      client.on('error', err => {
+        client.destroy()
+        if (err.code === 'ECONNRESET' || err.code === 'EPIPE') resolve(risposta || 'OK')
+        else reject(err)
+      })
+      client.on('timeout', () => { client.destroy(); resolve(risposta || 'OK') })
+    })
+    rispostaFinale = risposta
+    await new Promise(r => setTimeout(r, 200))
+  }
+  return rispostaFinale
+}
+
 async function inviaTCP(ip, porta, comando, marca = 'ditron') {
   return new Promise((resolve, reject) => {
     const client = new net.Socket()
@@ -87,10 +114,33 @@ export default async function handler(req, res) {
         break
       }
       case 'annullo':
-        comando = `docannullo mat='${dati.matricola}', nazz=${dati.numeroAzzeramento}, ndoc=${dati.numeroDocumento}, data=${dati.data}`
+        if (marca === '3i') {
+          comando = '25F'
+        } else {
+          comando = `docannullo mat='${dati.matricola}', nazz=${dati.numeroAzzeramento}, ndoc=${dati.numeroDocumento}, data=${dati.data}`
+        }
         break
       case 'ristampa':
-        comando = `dgfe tipo=160, datada=${dati.dataInizio}, dataa=${dati.dataFine}, nda=${dati.dalNumero}, na=${dati.alNumero}`
+        if (marca === '3i') {
+          // Formato 3i: "aammggNNNNNNNNNN"15F
+          // dataInizio/dataFine formato gg/mm/aaaa -> aammgg
+          const fmtData3i = (d) => {
+            if (!d) return '000000'
+            // Arriva già come DDMMYY (6 chars) dal pannello
+            if (d.length === 6) return d.slice(4,6) + d.slice(2,4) + d.slice(0,2) // DDMMYY -> YYMMDD
+            const parts = d.split('/')
+            if (parts.length === 3) return parts[2].slice(2) + parts[1] + parts[0]
+            return d.replace(/-/g, '').slice(2)
+          }
+          const d1 = fmtData3i(dati.dataInizio)
+          const d2 = fmtData3i(dati.dataFine)
+          const n1 = String(dati.dalNumero || 1).padStart(5, '0')
+          const n2 = String(dati.alNumero || 1).padStart(5, '0')
+          comando = `"${d1}${n1}${n2}"15F`
+          console.log('3i ristampa comando:', comando, 'lunghezza descrittore:', (d1+n1+n2).length)
+        } else {
+          comando = `dgfe tipo=160, datada=${dati.dataInizio}, dataa=${dati.dataFine}, nda=${dati.dalNumero}, na=${dati.alNumero}`
+        }
         break
       default:
       case 'raw': {
@@ -103,7 +153,16 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: `Azione non riconosciuta: ${azione}` })
     }
 
-    const risposta = await inviaTCP(ip, porta, comando, marca)
+    // Per 3i RT chiusura usa comandi separati
+    let risposta
+    if (marca === '3i' && (azione === 'chiusura_fiscale' || azione === 'lettura_x')) {
+      const cmds = azione === 'chiusura_fiscale' 
+        ? (modalita === 'RT' ? ['z', '1F', 'c'] : ['z', '1F', 'c'])
+        : ['x', '1F', 'c']
+      risposta = await inviaTCP3i(ip, porta, cmds)
+    } else {
+      risposta = await inviaTCP(ip, porta, comando, marca)
+    }
     return res.json({ ok: true, risposta, comando })
 
   } catch (err) {

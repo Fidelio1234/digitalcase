@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getImpostazioniDb, salvaImpostazioniDb } from '@/lib/supabase-db'
 
 export default function ImpostazioniTavoli({ negozioId, showToast }) {
-  const [imp, setImp] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10 })
+  const [imp, setImp] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10, tavoliAbilitati: true })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -25,6 +25,21 @@ export default function ImpostazioniTavoli({ negozioId, showToast }) {
 
   return (
     <div style={{display:'flex', flexDirection:'column', gap:16}}>
+
+      {/* Toggle modulo tavoli */}
+      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #252830'}}>
+        <div>
+          <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6'}}>Modulo Tavoli</div>
+          <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:2}}>Abilita la gestione dei tavoli in cassa</div>
+        </div>
+        <div onClick={() => setImp(i => ({...i, tavoliAbilitati: !i.tavoliAbilitati}))}
+          style={{width:44, height:24, borderRadius:12, cursor:'pointer',
+            background: imp.tavoliAbilitati ? '#00e5a0' : '#252830',
+            position:'relative', transition:'background 0.2s', flexShrink:0}}>
+          <div style={{position:'absolute', top:2, left: imp.tavoliAbilitati ? 22 : 2,
+            width:20, height:20, borderRadius:'50%', background:'white', transition:'left 0.2s'}} />
+        </div>
+      </div>
 
       {/* Numero tavoli */}
       <div>
