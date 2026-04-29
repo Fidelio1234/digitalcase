@@ -42,6 +42,7 @@ export default function CassaPage() {
   const [righeBackup, setRigheBackup] = useState([])
   const [barcodeVal, setBarcodeVal] = useState('')
   const [avvisoMagazzino, setAvvisoMagazzino] = useState([])
+  const [giacenzaInsuff, setGiacenzaInsuff] = useState([])
   const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: true })
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
 
@@ -159,9 +160,7 @@ export default function CassaPage() {
         r.giacenza !== null && r.giacenza !== undefined && r.giacenza < r.quantita
       )
       if (insufficienti.length > 0) {
-        alert('⚠️ Giacenza insufficiente:\n' + insufficienti.map(r =>
-          `${r.nome}: disponibili ${r.giacenza}, richiesti ${r.quantita}`
-        ).join('\n'))
+        setGiacenzaInsuff(insufficienti)
         return
       }
     }
@@ -723,6 +722,26 @@ export default function CassaPage() {
         </div>
       )}
 
+      {/* MODAL GIACENZA INSUFFICIENTE */}
+      {giacenzaInsuff.length > 0 && (
+        <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#111318',border:'2px solid #ff4d6a',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
+            <div style={{fontSize:'1.1rem',fontWeight:700,color:'#ff4d6a',marginBottom:16}}>⚠️ Giacenza insufficiente</div>
+            {giacenzaInsuff.map((r,i) => (
+              <div key={i} style={{padding:'8px 0',borderBottom:'1px solid #252830',fontSize:'0.85rem'}}>
+                <strong>{r.nome}</strong>
+                <div style={{fontSize:'0.78rem',color:'#5a5d6e',marginTop:4}}>
+                  Disponibili: <strong style={{color:'#ff4d6a'}}>{r.giacenza}</strong> · Richiesti: <strong>{r.quantita}</strong>
+                </div>
+              </div>
+            ))}
+            <button onClick={() => setGiacenzaInsuff([])} style={{width:'100%',marginTop:20,padding:'12px',borderRadius:10,border:'none',background:'#ff4d6a',color:'white',cursor:'pointer',fontWeight:700}}>
+              OK — Modifica lo scontrino
+            </button>
+          </div>
+        </div>
+      )}
+
       <PannelloRT
         rtConfig={rtConfig}
         mappatura={rtMappatura}
@@ -833,6 +852,7 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
           </button>
         </div>
       </div>
+
     </div>
   )
 }
