@@ -159,6 +159,8 @@ export default function RepartiPage() {
         minimoImporto: form.minimoImporto,
         massimoImporto: form.massimoImporto,
         barcode: form.barcode || null,
+        giacenza: form.giacenza !== '' && form.giacenza !== null && form.giacenza !== undefined ? parseInt(form.giacenza) : null,
+        giacenzaMinima: form.giacenzaMinima !== '' && form.giacenzaMinima !== null ? parseInt(form.giacenzaMinima) : null,
         abilitato: form.abilitato,
         ordine: form.ordine,
       }
@@ -442,6 +444,28 @@ export default function RepartiPage() {
                     className={styles.input}
                     style={{fontFamily:"'DM Mono',monospace", letterSpacing:2}}
                   />
+                </div>
+              )}
+              {modal.tipo === 'sottoreparto' && (
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label>Giacenza attuale</label>
+                    <input type="number" min="0"
+                      value={form.giacenza ?? ''}
+                      onChange={e => setForm(f => ({...f, giacenza: e.target.value}))}
+                      placeholder="Es. 10"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Soglia minima avviso</label>
+                    <input type="number" min="0"
+                      value={form.giacenzaMinima ?? ''}
+                      onChange={e => setForm(f => ({...f, giacenzaMinima: e.target.value}))}
+                      placeholder="Es. 3"
+                      className={styles.input}
+                    />
+                  </div>
                 </div>
               )}
               {modal.tipo === 'reparto' && (

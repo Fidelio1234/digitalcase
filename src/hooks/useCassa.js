@@ -51,12 +51,14 @@ export function useCassa() {
     }
 
     const nuovaRiga = {
-      id: Date.now() + Math.random(),
+      id: sottoreparto?.id || (Date.now() + Math.random()),
       nome, importo, iva,
       colore: reparto.colore,
       icona: reparto.icona,
       repartoId: reparto.id,
       sottoRepartoId: sottoreparto?.id || null,
+      giacenza: sottoreparto?.giacenza ?? null,
+      giacenzaMinima: sottoreparto?.giacenzaMinima ?? null,
     }
 
     setRighe(prev => {

@@ -105,6 +105,8 @@ export async function getRepartiDb(negozioId) {
       minimoImporto: p.minimo_importo,
       massimoImporto: p.massimo_importo,
       barcode: p.barcode || null,
+      giacenza: p.giacenza ?? null,
+      giacenzaMinima: p.giacenza_minima ?? null,
       abilitato: p.abilitato,
       ordine: p.ordine,
     })).sort((a,b) => a.ordine - b.ordine)
@@ -149,6 +151,8 @@ export async function saveProdottoDb(negozioId, repartoId, prodotto) {
       abilitato: prodotto.abilitato,
       ordine: prodotto.ordine,
       barcode: prodotto.barcode || null,
+      giacenza: prodotto.giacenza ?? null,
+      giacenza_minima: prodotto.giacenzaMinima ?? null,
     })
   return !error
 }
@@ -390,6 +394,7 @@ export async function getImpostazioniDb(negozioId) {
     copertoImporto: data?.coperto_importo || 200,
     numeroTavoli: data?.numero_tavoli || 10,
     tavoliAbilitati: data?.tavoli_abilitati !== false,
+    magazzinoAbilitato: data?.magazzino_abilitato || false,
   }
 }
 
@@ -402,6 +407,7 @@ export async function salvaImpostazioniDb(negozioId, imp) {
       coperto_importo: imp.copertoImporto,
       numero_tavoli: imp.numeroTavoli,
       tavoli_abilitati: imp.tavoliAbilitati !== false,
+      magazzino_abilitato: imp.magazzinoAbilitato || false,
     }, { onConflict: 'negozio_id' })
   return !error
 }
@@ -409,3 +415,45 @@ export async function salvaImpostazioniDb(negozioId, imp) {
 // ─── TAVOLI ──────────────────────────────────────────────────────────────────
 
 
+
+// ─── MAGAZZINO ────────────────────────────────────────────────────────────────
+
+export async function getProdottiConGiacenza(negozioId) {
+  const { data } = await supabase
+    .from('prodotti')
+    .select('id, nome, giacenza, giacenza_minima, reparto_id')
+    .eq('negozio_id', negozioId)
+    .not('giacenza', 'is', null)
+    .order('nome')
+  return data || []
+}
+
+export async function aggiornaGiacenza(negozioId, prodottoId, prodottoNome, tipo, quantita, giacenzaDopo) {
+  // Aggiorna giacenza prodotto
+  await supabase
+    .from('prodotti')
+    .update({ giacenza: giacenzaDopo })
+    .eq('id', prodottoId)
+
+  // Salva movimento
+  await supabase
+    .from('movimenti_magazzino')
+    .insert({
+      negozio_id: negozioId,
+      prodotto_id: prodottoId,
+      prodotto_nome: prodottoNome,
+      tipo,
+      quantita,
+      giacenza_dopo: giacenzaDopo,
+    })
+}
+
+export async function getMovimentiMagazzino(negozioId, limit = 50) {
+  const { data } = await supabase
+    .from('movimenti_magazzino')
+    .select('*')
+    .eq('negozio_id', negozioId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  return data || []
+}

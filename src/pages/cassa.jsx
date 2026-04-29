@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
 import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
-import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb } from '@/lib/supabase-db'
+import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
@@ -41,6 +41,7 @@ export default function CassaPage() {
   const [scontrinoCorrente, setScontrinoCorrente] = useState(null)
   const [righeBackup, setRigheBackup] = useState([])
   const [barcodeVal, setBarcodeVal] = useState('')
+  const [avvisoMagazzino, setAvvisoMagazzino] = useState([])
   const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: true })
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
 
@@ -151,6 +152,20 @@ export default function CassaPage() {
 
   function handleChiudi() {
     if (righe.length === 0) return
+
+    // Controlla giacenze insufficienti
+    if (impostazioni.magazzinoAbilitato) {
+      const insufficienti = righe.filter(r =>
+        r.giacenza !== null && r.giacenza !== undefined && r.giacenza < r.quantita
+      )
+      if (insufficienti.length > 0) {
+        alert('⚠️ Giacenza insufficiente:\n' + insufficienti.map(r =>
+          `${r.nome}: disponibili ${r.giacenza}, richiesti ${r.quantita}`
+        ).join('\n'))
+        return
+      }
+    }
+
     setRigheBackup([...righe])
     const sc = chiudiScontrino()
     const c = incrementaScontrino()
@@ -203,6 +218,21 @@ export default function CassaPage() {
     setShowChiusura(false)
     setShowSuccesso(info)
     setRigheBackup([])
+
+    // Scala giacenze magazzino
+    if (impostazioni.magazzinoAbilitato) {
+      const avvisi = []
+      for (const riga of scontrinoCorrente?.righe || []) {
+        if (riga.giacenza !== null && riga.giacenza !== undefined) {
+          const nuovaGiacenza = Math.max(0, riga.giacenza - riga.quantita)
+          await aggiornaGiacenza(NEGOZIO_ID, riga.id, riga.nome, 'vendita', riga.quantita, nuovaGiacenza)
+          if (riga.giacenzaMinima !== null && nuovaGiacenza <= riga.giacenzaMinima) {
+            avvisi.push({ nome: riga.nome, giacenza: nuovaGiacenza, minima: riga.giacenzaMinima })
+          }
+        }
+      }
+      if (avvisi.length > 0) setAvvisoMagazzino(avvisi)
+    }
 
     // Stampa su RT se configurato
     if (rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0) {
@@ -449,6 +479,16 @@ export default function CassaPage() {
             </div>
           )}
 
+
+          {impostazioni.magazzinoAbilitato && (
+            <button onClick={() => router.push('/magazzino')}
+              style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                color:'#ffb830', cursor:'pointer', fontSize:'0.72rem', fontWeight:700, marginBottom:8,
+                display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+              <span style={{fontSize:'1.4rem'}}>📦</span>
+              <span>Magazzino</span>
+            </button>
+          )}
           {impostazioni.tavoliAbilitati !== false && (
           <button
             onClick={() => router.push('/tavoli')}
