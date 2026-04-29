@@ -128,6 +128,8 @@ export default function CassaPage() {
   useEffect(() => {
     const handler = (e) => {
       if (showChiusura || showConfirmAnnulla || showSuccesso || showAvvisoMezzanotte) return
+      // Ignora se si sta digitando in un input/select
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return
       if (e.key >= '0' && e.key <= '9') pressDigit(e.key)
       else if (e.key === 'Backspace') pressClear()
       else if (e.key === 'Escape') {
@@ -219,8 +221,17 @@ export default function CassaPage() {
               cmd += `"${descr}"${importoCents}H${reparto}R`
             }
           }
-          if (info.metodo === 'carta') cmd += '3T'
-          else cmd += '1T'
+          if (info.metodo === 'carta') {
+            cmd += '3T'
+          } else {
+            // Passa importo contanti per calcolo resto
+            const contantiCents = info.totale + (info.resto || 0)
+            if (contantiCents > info.totale) {
+              cmd += `${contantiCents}H1T`
+            } else {
+              cmd += '1T'
+            }
+          }
 
           await fetch('/api/ditron', {
             method: 'POST',
@@ -241,8 +252,16 @@ export default function CassaPage() {
             }
           }
           // Pagamento
-          if (info.metodo === 'carta') comandi.push('=T4')
-          else comandi.push('=T1')
+          if (info.metodo === 'carta') {
+            comandi.push('=T4')
+          } else {
+            const contantiCents = info.totale + (info.resto || 0)
+            if (contantiCents > info.totale) {
+              comandi.push(`=T1/$${contantiCents}`)
+            } else {
+              comandi.push('=T1')
+            }
+          }
 
           await fetch('/api/rch', {
             method: 'POST',
@@ -462,9 +481,7 @@ export default function CassaPage() {
                 <input
                   type="text"
                   placeholder="Scansiona codice a barre..."
-                  autoFocus
                   value={barcodeVal}
-                  onBlur={e => { if (!showChiusura && !showConfirmAnnulla && !showSuccesso && !showAvvisoMezzanotte) setTimeout(() => { try { e.target.focus() } catch(x){} }, 50) }}
                   onChange={e => setBarcodeVal(e.target.value)}
                   onKeyDown={e => {
                     e.stopPropagation()
