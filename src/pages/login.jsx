@@ -75,7 +75,7 @@ export default function LoginPage() {
       const u = utenti.find(u => u.id === selectedUserId)
       setLoggedUser(u)
       setSuccess(true)
-      setTimeout(() => router.replace('/cassa'), 1000)
+      sessionStorage.setItem('appena_loggato', '1'); router.replace('/cassa')
     } else {
       const newAttempts = attempts + 1
       setAttempts(newAttempts)

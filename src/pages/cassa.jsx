@@ -78,8 +78,12 @@ export default function CassaPage() {
     loadReparti()
     getImpostazioniDb(NEGOZIO_ID).then(imp => setImpostazioni(imp))
     setContatori(getContatori())
-    setBenvenuto(true)
-    setTimeout(() => setBenvenuto(false), 2000)
+    // Mostra benvenuto solo se arriva dal login
+    if (sessionStorage.getItem('appena_loggato')) {
+      sessionStorage.removeItem('appena_loggato')
+      setBenvenuto(true)
+      setTimeout(() => setBenvenuto(false), 2000)
+    }
   }, [user, router])
 
   // Carica righe da tavolo quando la pagina si monta
