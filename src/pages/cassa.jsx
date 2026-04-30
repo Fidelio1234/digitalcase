@@ -78,7 +78,8 @@ export default function CassaPage() {
     loadReparti()
     getImpostazioniDb(NEGOZIO_ID).then(imp => setImpostazioni(imp))
     setContatori(getContatori())
-    setTimeout(() => setBenvenuto(false), 3000)
+    setBenvenuto(true)
+    setTimeout(() => setBenvenuto(false), 2000)
   }, [user, router])
 
   // Carica righe da tavolo quando la pagina si monta
