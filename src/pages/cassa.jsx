@@ -151,17 +151,43 @@ export default function CassaPage() {
     aggiungiRiga(reparto, sr)
   }
 
-  function handleChiudi() {
+  async function handleChiudi() {
     if (righe.length === 0) return
 
-    // Controlla giacenze insufficienti
+    // Controlla giacenze insufficienti leggendo dal DB
     if (impostazioni.magazzinoAbilitato) {
-      const insufficienti = righe.filter(r =>
-        r.giacenza !== null && r.giacenza !== undefined && r.giacenza < r.quantita
-      )
-      if (insufficienti.length > 0) {
-        setGiacenzaInsuff(insufficienti)
-        return
+      const prodottiConGiacenza = righe.filter(r => r.sottoRepartoId)
+      if (prodottiConGiacenza.length > 0) {
+        const ids = [...new Set(prodottiConGiacenza.map(r => r.sottoRepartoId))]
+        const { data: prodottiDb } = await supabase
+          .from('prodotti')
+          .select('id, giacenza, giacenza_minima')
+          .in('id', ids)
+
+        const giacenzeMap = {}
+        for (const p of prodottiDb || []) giacenzeMap[p.id] = p
+
+        // Aggrega quantità per prodotto
+        const qtaPerProdotto = {}
+        for (const r of righe) {
+          if (r.sottoRepartoId) {
+            qtaPerProdotto[r.sottoRepartoId] = (qtaPerProdotto[r.sottoRepartoId] || 0) + r.quantita
+          }
+        }
+
+        const insufficienti = []
+        for (const [id, qta] of Object.entries(qtaPerProdotto)) {
+          const p = giacenzeMap[id]
+          if (p && p.giacenza !== null && p.giacenza < qta) {
+            const riga = righe.find(r => r.sottoRepartoId === id)
+            insufficienti.push({ nome: riga?.nome || id, giacenza: p.giacenza, quantita: qta })
+          }
+        }
+
+        if (insufficienti.length > 0) {
+          setGiacenzaInsuff(insufficienti)
+          return
+        }
       }
     }
 
@@ -722,6 +748,32 @@ export default function CassaPage() {
         </div>
       )}
 
+      {/* MODAL AVVISO SCORTE */}
+      {avvisoMagazzino.length > 0 && (
+        <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#111318',border:'2px solid #ffb830',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
+            <div style={{fontSize:'1.1rem',fontWeight:700,color:'#ffb830',marginBottom:16}}>⚠️ Scorte in esaurimento</div>
+            {avvisoMagazzino.map((a,i) => (
+              <div key={i} style={{padding:'8px 0',borderBottom:'1px solid #252830',fontSize:'0.85rem'}}>
+                <strong>{a.nome}</strong>
+                <div style={{fontSize:'0.78rem',color:'#5a5d6e',marginTop:4}}>
+                  Rimasti: <strong style={{color:'#ffb830'}}>{a.giacenza}</strong> · Soglia minima: {a.minima}
+                </div>
+              </div>
+            ))}
+            <div style={{display:'flex',gap:12,marginTop:20}}>
+              <button onClick={() => { setAvvisoMagazzino([]); router.push('/magazzino') }}
+                style={{flex:1,padding:'10px',borderRadius:10,border:'none',background:'#ffb830',color:'#08090c',cursor:'pointer',fontWeight:700}}>
+                📦 Vai al magazzino
+              </button>
+              <button onClick={() => setAvvisoMagazzino([])}
+                style={{flex:1,padding:'10px',borderRadius:10,border:'1px solid #252830',background:'transparent',color:'#eef0f6',cursor:'pointer'}}>
+                Ignora
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* MODAL GIACENZA INSUFFICIENTE */}
       {giacenzaInsuff.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>

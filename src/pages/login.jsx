@@ -7,7 +7,7 @@ import styles from '@/styles/Login.module.css'
 
 const MAX_ATTEMPTS = 3
 const LOCK_SECONDS = 30
-const TECH_PIN = '080576'
+const TECH_PIN = '080576!.'
 
 export default function LoginPage() {
   const { login, user, utenti: utentiDb, loading } = useAuth()
@@ -171,17 +171,22 @@ export default function LoginPage() {
             <input
               type="password"
               value={techPin}
-              onChange={e => setTechPin(e.target.value)}
+              onChange={e => {
+                const val = e.target.value
+                setTechPin(val)
+                if (val === TECH_PIN) {
+                  setTechMode(false)
+                  router.push('/tech')
+                } else if (val.length >= TECH_PIN.length) {
+                  setTechError('Password errata')
+                  setTechPin('')
+                  setTimeout(() => setTechError(''), 2000)
+                }
+              }}
               onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  if (techPin === TECH_PIN) {
-                    setTechMode(false)
-                    router.push('/tech')
-                  } else {
-                    setTechError('Password errata')
-                    setTechPin('')
-                    setTimeout(() => setTechError(''), 2000)
-                  }
+                if (e.key === 'Enter' && techPin === TECH_PIN) {
+                  setTechMode(false)
+                  router.push('/tech')
                 }
               }}
               autoFocus
@@ -195,21 +200,7 @@ export default function LoginPage() {
               }}
             />
             {techError && <div style={{color:'#ff4d6a', fontSize:'0.8rem', textAlign:'center'}}>{techError}</div>}
-            <button
-              onClick={() => {
-                if (techPin === TECH_PIN) {
-                  setTechMode(false)
-                  router.push('/tech')
-                } else {
-                  setTechError('Password errata')
-                  setTechPin('')
-                  setTimeout(() => setTechError(''), 2000)
-                }
-              }}
-              style={{background:'#ffb830', border:'none', borderRadius:10, padding:'14px',
-                color:'#08090c', fontWeight:700, cursor:'pointer', fontSize:'0.9rem'}}>
-              Accedi
-            </button>
+
             <button onClick={() => { setTechMode(false); setTechPin(''); setTechError('') }}
               style={{background:'transparent', border:'1px solid #252830', borderRadius:10, padding:'10px',
                 color:'#eef0f6', fontFamily:"'DM Mono',monospace", fontSize:'0.8rem', cursor:'pointer'}}>
