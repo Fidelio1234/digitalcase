@@ -43,7 +43,7 @@ export default function CassaPage() {
   const [barcodeVal, setBarcodeVal] = useState('')
   const [avvisoMagazzino, setAvvisoMagazzino] = useState([])
   const [giacenzaInsuff, setGiacenzaInsuff] = useState([])
-  const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: true })
+  const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: false, magazzinoAbilitato: false })
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
 
   const {
