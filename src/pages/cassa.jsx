@@ -54,7 +54,7 @@ export default function CassaPage() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
-    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto
+    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto
   } = useCassa()
 
 
@@ -252,7 +252,7 @@ export default function CassaPage() {
       timestamp: new Date().toISOString(),
       righe: scontrinoCorrente?.righe || [],
       totale: info.totale,
-      metodo: info.metodo,
+      metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo,
       resto: info.resto || 0,
       contatto: info.contatto || null,
       numeroScontrino: scontrinoCorrente?.numeroScontrino || 1,
@@ -263,6 +263,7 @@ export default function CassaPage() {
     setShowChiusura(false)
     setShowSuccesso(info)
     setRigheBackup([])
+    resetScontrinoAperto()
 
     // Scala giacenze magazzino
     if (impostazioni.magazzinoAbilitato) {
@@ -331,6 +332,24 @@ export default function CassaPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
           })
+
+          // Stampa scontrino di cortesia se richiesto
+          if (info.metodo === 'cortesia') {
+            let cmdCortesia = 'j'
+            for (const riga of scontrinoCorrente.righe) {
+              if (riga.importo < 0) continue
+              const descr = (riga.nome || '').replace(/"/g, '').substring(0, 38)
+              const qta = riga.quantita > 1 ? `${riga.quantita}x ` : ''
+              cmdCortesia += `"${qta}${descr}"@`
+            }
+            cmdCortesia += 'J'
+            await new Promise(r => setTimeout(r, 1000))
+            await fetch('/api/ditron', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia }, marca: rtConfig.marca })
+            })
+          }
         } else if (rtConfig.marca === 'rch') {
           // RCH Print!F — HTTP XML
           const comandi = []
@@ -376,6 +395,24 @@ export default function CassaPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
           })
+
+          // Stampa scontrino di cortesia RCH
+          if (info.metodo === 'cortesia') {
+            const comandiCortesia = ['=C0']
+            for (const riga of scontrinoCorrente.righe) {
+              if (riga.importo < 0) continue
+              const descr = (riga.nome || '').replace(/[()\/]/g, ' ').substring(0, 36)
+              const qta = riga.quantita > 1 ? `${riga.quantita}x ` : ''
+              comandiCortesia.push(`="/?A/(${qta}${descr})`)
+            }
+            comandiCortesia.push('=C1')
+            await new Promise(r => setTimeout(r, 1000))
+            await fetch('/api/rch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia })
+            })
+          }
         } else {
           // Ditron — TCP
           const righeConRt = scontrinoCorrente.righe.map(riga => ({
@@ -391,7 +428,7 @@ export default function CassaPage() {
               azione: 'scontrino',
               dati: {
                 righe: righeConRt,
-                metodo: info.metodo,
+                metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo,
                 totale: info.totale,
                 resto: info.resto || 0,
                 contatto: info.contatto || null,
@@ -1000,6 +1037,9 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
             </button>
             <button className={`${styles.metodoBtn} ${metodo==='contanti' ? styles.metodoActive : ''}`} onClick={() => setMetodo('contanti')}>
               💵 Contanti
+            </button>
+            <button className={`${styles.metodoBtn} ${metodo==='cortesia' ? styles.metodoActive : ''}`} onClick={() => setMetodo('cortesia')}>
+              ��️ Fiscale + Cortesia
             </button>
           </div>
           {metodo === 'contanti' && (
