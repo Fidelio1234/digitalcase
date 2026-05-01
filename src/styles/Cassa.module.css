@@ -43,14 +43,14 @@
 .headerRight { display: flex; gap: 8px; align-items: center; }
 .cfgBtn {
   background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 8px; padding: 7px 12px; color: var(--text);
+  border-radius: 8px; padding: 7px 12px; color: var(--accent);
   font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer;
   transition: all 0.2s;
 }
 .cfgBtn:hover { border-color: var(--accent); color: var(--accent); }
 .logoutBtn {
   background: transparent; border: 1px solid var(--border);
-  border-radius: 8px; padding: 7px 12px; color: var(--text);
+  border-radius: 8px; padding: 7px 12px; color: var(--danger);
   font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer;
   transition: all 0.2s;
 }
@@ -245,7 +245,7 @@
 .repartoBtn:hover { background: var(--accent-dim); border-color: var(--accent); }
 .repartoActive { background: var(--accent-dim) !important; }
 .repartoIcn { font-size: 1.2rem; flex-shrink: 0; }
-.repartoNm { flex: 1; font-size: 0.85rem; color: var(--text); }
+.repartoNm { flex: 1; font-size: 0.85rem; color: var(--accent); }
 .repartoEuro {
   font-size: 0.72rem; font-weight: 600;
   padding: 3px 8px; border-radius: 6px;
@@ -310,10 +310,10 @@
   padding: 10px 24px; border-bottom: 1px solid var(--border);
   display: flex; flex-direction: column; gap: 4px;
 }
-.modalIvaRow { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); }
+.modalIvaRow { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--append); }
 
 .modalSection { padding: 16px 24px; border-bottom: 1px solid var(--border); }
-.modalLabel { font-size: 0.68rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+.modalLabel { font-size: 0.68rem; color: var(--append); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
 
 .metodoGroup { display: flex; gap: 8px; }
 .metodoBtn {
