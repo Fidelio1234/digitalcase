@@ -53,7 +53,13 @@ export default function StoricoPage() {
     const testOk = ricerca
       ? s.id?.toLowerCase().includes(ricerca.toLowerCase()) ||
         s.righe?.some(r => r.nome?.toLowerCase().includes(ricerca.toLowerCase())) ||
-        s.contatto?.toLowerCase().includes(ricerca.toLowerCase())
+        s.contatto?.toLowerCase().includes(ricerca.toLowerCase()) ||
+        (() => {
+          const r = ricerca.replace('€','').replace(',','.').trim()
+          const totaleStr = (s.totale / 100).toFixed(2)
+          return totaleStr.startsWith(r) || totaleStr === r || 
+                 fmt(s.totale).replace(',','.').startsWith(r)
+        })()
       : true
     const dopoChiusura = ultimaChiusuraDelGiorno
       ? new Date(s.timestamp) > new Date(ultimaChiusuraDelGiorno.timestamp)
