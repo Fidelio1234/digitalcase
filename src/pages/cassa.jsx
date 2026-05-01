@@ -54,7 +54,7 @@ export default function CassaPage() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
-    ripristinaRighe, eliminaRiga, applicaSconto
+    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto
   } = useCassa()
 
 
@@ -216,8 +216,8 @@ export default function CassaPage() {
   }
 
   function handleConfermAnnulla() {
-    // Salva annullo se ci sono righe
-    if (righe.length > 0) {
+    // Salva annullo se scontrino è aperto (anche se vuoto)
+    if (scontrinoAperto) {
       salvaAnnulloDb(NEGOZIO_ID, {
         totale,
         operatoreId: user?.id || null,
@@ -542,7 +542,7 @@ export default function CassaPage() {
             </button>
           </div>
 
-          {righe.length > 0 && (
+          {(righe.length > 0 || scontrinoAperto) && (
             <div className={styles.subtotale}>
               <div className={styles.subtotaleRow}
                 style={{cursor:'pointer', userSelect:'none'}}
@@ -590,7 +590,14 @@ export default function CassaPage() {
             <span>Tavoli</span>
           </button>
           )}
-          <button className={styles.chiudiBtn} onClick={handleChiudi} disabled={righe.length === 0}>
+          {scontrinoAperto && righe.length === 0 && (
+            <button className={styles.chiudiBtn}
+              style={{background:'#ff4d6a'}}
+              onClick={() => setShowConfirmAnnulla(true)}>
+              🗑️ Annulla scontrino
+            </button>
+          )}
+          <button className={styles.chiudiBtn} onClick={handleChiudi} disabled={righe.length === 0 || (scontrinoAperto && righe.length === 0)}>
             Chiudi scontrino
             {righe.length > 0 && <span className={styles.chiudiBadge}>€ {fmt(totale)}</span>}
           </button>

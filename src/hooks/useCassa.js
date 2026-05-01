@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react'
 export function useCassa() {
   const [inputCents, setInputCents] = useState(0)
   const [righe, setRighe] = useState([])
+  const [scontrinoAperto, setScontrinoAperto] = useState(false)
   const [ultimaChiusa, setUltimaChiusa] = useState(null)
   const [errore, setErrore] = useState('')
 
@@ -76,6 +77,7 @@ export function useCassa() {
         }
         return aggiornato
       }
+      setScontrinoAperto(true)
       return [...prev, { ...nuovaRiga, quantita: 1, totaleRiga: nuovaRiga.importo }]
     })
 
@@ -112,6 +114,7 @@ export function useCassa() {
     setInputCents(0)
     setErrore('')
     setUltimaChiusa(null)
+    setScontrinoAperto(false)
   }, [])
 
   const ripristinaRighe = useCallback((righeBackup) => {
@@ -184,7 +187,7 @@ export function useCassa() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, eliminaRiga, annullaTutto,
-    chiudiScontrino, ripristinaRighe, applicaSconto
+    chiudiScontrino, ripristinaRighe, applicaSconto, scontrinoAperto
   }
 }
 
