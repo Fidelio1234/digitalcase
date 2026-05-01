@@ -287,6 +287,8 @@ export default function CassaPage() {
           let cmd = ''
           const mappatura = rtMappatura || {}
           for (const riga of scontrinoCorrente.righe) {
+            // Salta righe sconto — le gestiamo separatamente
+            if (riga.repartoId === null && riga.importo < 0) continue
             const reparto = mappatura[riga.repartoId]?.numeroRt || 1
             const importoCents = Math.round(riga.importo)
             const descr = (riga.nome || '').replace(/"/g, '').substring(0, 38)
@@ -294,6 +296,22 @@ export default function CassaPage() {
               cmd += `"${descr}"${riga.quantita}*${importoCents}H${reparto}R`
             } else {
               cmd += `"${descr}"${importoCents}H${reparto}R`
+            }
+          }
+          // Applica sconti sul subtotale
+          const righeSconto = scontrinoCorrente.righe.filter(r => r.repartoId === null && r.importo < 0)
+          if (righeSconto.length > 0) {
+            cmd += '='  // subtotale
+            for (const sconto of righeSconto) {
+              const scontoCents = Math.abs(Math.round(sconto.importo))
+              if (sconto.nome.includes('%')) {
+                // Sconto percentuale: formato 10.00*2M
+                const perc = sconto.nome.match(/(\d+(?:\.\d+)?)%/)?.[1] || '0'
+                cmd += `${perc}*2M`
+              } else {
+                // Sconto in euro: formato 150H4M
+                cmd += `${scontoCents}H4M`
+              }
             }
           }
           if (info.metodo === 'carta') {
@@ -317,6 +335,7 @@ export default function CassaPage() {
           // RCH Print!F — HTTP XML
           const comandi = []
           for (const riga of scontrinoCorrente.righe) {
+            if (riga.repartoId === null && riga.importo < 0) continue
             const ivaIndice = rtMappatura[riga.repartoId]?.ivaIndice || 1
             const importoCents = Math.round(riga.importo)
             const descr = (riga.nome || '').replace(/[()\/]/g, ' ').substring(0, 36)
@@ -324,6 +343,20 @@ export default function CassaPage() {
               comandi.push(`=R${ivaIndice}/$${importoCents}/*${riga.quantita}/(${descr})`)
             } else {
               comandi.push(`=R${ivaIndice}/$${importoCents}/(${descr})`)
+            }
+          }
+          // Sconti RCH
+          const righeSconto = scontrinoCorrente.righe.filter(r => r.repartoId === null && r.importo < 0)
+          if (righeSconto.length > 0) {
+            comandi.push('=S')
+            for (const sconto of righeSconto) {
+              const scontoCents = Math.abs(Math.round(sconto.importo))
+              if (sconto.nome.includes('%')) {
+                const perc = sconto.nome.match(/(\d+(?:\.\d+)?)%/)?.[1] || '0'
+                comandi.push(`=%-/$${perc}`)
+              } else {
+                comandi.push(`=V-/$${scontoCents}`)
+              }
             }
           }
           // Pagamento
