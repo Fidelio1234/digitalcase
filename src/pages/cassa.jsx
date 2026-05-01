@@ -43,6 +43,10 @@ export default function CassaPage() {
   const [barcodeVal, setBarcodeVal] = useState('')
   const [avvisoMagazzino, setAvvisoMagazzino] = useState([])
   const [giacenzaInsuff, setGiacenzaInsuff] = useState([])
+  const [showSconto, setShowSconto] = useState(false)
+  const [tipoSconto, setTipoSconto] = useState('euro') // euro | percentuale
+  const [valoreSconto, setValoreSconto] = useState('')
+  const longPressTimer = useRef(null)
   const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: false, magazzinoAbilitato: false })
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
 
@@ -50,7 +54,7 @@ export default function CassaPage() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
-    ripristinaRighe, eliminaRiga
+    ripristinaRighe, eliminaRiga, applicaSconto
   } = useCassa()
 
 
@@ -507,8 +511,15 @@ export default function CassaPage() {
 
           {righe.length > 0 && (
             <div className={styles.subtotale}>
-              <div className={styles.subtotaleRow}>
-                <span>Subtotale</span>
+              <div className={styles.subtotaleRow}
+                style={{cursor:'pointer', userSelect:'none'}}
+                onMouseDown={() => { longPressTimer.current = setTimeout(() => setShowSconto(true), 600) }}
+                onMouseUp={() => clearTimeout(longPressTimer.current)}
+                onMouseLeave={() => clearTimeout(longPressTimer.current)}
+                onTouchStart={() => { longPressTimer.current = setTimeout(() => setShowSconto(true), 600) }}
+                onTouchEnd={() => clearTimeout(longPressTimer.current)}
+              >
+                <span>Subtotale {showSconto && '✂️'}</span>
                 <span>€ {fmt(totale)}</span>
               </div>
               {Object.entries(subtotalePerIva).map(([iva, imp]) => (
@@ -764,6 +775,66 @@ export default function CassaPage() {
         </div>
       )}
 
+      {/* MODAL SCONTO */}
+      {showSconto && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#111318',border:'2px solid #00e5a0',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
+            <div style={{fontSize:'1.1rem',fontWeight:700,color:'#00e5a0',marginBottom:8}}>✂️ Applica Sconto</div>
+            <div style={{fontSize:'0.75rem',color:'#5a5d6e',marginBottom:20}}>
+              Totale attuale: <strong style={{color:'#eef0f6'}}>€ {fmt(totale)}</strong>
+            </div>
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {['euro','percentuale'].map(t => (
+                <button key={t} onClick={() => setTipoSconto(t)}
+                  style={{flex:1,padding:'10px',borderRadius:8,border:'none',cursor:'pointer',
+                    background: tipoSconto === t ? '#00e5a0' : '#1a1c24',
+                    color: tipoSconto === t ? '#08090c' : '#eef0f6',
+                    fontWeight: tipoSconto === t ? 700 : 400}}>
+                  {t === 'euro' ? '€ Euro' : '% Percentuale'}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text" inputMode="decimal"
+              value={valoreSconto}
+              onChange={e => setValoreSconto(e.target.value)}
+              placeholder={tipoSconto === 'euro' ? 'Es. 1,50' : 'Es. 10'}
+              autoFocus
+              style={{width:'100%',background:'#1a1c24',border:'1px solid #252830',borderRadius:10,
+                padding:'12px',color:'#eef0f6',fontSize:'1.2rem',textAlign:'center',
+                boxSizing:'border-box',outline:'none',marginBottom:16,
+                fontFamily:"'DM Mono',monospace"}}
+            />
+            {valoreSconto && tipoSconto === 'euro' && (
+              <div style={{textAlign:'center',color:'#00e5a0',marginBottom:12,fontSize:'0.85rem'}}>
+                Nuovo totale: € {fmt(totale - Math.round(parseFloat(valoreSconto.replace(',','.') || 0) * 100))}
+              </div>
+            )}
+            {valoreSconto && tipoSconto === 'percentuale' && (
+              <div style={{textAlign:'center',color:'#00e5a0',marginBottom:12,fontSize:'0.85rem'}}>
+                Nuovo totale: € {fmt(totale - Math.round(totale * parseFloat(valoreSconto.replace(',','.') || 0) / 100))}
+              </div>
+            )}
+            <div style={{display:'flex',gap:12}}>
+              <button onClick={() => { setShowSconto(false); setValoreSconto('') }}
+                style={{flex:1,padding:'12px',borderRadius:10,border:'1px solid #252830',
+                  background:'transparent',color:'#eef0f6',cursor:'pointer'}}>
+                Annulla
+              </button>
+              <button onClick={() => {
+                  if (applicaSconto(tipoSconto, valoreSconto)) {
+                    setShowSconto(false)
+                    setValoreSconto('')
+                  }
+                }}
+                style={{flex:1,padding:'12px',borderRadius:10,border:'none',
+                  background:'#00e5a0',color:'#08090c',cursor:'pointer',fontWeight:700}}>
+                ✓ Applica
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* MODAL AVVISO SCORTE */}
       {avvisoMagazzino.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>

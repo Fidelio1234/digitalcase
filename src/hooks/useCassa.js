@@ -140,11 +140,50 @@ export function useCassa() {
     return acc
   }, {})
 
+  function applicaSconto(tipo, valore) {
+    if (tipo === 'euro') {
+      const scontoCents = Math.round(parseFloat(valore.replace(',','.')) * 100)
+      if (scontoCents <= 0 || scontoCents >= totale) return false
+      setRighe(prev => {
+        // Aggiunge una riga sconto negativa
+        return [...prev, {
+          id: Date.now(),
+          nome: `Sconto -€${(scontoCents/100).toFixed(2).replace('.',',')}`,
+          importo: -scontoCents,
+          iva: 0,
+          colore: '#ff4d6a',
+          icona: 'tag',
+          repartoId: null,
+          sottoRepartoId: null,
+          quantita: 1,
+          totaleRiga: -scontoCents,
+        }]
+      })
+    } else {
+      const perc = parseFloat(valore.replace(',','.'))
+      if (perc <= 0 || perc >= 100) return false
+      const scontoCents = Math.round(totale * perc / 100)
+      setRighe(prev => [...prev, {
+        id: Date.now(),
+        nome: `Sconto ${perc}%`,
+        importo: -scontoCents,
+        iva: 0,
+        colore: '#ff4d6a',
+        icona: 'tag',
+        repartoId: null,
+        sottoRepartoId: null,
+        quantita: 1,
+        totaleRiga: -scontoCents,
+      }])
+    }
+    return true
+  }
+
   return {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, eliminaRiga, annullaTutto,
-    chiudiScontrino, ripristinaRighe
+    chiudiScontrino, ripristinaRighe, applicaSconto
   }
 }
 
