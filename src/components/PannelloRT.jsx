@@ -216,7 +216,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
     width:'100%', boxSizing:'border-box',
     background:'#1a1c24', border:'1px solid #252830',
     borderRadius:6, padding:'4px 8px',
-    color:'#eef0f6', fontSize:'0.75rem', textAlign:'center',
+    color:'#00ff00', fontSize:'1.1rem', textAlign:'center',
     fontFamily:"'DM Mono',monospace"
   }
 
@@ -241,7 +241,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
           boxShadow: rtConfig.attivo ? '0 0 8px #00e5a0' : 'none'
         }} />
         <span style={{fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", color:'#eef0f6'}}>
-          RT {rtConfig.marca?.toUpperCase()} {rtConfig.ip}
+          MENU RT {rtConfig.marca?.toUpperCase()} 
         </span>
         <span style={{color:'#5a5d6e', fontSize:'0.75rem'}}>
           {pannelloAperto ? '▼' : '▲'}
@@ -267,7 +267,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
             {/* Header modal */}
             <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
               <span style={{fontSize:'0.9rem', fontFamily:"'DM Mono',monospace", color:'#eef0f6', fontWeight:600}}>
-                RT {rtConfig.marca?.toUpperCase()} — {rtConfig.ip}
+               <div style={{color:'red',fontSize:'2rem',}}>MENU RT - {rtConfig.marca?.toUpperCase()} </div>
               </span>
               <button onClick={() => setPannelloAperto(false)}
                 style={{background:'transparent', border:'none', color:'#5a5d6e', cursor:'pointer', fontSize:'1.2rem'}}>
@@ -287,78 +287,81 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
 
             {/* Chiusure */}
             <div>
-              <div style={labelStyle}>CHIUSURE</div>
+           
               <div style={{display:'flex', flexDirection:'column', gap:6}}>
+              <div style={{width: '100%',color:'#ffb830',}}>CHIUSURE FISCALI</div>
                 <button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(1)} disabled={loading}>
                   Chiusura fiscale Z (estesa)
                 </button>
                 <button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(2)} disabled={loading}>
                   Chiusura fiscale Z (breve)
-                </button>
-                <button style={btnStyle()} onClick={() => letturaX(2)} disabled={loading}>
+                </button><br/>
+                <div style={{width: '100%',color:'#ffb830',}}>LETTURA PARZIALE</div>
+               
+                <button style={btnStyle('#ffb830')} onClick={() => letturaX(2)} disabled={loading}>
                   Lettura X (parziale)
                 </button>
               </div>
             </div>
-
+            <br/>
             {/* Annullo */}
             <div>
-              <div style={labelStyle}>ANNULLO SCONTRINO RT</div>
+              <div style={{width: '100%',color:'#ff4d6a'}}>ANNULLO SCONTRINO RT</div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, marginBottom:6}}>
                 <div>
-                  <label style={inputLabelStyle}>N° CHIUSURA</label>
+                  <label style={{fontSize:'12px',color:'#ff4d6a',}}>N° CHIUSURA</label>
                   <input type="number" value={annulloData.nazz}
                     onChange={e => setAnnulloData(d => ({...d, nazz: e.target.value}))}
                     placeholder="0001" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={inputLabelStyle}>N° DOC</label>
+                  <label style={{fontSize:'12px',color:'#ff4d6a',}}>N° DOCUMENTO</label>
                   <input type="number" value={annulloData.ndoc}
                     onChange={e => setAnnulloData(d => ({...d, ndoc: e.target.value}))}
                     placeholder="0001" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={inputLabelStyle}>DATA (DDMMYY)</label>
+                  <label style={{fontSize:'12px',color:'#ff4d6a',}}>DATA (DDMMYY)</label>
                   <input type="text" value={annulloData.data}
                     onChange={e => setAnnulloData(d => ({...d, data: e.target.value}))}
-                    placeholder="010126" maxLength={6} style={inputStyle} />
+                    placeholder="010126"  maxLength={6} style={inputStyle} />
                 </div>
               </div>
               <button style={btnStyle('#ff4d6a')} onClick={annulloScontrino} disabled={loading}>
                 Annulla scontrino RT
               </button>
             </div>
-
+<br/>
             {/* Ristampa DGFE */}
             <div>
-              <div style={labelStyle}>RISTAMPA DA DGFE</div>
+              <div style={{width: '100%',color:'#00ff00'}}>RISTAMPA DA DGFE</div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6}}>
                 <div>
-                  <label style={inputLabelStyle}>DA DATA (DDMMYY)</label>
+                  <label style={{fontSize:'12px',color:'#00ff00',}}>DA DATA (DDMMYY)</label>
                   <input type="text" value={ristampaData.dataInizio}
                     onChange={e => setRistampaData(d => ({...d, dataInizio: e.target.value}))}
                     maxLength={6} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={inputLabelStyle}>A DATA (DDMMYY)</label>
+                  <label style={{fontSize:'12px',color:'#00ff00',}}>A DATA (DDMMYY)</label>
                   <input type="text" value={ristampaData.dataFine}
                     onChange={e => setRistampaData(d => ({...d, dataFine: e.target.value}))}
                     maxLength={6} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={inputLabelStyle}>DA N° SCONTRINO</label>
+                  <label style={{fontSize:'12px',color:'#00ff00',}}>DA N° SCONTRINO</label>
                   <input type="number" value={ristampaData.dalNumero}
                     onChange={e => setRistampaData(d => ({...d, dalNumero: parseInt(e.target.value)}))}
                     placeholder="0 = tutti" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={inputLabelStyle}>A N° SCONTRINO</label>
+                  <label style={{fontSize:'12px',color:'#00ff00',}}>A N° SCONTRINO</label>
                   <input type="number" value={ristampaData.alNumero}
                     onChange={e => setRistampaData(d => ({...d, alNumero: parseInt(e.target.value)}))}
                     placeholder="0 = tutti" style={inputStyle} />
                 </div>
               </div>
-              <button style={btnStyle()} onClick={ristampaDGFE} disabled={loading}>
+              <button style={btnStyle('#00ff00')} onClick={ristampaDGFE} disabled={loading}>
                 Ristampa scontrini
               </button>
             </div>
