@@ -771,6 +771,7 @@ export default function CassaPage() {
           scontrino={scontrinoCorrente}
           onAnnulla={handleAnnullaChiusura}
           onSuccesso={handleSuccesso}
+          cortesiaAbilitato={impostazioni.cortesiaAbilitato}
         />
       )}
 
@@ -963,7 +964,7 @@ export default function CassaPage() {
   )
 }
 
-function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
+function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) {
   const [metodo, setMetodo] = useState('carta')
   const [datoCliente, setDatoCliente] = useState('')
   const [contanti, setContanti] = useState('')
@@ -1038,9 +1039,11 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso }) {
             <button className={`${styles.metodoBtn} ${metodo==='contanti' ? styles.metodoActive : ''}`} onClick={() => setMetodo('contanti')}>
               💵 Contanti
             </button>
+            {cortesiaAbilitato && (
             <button className={`${styles.metodoBtn} ${metodo==='cortesia' ? styles.metodoActive : ''}`} onClick={() => setMetodo('cortesia')}>
               ��️ Fiscale + Cortesia
             </button>
+            )}
           </div>
           {metodo === 'contanti' && (
             <div className={styles.contantiWrap}>
