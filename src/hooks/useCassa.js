@@ -142,7 +142,8 @@ export function useCassa() {
 
   function applicaSconto(tipo, valore) {
     if (tipo === 'euro') {
-      const scontoCents = Math.round(parseFloat(valore.replace(',','.')) * 100)
+      // Stessa logica della cassa: input in centesimi
+      const scontoCents = parseInt(valore) || 0
       if (scontoCents <= 0 || scontoCents >= totale) return false
       setRighe(prev => {
         // Aggiunge una riga sconto negativa

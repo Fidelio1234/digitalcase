@@ -807,7 +807,7 @@ export default function CassaPage() {
             />
             {valoreSconto && tipoSconto === 'euro' && (
               <div style={{textAlign:'center',color:'#00e5a0',marginBottom:12,fontSize:'0.85rem'}}>
-                Nuovo totale: € {fmt(totale - Math.round(parseFloat(valoreSconto.replace(',','.') || 0) * 100))}
+                Sconto: € {fmt(parseInt(valoreSconto) || 0)} · Nuovo totale: € {fmt(totale - (parseInt(valoreSconto) || 0))}
               </div>
             )}
             {valoreSconto && tipoSconto === 'percentuale' && (
