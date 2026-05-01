@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
 import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
-import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza } from '@/lib/supabase-db'
+import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza, salvaAnnulloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
@@ -212,6 +212,15 @@ export default function CassaPage() {
   }
 
   function handleConfermAnnulla() {
+    // Salva annullo se ci sono righe
+    if (righe.length > 0) {
+      salvaAnnulloDb(NEGOZIO_ID, {
+        totale,
+        operatoreId: user?.id || null,
+        operatoreNome: user?.name || null,
+        righe,
+      })
+    }
     annullaTutto()
     setShowConfirmAnnulla(false)
   }
@@ -243,6 +252,8 @@ export default function CassaPage() {
       resto: info.resto || 0,
       contatto: info.contatto || null,
       numeroScontrino: scontrinoCorrente?.numeroScontrino || 1,
+      operatoreId: user?.id || null,
+      operatoreNome: user?.name || null,
     })
     setContatori(getContatori())
     setShowChiusura(false)

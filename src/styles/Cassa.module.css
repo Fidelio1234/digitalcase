@@ -32,7 +32,7 @@
 .headerLeft { display: flex; align-items: center; gap: 10px; }
 .logoMark { font-size: 1.4rem; }
 .logoName { font-family: 'Unbounded', sans-serif; font-size: 0.85rem; font-weight: 700; }
-.headerUser { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+.headerUser { font-size: 0.8rem; color: var(--accent); margin-top: 1px; }
 .headerCenter { flex: 1; display: flex; justify-content: center; }
 .errore {
   background: rgba(255,77,106,0.12); border: 1px solid var(--danger);

@@ -94,7 +94,7 @@
 .metodoBtn {
   padding: 8px 14px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--surface);
-  color: var(--text); font-family: 'DM Mono', monospace;
+  color: var(--accent); font-family: 'DM Mono', monospace;
   font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
 }
 .metodoBtn:hover { border-color: var(--accent); color: var(--accent); }
@@ -239,3 +239,14 @@
   animation: toastIn 0.3s ease;
 }
 @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+.annullato {
+  background: rgba(255, 77, 106, 0.15);
+  color: #ff4d6a;
+  border: 1px solid #ff4d6a;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 1rem;
+}
+
+

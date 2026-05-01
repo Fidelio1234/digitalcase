@@ -180,6 +180,8 @@ export async function salvaScontrinoDb(negozioId, scontrino) {
       resto: scontrino.resto || 0,
       contatto: scontrino.contatto,
       timestamp_emissione: scontrino.timestamp,
+      operatore_id: scontrino.operatoreId || null,
+      operatore_nome: scontrino.operatoreNome || null,
     })
     .select()
     .single()
@@ -228,6 +230,10 @@ export async function getStoricoDb(negozioId, filtri = {}) {
     resto: s.resto,
     contatto: s.contatto,
     timestamp: s.timestamp_emissione,
+    operatoreNome: s.operatore_nome || null,
+    annullato: s.annullato || false,
+    annullatoDa: s.annullato_da || null,
+    annullatoAlle: s.annullato_alle || null,
     righe: (s.righe_scontrino || []).map(r => ({
       nome: r.nome,
       importo: r.importo,
@@ -456,4 +462,26 @@ export async function getMovimentiMagazzino(negozioId, limit = 50) {
     .order('created_at', { ascending: false })
     .limit(limit)
   return data || []
+}
+
+export async function salvaAnnulloDb(negozioId, dati) {
+  const { error } = await supabase
+    .from('scontrini')
+    .insert({
+      negozio_id: negozioId,
+      numero_scontrino: 0,
+      totale: dati.totale,
+      metodo: 'annullato',
+      resto: 0,
+      timestamp_emissione: new Date().toISOString(),
+      operatore_id: dati.operatoreId || null,
+      operatore_nome: dati.operatoreNome || null,
+      annullato: true,
+      annullato_da: dati.operatoreNome || null,
+      annullato_alle: new Date().toISOString(),
+    })
+  if (dati.righe?.length > 0 && !error) {
+    // Non salviamo le righe per gli annulli
+  }
+  return !error
 }

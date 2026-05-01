@@ -49,7 +49,7 @@ export default function StoricoPage() {
 
   const scontriniFiltrati = storico.filter(s => {
     const dataOk = filtroData ? s.timestamp?.startsWith(filtroData) : true
-    const metodoOk = filtroMetodo === 'tutti' ? true : s.metodo === filtroMetodo
+    const metodoOk = filtroMetodo === 'tutti' ? true : filtroMetodo === 'annullati' ? s.annullato : (!s.annullato && s.metodo === filtroMetodo)
     const testOk = ricerca
       ? s.id?.toLowerCase().includes(ricerca.toLowerCase()) ||
         s.righe?.some(r => r.nome?.toLowerCase().includes(ricerca.toLowerCase())) ||
@@ -192,11 +192,11 @@ export default function StoricoPage() {
             <input type="date" value={filtroData}
               onChange={e => setFiltroData(e.target.value)} className={styles.dateInput} />
             <div className={styles.metodoFiltro}>
-              {['tutti','carta','contanti'].map(m => (
+              {['tutti','carta','contanti', ...(user?.role === 'owner' ? ['annullati'] : [])].map(m => (
                 <button key={m}
                   className={`${styles.metodoBtn} ${filtroMetodo === m ? styles.metodoActive : ''}`}
                   onClick={() => setFiltroMetodo(m)}>
-                  {m === 'tutti' ? 'Tutti' : m === 'carta' ? '💳 Carta' : '💵 Contanti'}
+                  {m === 'tutti' ? 'Tutti' : m === 'carta' ? '💳 Carta' : m === 'contanti' ? '💵 Contanti' : '🗑️ Annullati'}
                 </button>
               ))}
             </div>
@@ -232,11 +232,15 @@ export default function StoricoPage() {
               <React.Fragment key={s.id}>
                 <div
                   className={`${styles.scontrinoRow} ${selected?.id === s.id ? styles.selected : ''}`}
+                  style={s.annullato ? {borderColor:'#ff4d6a', opacity:0.7, background:'rgba(255,77,106,0.05)'} : {}}
                   onClick={() => setSelected(selected?.id === s.id ? null : s)}
                 >
                   <div className={styles.scontrinoLeft}>
                     <div className={styles.scontrinoNum}>#{s.numeroScontrino || s.id?.slice(-4)}</div>
                     <div className={styles.scontrinoData}>{fmtData(s.timestamp)}</div>
+                  {s.operatoreNome && (
+                    <div style={{fontSize:'0.9rem', color:'white', marginTop:2}}>👤 {s.operatoreNome}</div>
+                  )}
                   </div>
                   <div className={styles.scontrinoCenter}>
                     <div className={styles.scontrinoRighe}>
@@ -249,8 +253,8 @@ export default function StoricoPage() {
                   </div>
                   <div className={styles.scontrinoRight}>
                     <div className={styles.scontrinoTotale}>€ {fmt(s.totale)}</div>
-                    <div className={`${styles.scontrinoMetodo} ${s.metodo === 'carta' ? styles.carta : styles.contanti}`}>
-                      {s.metodo === 'carta' ? '💳' : '💵'}
+                    <div className={s.annullato ? styles.annullato : `${styles.scontrinoMetodo} ${s.metodo === 'carta' ? styles.carta : styles.contanti}`}>
+                      {s.annullato ? '🗑️' : s.metodo === 'carta' ? '💳' : '💵'}
                     </div>
                   </div>
                 </div>
