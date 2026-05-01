@@ -565,31 +565,26 @@ export default function CassaPage() {
           )}
 
 
-          {impostazioni.magazzinoAbilitato && (
-            <button onClick={() => router.push('/magazzino')}
-              style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-                color:'#ffb830', cursor:'pointer', fontSize:'0.72rem', fontWeight:700, marginBottom:8,
-                display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
-              <span style={{fontSize:'1.4rem'}}>📦</span>
-              <span>Magazzino</span>
-            </button>
-          )}
-          {impostazioni.tavoliAbilitati !== false && (
-          <button
-            onClick={() => router.push('/tavoli')}
-            style={{
-              width:60, height:60, background:'black',
-              border:'none', borderRadius:10,
-              color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem',
-              fontWeight:700, marginBottom:8,
-              display:'flex', flexDirection:'column',
-              alignItems:'center', justifyContent:'center', gap:2,
-            }}
-          >
-            <span style={{fontSize:'1.4rem'}}>🍽️</span>
-            <span>Tavoli</span>
-          </button>
-          )}
+          <div style={{display:'flex', gap:8, marginBottom:8}}>
+            {impostazioni.magazzinoAbilitato && (
+              <button onClick={() => router.push('/magazzino')}
+                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                  color:'#ffb830', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                <span style={{fontSize:'1.4rem'}}>📦</span>
+                <span>Magazzino</span>
+              </button>
+            )}
+            {impostazioni.tavoliAbilitati !== false && (
+              <button onClick={() => router.push('/tavoli')}
+                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                  color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                <span style={{fontSize:'1.4rem'}}>🍽️</span>
+                <span>Tavoli</span>
+              </button>
+            )}
+          </div>
           {scontrinoAperto && righe.length === 0 && (
             <button className={styles.chiudiBtn}
               style={{background:'#ff4d6a'}}

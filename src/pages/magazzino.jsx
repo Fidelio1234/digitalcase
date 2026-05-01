@@ -77,7 +77,7 @@ export default function MagazzinoPage() {
         </button>
         <div>
           <div style={{ fontSize:'1.1rem', fontWeight:700 }}>📦 Magazzino</div>
-          <div style={{ fontSize:'0.72rem', color:'#5a5d6e' }}>{prodotti.length} prodotti con giacenza</div>
+          <div style={{ fontSize:'0.72rem', color:'white' }}>{prodotti.length} prodotti con giacenza</div>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ export default function MagazzinoPage() {
                       {sottoMin && '⚠ '}{p.nome}
                     </div>
                     {p.giacenza_minima !== null && (
-                      <div style={{ fontSize:'0.72rem', color:'#5a5d6e', marginTop:2 }}>
+                      <div style={{ fontSize:'0.72rem', color:'white', marginTop:2 }}>
                         Soglia minima: {p.giacenza_minima}
                       </div>
                     )}
@@ -180,7 +180,7 @@ export default function MagazzinoPage() {
             <div key={m.id} style={{ background:'#111318', border:'1px solid #252830', borderRadius:10, padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
                 <div style={{ fontSize:'0.85rem', fontWeight:600 }}>{m.prodotto_nome}</div>
-                <div style={{ fontSize:'0.72rem', color:'#5a5d6e', marginTop:2 }}>
+                <div style={{ fontSize:'0.72rem', color:'white', marginTop:2 }}>
                   {new Date(m.created_at).toLocaleDateString('it-IT')} {new Date(m.created_at).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'})}
                 </div>
               </div>
