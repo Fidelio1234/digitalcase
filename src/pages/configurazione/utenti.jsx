@@ -8,7 +8,7 @@ import styles from '@/styles/Utenti.module.css'
 
 const RUOLI = [
   { value: 'owner', label: 'Titolare', desc: 'Accesso completo + configurazione', colore: '#00e5a0' },
-  { value: 'staff', label: 'Cassiere', desc: 'Solo cassa', colore: '#6482ff' },
+
 ]
 
 const emptyUtente = () => ({
@@ -339,14 +339,14 @@ export default function UtentiPage() {
                     <button
                       type="button"
                       onClick={() => { setPinInput(['','','','']); setPinConfirm(['','','','']); setShowPin(false); setTimeout(() => document.getElementById('pin-0')?.focus(), 50) }}
-                      style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontSize:'0.75rem',display:'flex',alignItems:'center',gap:4}}
+                      style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontSize:'0.95rem',display:'flex',alignItems:'center',gap:4}}
                     >
                       ✕ Pulisci
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowPin(s => !s)}
-                      style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',fontSize:'0.75rem',display:'flex',alignItems:'center',gap:4}}
+                      style={{background:'none',border:'none',cursor:'pointer',color:'var(--accent)',fontSize:'0.95rem',display:'flex',alignItems:'center',gap:4}}
                     >
                       {showPin ? '🙈 Nascondi' : '👁 Mostra'}
                     </button>
@@ -362,12 +362,6 @@ export default function UtentiPage() {
 
               <div className={styles.field}>
                 <label className={styles.checkRow}>
-                  <input
-                    type="checkbox"
-                    checked={form.abilitato ?? true}
-                    onChange={e => setForm(f => ({ ...f, abilitato: e.target.checked }))}
-                  />
-                  Utente abilitato
                 </label>
               </div>
 

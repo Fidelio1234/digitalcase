@@ -130,7 +130,7 @@
 }
 .modalTitle { font-family: 'Unbounded', sans-serif; font-size: 0.9rem; font-weight: 700; }
 .modalClose {
-  background: transparent; border: none; color: var(--muted);
+  background: transparent; border: none; color: var(--danger);
   cursor: pointer; font-size: 1rem; padding: 4px 8px; transition: color 0.2s;
 }
 .modalClose:hover { color: var(--danger); }

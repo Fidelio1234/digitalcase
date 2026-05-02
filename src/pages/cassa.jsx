@@ -333,8 +333,8 @@ export default function CassaPage() {
             body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
           })
 
-          // Stampa scontrino di cortesia se richiesto
-          if (info.metodo === 'cortesia') {
+          // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
+          if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
             let cmdCortesia = 'j'
             for (const riga of scontrinoCorrente.righe) {
               if (riga.importo < 0) continue
@@ -397,7 +397,7 @@ export default function CassaPage() {
           })
 
           // Stampa scontrino di cortesia RCH
-          if (info.metodo === 'cortesia') {
+          if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
             const comandiCortesia = ['=C0']
             for (const riga of scontrinoCorrente.righe) {
               if (riga.importo < 0) continue

@@ -309,12 +309,14 @@ export default function TechPage() {
                     <button className={styles.techBtn} onClick={() => { setEditingPin(u.id); setNewPin('') }}>
                       🔑 Cambia PIN
                     </button>
-                    <button
-                      className={`${styles.techBtn} ${u.abilitato ? styles.techBtnOff : styles.techBtnOn}`}
-                      onClick={() => toggleUtente(u)}
-                    >
-                      {u.abilitato ? '🔒 Disabilita' : '🔓 Abilita'}
-                    </button>
+                    {u.ruolo !== 'owner' && (
+                      <button
+                        className={`${styles.techBtn} ${u.abilitato ? styles.techBtnOff : styles.techBtnOn}`}
+                        onClick={() => toggleUtente(u)}
+                      >
+                        {u.abilitato ? '🔒 Disabilita' : '🔓 Abilita'}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
