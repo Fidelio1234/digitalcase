@@ -581,7 +581,7 @@ export default function CassaPage() {
         {/* SINISTRA */}
         <div className={styles.colLeft}>
           <div className={styles.displayImporto}>
-            <div className={styles.displayLabel}>IMPORTO</div>
+            <div className={styles.displayLabel}>TOTALE IMPORTO</div>
             <div className={styles.displayValue}>
               {inputCents > 0 ? `€ ${fmt(inputCents)}` : righe.length > 0 ? `€ ${fmt(totale)}` : '€ 0,00'}
             </div>
@@ -714,7 +714,7 @@ export default function CassaPage() {
                   }}
                 />
               </div>
-              <span className={styles.righeCount}>{righe.length} Voci</span>
+              <span className={styles.righeCount}>{righe.length} VOCI</span>
             </div>
             <div className={styles.righeList}>
               {righe.length === 0 && (
