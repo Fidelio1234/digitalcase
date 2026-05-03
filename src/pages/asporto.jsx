@@ -188,16 +188,16 @@ export default function AsportoPage() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', borderBottom:'1px solid #1a1c24' }}>
         <button onClick={() => { if (asportoAttivo) salvaAsportoDb(NEGOZIO_ID, asportoAttivo, righeComanda); router.replace('/cassa') }}
-          style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', padding:'8px 14px', cursor:'pointer', fontSize:'0.82rem' }}>
+          style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#00ffb3', padding:'12px 19px', cursor:'pointer', fontSize:'1.2rem' }}>
           ← Cassa
         </button>
-        <div style={{ flex:1 }}>
-          <div style={{ fontSize:'1rem', fontWeight:700 }}>🛵 Asporto</div>
-          <div style={{ fontSize:'0.72rem', color:'#5a5d6e' }}>{asporti.length} ordini aperti</div>
+        <div style={{ flex:1 ,textAlign:'center'}}>
+          <div style={{ fontSize:'1.5rem', fontWeight:700, }}>🛵 Asporto</div>
+          <div style={{ fontSize:'1.5rem', color:'#ffb830' }}>{asporti.length} ordini aperti</div>
         </div>
         <button onClick={() => setShowNuovoAsporto(true)}
-          style={{ background:'#00e5a0', border:'none', borderRadius:10, color:'#08090c', padding:'10px 16px', cursor:'pointer', fontSize:'0.82rem', fontWeight:700 }}>
-          + Nuovo
+          style={{ background:'#00e5a0', border:'none', borderRadius:10, color:'#08090c', padding:'10px 20px', cursor:'pointer', fontSize:'0.82rem', fontWeight:700 }}>
+          + Nuovo cliente
         </button>
       </div>
 
@@ -206,7 +206,7 @@ export default function AsportoPage() {
         {/* Lista asporti sx */}
         <div style={{ width:220, borderRight:'1px solid #1a1c24', overflowY:'auto', padding:8 }}>
           {asporti.length === 0 && (
-            <div style={{ textAlign:'center', color:'#5a5d6e', padding:20, fontSize:'0.8rem' }}>
+            <div style={{ textAlign:'center', color:'#ffb830', padding:20, fontSize:'0.8rem' }}>
               <div style={{ fontSize:'2rem' }}>🛵</div>
               Nessun asporto aperto
             </div>
@@ -225,11 +225,11 @@ export default function AsportoPage() {
                 border: `1px solid ${asportoAttivo === a.id ? '#00e5a0' : '#252830'}`,
               }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <span style={{ fontSize:'0.72rem', color:'#5a5d6e' }}>#{a.numero}</span>
+                <span style={{ fontSize:'0.72rem', color:'#ffb830' }}>#{a.numero}</span>
                 <Timer apertoAlle={a.aperto_alle} />
               </div>
-              <div style={{ fontWeight:700, fontSize:'0.9rem', marginTop:2 }}>{a.nome_cliente}</div>
-              <div style={{ fontSize:'0.7rem', color:'#5a5d6e', marginTop:2 }}>
+              <div style={{ fontWeight:700, fontSize:'1.2rem', marginTop:2 }}>{a.nome_cliente}</div>
+              <div style={{ fontSize:'0.9rem', color:'#ffb830', marginTop:2 }}>
                 {fmtOra(a.aperto_alle)} · {(a.righe || []).length} prodotti
               </div>
             </div>
@@ -244,25 +244,25 @@ export default function AsportoPage() {
             <div style={{ padding:'10px 16px', borderBottom:'1px solid #1a1c24', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
                 <div style={{ fontWeight:700 }}>#{asportoCorrente.numero} — {asportoCorrente.nome_cliente}</div>
-                <div style={{ fontSize:'0.72rem', color:'#5a5d6e' }}>Chiamato alle {fmtOra(asportoCorrente.aperto_alle)}</div>
+                <div style={{ fontSize:'0.92rem', color:'#ffb830' }}>Chiamato alle {fmtOra(asportoCorrente.aperto_alle)}</div>
               </div>
               <div style={{ display:'flex', gap:8 }}>
                 <button onClick={preconto}
-                  style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #252830', background:'transparent', color:'#eef0f6', cursor:'pointer', fontSize:'0.78rem' }}>
+                  style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #252830', background:'transparent', color:'#ffb830', cursor:'pointer', fontSize:'0.98rem' }}>
                   🖨️ Preconto
                 </button>
                 <button onClick={salvaComanda}
-                  style={{ padding:'8px 12px', borderRadius:8, border:'none', background:'#1a2a1a', color:'#00e5a0', cursor:'pointer', fontSize:'0.78rem' }}>
+                  style={{ padding:'8px 12px', borderRadius:8, border:'none', background:'#1a2a1a', color:'#00e5a0', cursor:'pointer', fontSize:'0.98rem' }}>
                   💾 Salva
                 </button>
                 <button onClick={chiudiAsporto}
-                  style={{ padding:'8px 16px', borderRadius:8, border:'none', background:'#00e5a0', color:'#08090c', cursor:'pointer', fontSize:'0.82rem', fontWeight:700 }}>
+                  style={{ padding:'8px 16px', borderRadius:8, border:'none', background:'#00e5a0', color:'#08090c', cursor:'pointer', fontSize:'0.92rem', fontWeight:700 }}>
                   Cassa →
                 </button>
               </div>
             </div>
           ) : (
-            <div style={{ padding:20, textAlign:'center', color:'#5a5d6e', fontSize:'0.85rem' }}>
+            <div style={{ padding:20, textAlign:'center', color:'#ffb830', fontSize:'0.95rem' }}>
               Seleziona un asporto o creane uno nuovo
             </div>
           )}
@@ -270,7 +270,7 @@ export default function AsportoPage() {
           {/* Lista righe */}
           <div style={{ flex:1, overflowY:'auto', padding:12 }}>
             {righeComanda.length === 0 && asportoCorrente && (
-              <div style={{ textAlign:'center', color:'#5a5d6e', padding:40, fontSize:'0.85rem' }}>
+              <div style={{ textAlign:'center', color:'#ffb830', padding:40, fontSize:'0.85rem' }}>
                 <div style={{ fontSize:'2rem' }}>🛵</div>
                 Aggiungi prodotti dall'ordine
               </div>
@@ -335,7 +335,7 @@ export default function AsportoPage() {
 
         {/* Reparti dx */}
         <div style={{ width:160, borderLeft:'1px solid #1a1c24', overflowY:'auto', padding:8 }}>
-          <div style={{ fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:2, padding:'4px 8px', marginBottom:4 }}>REPARTI</div>
+          <div style={{ fontSize:'1.25rem', color:'#ffb830', letterSpacing:2, padding:'4px 8px', marginBottom:4 }}>REPARTI</div>
           {reparti.map(r => (
             <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
               style={{
@@ -361,7 +361,7 @@ export default function AsportoPage() {
               value={nomeCliente}
               onChange={e => setNomeCliente(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && creaNuovoAsporto()}
-              placeholder="Nome cliente..."
+              placeholder="Cognome e Nome cliente..."
               autoFocus
               style={{ width:'100%', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, padding:'12px', color:'#eef0f6', fontSize:'1rem', boxSizing:'border-box', outline:'none', marginBottom:16 }}
             />
@@ -384,7 +384,7 @@ export default function AsportoPage() {
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center' }}>
           <div style={{ background:'#111318', border:'2px solid #ff4d6a', borderRadius:16, padding:28, width:320 }}>
             <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#ff4d6a', marginBottom:8 }}>🗑️ Elimina asporto?</div>
-            <div style={{ fontSize:'0.85rem', color:'#5a5d6e', marginBottom:20 }}>L'ordine verrà eliminato definitivamente.</div>
+            <div style={{ fontSize:'0.85rem', color:'#ffb830', marginBottom:20 }}>L'ordine verrà eliminato definitivamente.</div>
             <div style={{ display:'flex', gap:12 }}>
               <button onClick={() => setShowElimina(null)}
                 style={{ flex:1, padding:'12px', borderRadius:10, border:'1px solid #252830', background:'transparent', color:'#eef0f6', cursor:'pointer' }}>

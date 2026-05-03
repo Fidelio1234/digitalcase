@@ -513,7 +513,7 @@ export default function CassaPage() {
           </div>
           {user?.role === 'owner' && (
             <>
-              <button className={styles.cfgBtn} onClick={() => router.push('/storico')}>
+              <button className={styles.cfgBtn1} onClick={() => router.push('/storico')}>
                 📋 Storico Scontrini
               </button>
               <button className={styles.cfgBtn} onClick={() => router.push('/configurazione')}>
@@ -552,13 +552,13 @@ export default function CassaPage() {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <div style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:4, fontFamily:"'DM Mono',monospace", textTransform:'uppercase'}}>
+            <div style={{fontSize:'0.72rem', color:' #00e5a0', letterSpacing:4, fontFamily:"'DM Mono',monospace", textTransform:'uppercase'}}>
               Benvenuto/a
             </div>
             <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'#00e5a0', letterSpacing:'-0.5px'}}>
               {user.name}
             </div>
-            <div style={{fontSize:'0.82rem', color:'#5a5d6e', fontFamily:"'DM Mono',monospace"}}>
+            <div style={{fontSize:'0.82rem', color:' #00e5a0', fontFamily:"'DM Mono',monospace"}}>
               {user.role === 'owner' ? '👑 Titolare — Accesso Completo' : '👤 Cassiere — Solo Cassa'}
             </div>
           </div>

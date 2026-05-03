@@ -205,7 +205,7 @@ export default function StoricoPage() {
                   onClick={() => setFiltroMetodo(m)}>
                   {m === 'tutti' ? 'Tutti' : m === 'carta' ? '💳 Carta' : m === 'contanti' ? '💵 Contanti' : '🗑️ Annullati'}
                 </button>
-              ))}
+                ))}
             </div>
           </div>
 

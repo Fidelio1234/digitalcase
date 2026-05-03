@@ -44,14 +44,26 @@
 .cfgBtn {
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 8px; padding: 7px 12px; color: var(--accent);
-  font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.9rem; cursor: pointer;
   transition: all 0.2s;
 }
 .cfgBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+
+.cfgBtn1 {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 12px; color: #ffd06b;
+  font-family: 'DM Mono', monospace; font-size: 0.9rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.cfgBtn1:hover { border-color: var(--accent); color: var(--accent); }
+
+
+
 .logoutBtn {
   background: transparent; border: 1px solid var(--border);
   border-radius: 8px; padding: 7px 12px; color: var(--danger);
-  font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 1.1rem; cursor: pointer;
   transition: all 0.2s;
 }
 .logoutBtn:hover { border-color: var(--danger); color: var(--danger); }
