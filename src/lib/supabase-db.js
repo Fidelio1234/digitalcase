@@ -402,6 +402,7 @@ export async function getImpostazioniDb(negozioId) {
     tavoliAbilitati: data?.tavoli_abilitati !== false,
     magazzinoAbilitato: data?.magazzino_abilitato || false,
     cortesiaAbilitato: data?.cortesia_abilitato || false,
+    asportoAbilitato: data?.asporto_abilitato || false,
   }
 }
 
@@ -416,6 +417,7 @@ export async function salvaImpostazioniDb(negozioId, imp) {
       tavoli_abilitati: imp.tavoliAbilitati !== false,
       magazzino_abilitato: imp.magazzinoAbilitato || false,
       cortesia_abilitato: imp.cortesiaAbilitato || false,
+      asporto_abilitato: imp.asportoAbilitato || false,
     }, { onConflict: 'negozio_id' })
   return !error
 }
@@ -486,4 +488,87 @@ export async function salvaAnnulloDb(negozioId, dati) {
     // Non salviamo le righe per gli annulli
   }
   return !error
+}
+
+// ─── ASPORTI ────────────────────────────────────────────────────────────────
+
+export async function getAsportiDb(negozioId) {
+  const { data } = await supabase
+    .from('asporti')
+    .select('*')
+    .eq('negozio_id', negozioId)
+    .eq('stato', 'aperto')
+    .order('numero', { ascending: true })
+  return data || []
+}
+
+export async function nuovoAsportoDb(negozioId, nomeCliente, numero) {
+  const { data, error } = await supabase
+    .from('asporti')
+    .insert({
+      negozio_id: negozioId,
+      numero,
+      nome_cliente: nomeCliente,
+      stato: 'aperto',
+      righe: [],
+      aperto_alle: new Date().toISOString(),
+    })
+    .select()
+    .single()
+  if (error) return null
+  return data
+}
+
+export async function salvaAsportoDb(negozioId, id, righe) {
+  const totale = righe.reduce((s, r) => s + (r.totaleRiga || 0), 0)
+  const { error } = await supabase
+    .from('asporti')
+    .update({ righe, totale })
+    .eq('id', id)
+    .eq('negozio_id', negozioId)
+  return !error
+}
+
+export async function chiudiAsportoDb(negozioId, id) {
+  const { error } = await supabase
+    .from('asporti')
+    .update({ stato: 'chiuso', chiuso_alle: new Date().toISOString() })
+    .eq('id', id)
+    .eq('negozio_id', negozioId)
+  return !error
+}
+
+export async function eliminaAsportoDb(negozioId, id) {
+  const { error } = await supabase
+    .from('asporti')
+    .delete()
+    .eq('id', id)
+    .eq('negozio_id', negozioId)
+  return !error
+}
+
+export async function getContatoraAsportoDb(negozioId) {
+  const { data } = await supabase
+    .from('impostazioni_negozio')
+    .select('asporto_contatore')
+    .eq('negozio_id', negozioId)
+    .single()
+  return data?.asporto_contatore || 0
+}
+
+export async function incrementaContatoraAsportoDb(negozioId) {
+  const corrente = await getContatoraAsportoDb(negozioId)
+  const nuovo = corrente + 1
+  await supabase
+    .from('impostazioni_negozio')
+    .update({ asporto_contatore: nuovo })
+    .eq('negozio_id', negozioId)
+  return nuovo
+}
+
+export async function resetContatoraAsportoDb(negozioId) {
+  await supabase
+    .from('impostazioni_negozio')
+    .update({ asporto_contatore: 0 })
+    .eq('negozio_id', negozioId)
 }

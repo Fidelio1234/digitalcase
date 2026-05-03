@@ -49,7 +49,7 @@ export default function StoricoPage() {
 
   const scontriniFiltrati = storico.filter(s => {
     const dataOk = filtroData ? s.timestamp?.startsWith(filtroData) : true
-    const metodoOk = filtroMetodo === 'tutti' ? true : filtroMetodo === 'annullati' ? s.annullato : (!s.annullato && s.metodo === filtroMetodo)
+    const metodoOk = filtroMetodo === 'annullati' ? s.annullato : (!s.annullato && (filtroMetodo === 'tutti' || s.metodo === filtroMetodo))
     const testOk = ricerca
       ? s.id?.toLowerCase().includes(ricerca.toLowerCase()) ||
         s.righe?.some(r => r.nome?.toLowerCase().includes(ricerca.toLowerCase())) ||
@@ -64,13 +64,14 @@ export default function StoricoPage() {
     const dopoChiusura = ultimaChiusuraDelGiorno
       ? new Date(s.timestamp) > new Date(ultimaChiusuraDelGiorno.timestamp)
       : true
-    return dataOk && metodoOk && testOk && dopoChiusura
+    // Gli annullati ignorano il filtro dopoChiusura
+    return dataOk && metodoOk && testOk && (s.annullato || dopoChiusura)
   })
 
-  const totaleGiornaliero = scontriniFiltrati.reduce((s, x) => s + (x.totale || 0), 0)
-  const totaleCarte = scontriniFiltrati.filter(x => x.metodo === 'carta').reduce((s, x) => s + (x.totale || 0), 0)
-  const totaleContanti = scontriniFiltrati.filter(x => x.metodo === 'contanti').reduce((s, x) => s + (x.totale || 0), 0)
-  const totaleIva = scontriniFiltrati.reduce((acc, s) => {
+  const totaleGiornaliero = scontriniFiltrati.filter(x => !x.annullato).reduce((s, x) => s + (x.totale || 0), 0)
+  const totaleCarte = scontriniFiltrati.filter(x => !x.annullato && x.metodo === 'carta').reduce((s, x) => s + (x.totale || 0), 0)
+  const totaleContanti = scontriniFiltrati.filter(x => !x.annullato && x.metodo === 'contanti').reduce((s, x) => s + (x.totale || 0), 0)
+  const totaleIva = scontriniFiltrati.filter(x => !x.annullato).reduce((acc, s) => {
     s.righe?.forEach(r => {
       const k = String(r.iva)
       acc[k] = (acc[k] || 0) + r.totaleRiga
@@ -83,7 +84,7 @@ export default function StoricoPage() {
       id: 'CF' + Date.now(),
       timestamp: new Date().toISOString(),
       numeroChiusura: (chiusure.length + 1),
-      numeroScontrini: scontriniFiltrati.length,
+      numeroScontrini: scontriniFiltrati.filter(s => !s.annullato).length,
       totaleGiornaliero, totaleCarte, totaleContanti, totaleIva, negozio,
       scontrini: scontriniFiltrati.map(s => s.id),
     }

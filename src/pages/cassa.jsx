@@ -54,7 +54,7 @@ export default function CassaPage() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
-    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto
+    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto, apriScontrino
   } = useCassa()
 
 
@@ -92,6 +92,18 @@ export default function CassaPage() {
 
   // Carica righe da tavolo quando la pagina si monta
   useEffect(() => {
+    // Gestisci ritorno da asporto
+    const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
+    if (asportoDaChiudere) {
+      try {
+        const { righe } = JSON.parse(asportoDaChiudere)
+        setTimeout(() => {
+          caricaRigheEsterne(righe)
+          apriScontrino()
+        }, 300)
+      } catch(e) { console.error(e) }
+    }
+
     const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
     console.log('Check tavolo:', tavoloDaChiudere)
     if (tavoloDaChiudere) {
@@ -215,14 +227,31 @@ export default function CassaPage() {
     setShowChiusura(false)
   }
 
-  function handleConfermAnnulla() {
+  async function handleConfermAnnulla() {
+    // Chiudi asporto pendente se presente
+    const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
+    let righeAsporto = null
+    let totaleAsporto = 0
+    if (asportoDaChiudere) {
+      try {
+        const parsed = JSON.parse(asportoDaChiudere)
+        righeAsporto = parsed.righe || []
+        totaleAsporto = righeAsporto.reduce((s, r) => s + (r.totaleRiga || 0), 0)
+        const { chiudiAsportoDb } = await import('@/lib/supabase-db')
+        await chiudiAsportoDb(NEGOZIO_ID, parsed.id)
+        sessionStorage.removeItem('asporto_da_chiudere')
+      } catch(e) {}
+    }
+
     // Salva annullo se scontrino è aperto (anche se vuoto)
     if (scontrinoAperto) {
+      const righeEffettive = righe.length > 0 ? righe : (righeAsporto || [])
+      const totaleEffettivo = righe.length > 0 ? totale : totaleAsporto
       salvaAnnulloDb(NEGOZIO_ID, {
-        totale,
+        totale: totaleEffettivo,
         operatoreId: user?.id || null,
         operatoreNome: user?.name || null,
-        righe,
+        righe: righeEffettive,
       })
     }
     annullaTutto()
@@ -244,6 +273,17 @@ export default function CassaPage() {
         })
         await chiudiTavoloDb(NEGOZIO_ID, numero)
         sessionStorage.removeItem('tavolo_da_chiudere')
+      } catch(e) {}
+    }
+
+    // Chiudi asporto se viene da asporto
+    const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
+    if (asportoDaChiudere) {
+      try {
+        const { id } = JSON.parse(asportoDaChiudere)
+        const { chiudiAsportoDb } = await import('@/lib/supabase-db')
+        await chiudiAsportoDb(NEGOZIO_ID, id)
+        sessionStorage.removeItem('asporto_da_chiudere')
       } catch(e) {}
     }
 
@@ -474,10 +514,10 @@ export default function CassaPage() {
           {user?.role === 'owner' && (
             <>
               <button className={styles.cfgBtn} onClick={() => router.push('/storico')}>
-                📋 Storico
+                📋 Storico Scontrini
               </button>
               <button className={styles.cfgBtn} onClick={() => router.push('/configurazione')}>
-                ⚙️ Config
+                ⚙️ Configurazione
               </button>
             </>
           )}
@@ -602,7 +642,16 @@ export default function CassaPage() {
           )}
 
 
-          <div style={{display:'flex', gap:8, marginBottom:8}}>
+          <div style={{display:'flex', gap:8, marginBottom:8, flexWrap:'wrap'}}>
+            {impostazioni.asportoAbilitato && (
+              <button onClick={() => router.push('/asporto')}
+                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                  color:'#6482ff', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                <span style={{fontSize:'1.4rem'}}>🛵</span>
+                <span>Asporto</span>
+              </button>
+            )}
             {impostazioni.magazzinoAbilitato && (
               <button onClick={() => router.push('/magazzino')}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
@@ -1040,7 +1089,7 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
               💵 Contanti
             </button>
             {cortesiaAbilitato && (
-            <button className={`${styles.metodoBtn} ${metodo==='cortesia' ? styles.metodoActive : ''}`} onClick={() => setMetodo('cortesia')}>
+            <button className={`${styles.metodoBtn1} ${metodo==='cortesia' ? styles.metodoActive : ''}`} onClick={() => setMetodo('cortesia')}>
               ��️ Fiscale + Cortesia
             </button>
             )}

@@ -187,7 +187,9 @@ export function useCassa() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, eliminaRiga, annullaTutto,
-    chiudiScontrino, ripristinaRighe, applicaSconto, scontrinoAperto, resetScontrinoAperto: () => setScontrinoAperto(false)
+    chiudiScontrino, ripristinaRighe, applicaSconto, scontrinoAperto,
+    resetScontrinoAperto: () => setScontrinoAperto(false),
+    apriScontrino: () => setScontrinoAperto(true)
   }
 }
 

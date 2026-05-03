@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getImpostazioniDb, salvaImpostazioniDb } from '@/lib/supabase-db'
 
 export default function ImpostazioniTavoli({ negozioId, showToast }) {
-  const [imp, setImp] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10, tavoliAbilitati: true, magazzinoAbilitato: false, cortesiaAbilitato: false })
+  const [imp, setImp] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10, tavoliAbilitati: true, magazzinoAbilitato: false, cortesiaAbilitato: false, asportoAbilitato: false })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function ImpostazioniTavoli({ negozioId, showToast }) {
       <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #252830'}}>
         <div>
           <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6'}}>Modulo Magazzino</div>
-          <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:2}}>Abilita la gestione delle giacenze in cassa</div>
+          <div style={{fontSize:'0.72rem', color:'#00e5a0', marginTop:2}}>Abilita la gestione delle giacenze in cassa</div>
         </div>
         <div onClick={() => setImp(i => ({...i, magazzinoAbilitato: !i.magazzinoAbilitato}))}
           style={{width:44, height:24, borderRadius:12, cursor:'pointer',
@@ -45,7 +45,7 @@ export default function ImpostazioniTavoli({ negozioId, showToast }) {
       <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #252830'}}>
         <div>
           <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6'}}>Scontrino Cortesia</div>
-          <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:2}}>Abilita stampa scontrino non fiscale per la cucina</div>
+          <div style={{fontSize:'0.72rem', color:'#00e5a0', marginTop:2}}>Abilita stampa scontrino non fiscale per la cucina</div>
         </div>
         <div onClick={() => setImp(i => ({...i, cortesiaAbilitato: !i.cortesiaAbilitato}))}
           style={{width:44, height:24, borderRadius:12, cursor:'pointer',
@@ -56,11 +56,26 @@ export default function ImpostazioniTavoli({ negozioId, showToast }) {
         </div>
       </div>
 
+      {/* Toggle modulo asporto */}
+      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #252830'}}>
+        <div>
+          <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6'}}>Modulo Asporto</div>
+          <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:2}}>Abilita gestione ordini da asporto</div>
+        </div>
+        <div onClick={() => setImp(i => ({...i, asportoAbilitato: !i.asportoAbilitato}))}
+          style={{width:44, height:24, borderRadius:12, cursor:'pointer',
+            background: imp.asportoAbilitato ? '#00e5a0' : '#252830',
+            position:'relative', transition:'background 0.2s', flexShrink:0}}>
+          <div style={{position:'absolute', top:2, left: imp.asportoAbilitato ? 22 : 2,
+            width:20, height:20, borderRadius:'50%', background:'white', transition:'left 0.2s'}} />
+        </div>
+      </div>
+
       {/* Toggle modulo tavoli */}
       <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #252830'}}>
         <div>
           <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6'}}>Modulo Tavoli</div>
-          <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:2}}>Abilita la gestione dei tavoli in cassa</div>
+          <div style={{fontSize:'0.72rem', color:'#00e5a0', marginTop:2}}>Abilita la gestione dei tavoli in cassa</div>
         </div>
         <div onClick={() => setImp(i => ({...i, tavoliAbilitati: !i.tavoliAbilitati}))}
           style={{width:44, height:24, borderRadius:12, cursor:'pointer',
@@ -73,7 +88,7 @@ export default function ImpostazioniTavoli({ negozioId, showToast }) {
 
       {/* Numero tavoli */}
       <div>
-        <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>NUMERO TAVOLI</label>
+        <label style={{fontSize:'0.72rem', color:'#00e5a0', letterSpacing:1, display:'block', marginBottom:4}}>NUMERO TAVOLI</label>
         <input type="number" min="1" max="100"
           value={imp.numeroTavoli}
           onChange={e => setImp(i => ({...i, numeroTavoli: parseInt(e.target.value)}))}
@@ -85,7 +100,7 @@ export default function ImpostazioniTavoli({ negozioId, showToast }) {
       <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderRadius:12, border:'1px solid #252830'}}>
         <div>
           <div style={{fontSize:'0.85rem', fontWeight:600}}>Coperto</div>
-          <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:2}}>Aggiunge il coperto allo scontrino</div>
+          <div style={{fontSize:'0.72rem', color:'#00e5a0', marginTop:2}}>Aggiunge il coperto allo scontrino</div>
         </div>
         <div
           onClick={() => setImp(i => ({...i, copertoAbilitato: !i.copertoAbilitato}))}

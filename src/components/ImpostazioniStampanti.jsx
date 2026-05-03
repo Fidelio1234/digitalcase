@@ -85,26 +85,26 @@ export default function ImpostazioniStampanti({ reparti, showToast }) {
         <div key={s.id} style={{background:'#111318', border:'1px solid #252830', borderRadius:14, padding:16, display:'flex', flexDirection:'column', gap:10}}>
           <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8}}>
             <div>
-              <label style={{fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:3}}>NOME</label>
+              <label style={{fontSize:'0.65rem', color:'#00e5a0', letterSpacing:1, display:'block', marginBottom:3}}>NOME</label>
               <input type="text" value={s.nome}
                 onChange={e => aggiorna(s.id, 'nome', e.target.value)}
                 style={inputStyle} placeholder="es. Cucina" />
             </div>
             <div style={{display:'flex', alignItems:'center', gap:8, paddingTop:18}}>
-              <span style={{fontSize:'0.78rem', color:'#5a5d6e'}}>Attiva</span>
+              <span style={{fontSize:'0.78rem', color:'#00e5a0'}}>Attiva</span>
               <div onClick={() => aggiorna(s.id, 'attiva', !s.attiva)}
                 style={{width:40, height:22, borderRadius:11, cursor:'pointer', background: s.attiva ? '#00e5a0' : '#252830', position:'relative', transition:'background 0.2s', flexShrink:0}}>
                 <div style={{position:'absolute', top:2, left: s.attiva ? 20 : 2, width:18, height:18, borderRadius:'50%', background:'white', transition:'left 0.2s'}} />
               </div>
             </div>
             <div>
-              <label style={{fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:3}}>IP STAMPANTE</label>
+              <label style={{fontSize:'0.65rem', color:'#00e5a0', letterSpacing:1, display:'block', marginBottom:3}}>IP STAMPANTE</label>
               <input type="text" value={s.ip}
                 onChange={e => aggiorna(s.id, 'ip', e.target.value)}
                 style={inputStyle} placeholder="es. 192.168.1.50" />
             </div>
             <div>
-              <label style={{fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:3}}>PORTA</label>
+              <label style={{fontSize:'0.65rem', color:'#00e5a0', letterSpacing:1, display:'block', marginBottom:3}}>PORTA</label>
               <input type="number" value={s.porta}
                 onChange={e => aggiorna(s.id, 'porta', parseInt(e.target.value))}
                 style={inputStyle} placeholder="9100" />
@@ -113,7 +113,7 @@ export default function ImpostazioniStampanti({ reparti, showToast }) {
 
           {/* Gruppi reparti */}
           <div>
-            <label style={{fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:6}}>STAMPA REPARTI</label>
+            <label style={{fontSize:'0.65rem', color:'#00e5a0', letterSpacing:1, display:'block', marginBottom:6}}>STAMPA REPARTI</label>
             <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
               {reparti?.map(r => (
                 <button key={r.id} type="button"
@@ -165,7 +165,7 @@ export default function ImpostazioniStampanti({ reparti, showToast }) {
       ))}
 
       <button onClick={aggiungi}
-        style={{padding:'10px', borderRadius:12, border:'1px dashed #252830', background:'transparent', color:'#5a5d6e', cursor:'pointer', fontSize:'0.82rem'}}>
+        style={{padding:'10px', borderRadius:12, border:'1px dashed #252830', background:'transparent', color:'#00e5a0', cursor:'pointer', fontSize:'0.82rem'}}>
         + Aggiungi stampante
       </button>
     </div>

@@ -270,7 +270,7 @@ export default function LoginPage() {
             </div>
             <div className={styles.userName}>{u.nome}</div>
             <div className={`${styles.userRole} ${styles[u.ruolo]}`}>
-              {u.ruolo === 'owner' ? 'Admin' : 'Cassa'}
+              {u.ruolo === 'owner' ? 'titolare' : 'Cassa'}
             </div>
           </button>
         ))}

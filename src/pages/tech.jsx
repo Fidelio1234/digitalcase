@@ -285,7 +285,7 @@ export default function TechPage() {
                     </div>
                   ) : (
                     <div style={{display:'flex',alignItems:'center',gap:8,marginTop:6}}>
-                      <span style={{fontSize:'0.75rem',color:'#5a5d6e'}}>PIN:</span>
+                      <span style={{fontSize:'0.75rem',color:'white'}}>PIN:</span>
                       <span style={{
                         fontFamily:'monospace', fontSize:'0.9rem',
                         color:'#ffb830', letterSpacing:3,
@@ -354,7 +354,7 @@ export default function TechPage() {
                   </div>
                   <div style={{flex:1}}>
                     <div style={{fontSize:'0.9rem',fontWeight:500}}>{r.nome}</div>
-                    <div style={{fontSize:'0.72rem',color:'#5a5d6e',marginTop:2}}>
+                    <div style={{fontSize:'0.72rem',color:'#00e5a0',marginTop:2}}>
                       IVA {r.iva}% · max €{fmt(r.massimoImporto)} · {r.sottoreparti?.length || 0} prodotti
                     </div>
                   </div>

@@ -325,6 +325,23 @@
 .metodoBtn:hover { border-color: var(--accent); color: var(--accent); }
 .metodoActive { border-color: var(--accent) !important; background: var(--accent-dim) !important; color: var(--accent) !important; }
 
+
+
+
+.metodoBtn1 {
+  flex: 1; padding: 10px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--danger);
+  color: var(--border); font-family: 'DM Mono', monospace;
+  font-size: 0.86rem; cursor: pointer; transition: all 0.2s;
+}
+.metodoBtn1:hover { border-color: var(--accent); color: var(--accent); }
+.metodoActive { border-color: var(--accent) !important; background: var(--accent-dim) !important; color: var(--accent) !important; }
+
+
+
+
+
+
 .contantiWrap { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .contantiInput {
   width: 100%; background: var(--surface2); border: 1px solid var(--border);
