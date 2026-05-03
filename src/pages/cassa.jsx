@@ -555,7 +555,7 @@ export default function CassaPage() {
             <div style={{fontSize:'0.72rem', color:' #00e5a0', letterSpacing:4, fontFamily:"'DM Mono',monospace", textTransform:'uppercase'}}>
               Benvenuto/a
             </div>
-            <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'#00e5a0', letterSpacing:'-0.5px'}}>
+            <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'#ffd06b', letterSpacing:'-0.5px'}}>
               {user.name}
             </div>
             <div style={{fontSize:'0.82rem', color:' #00e5a0', fontFamily:"'DM Mono',monospace"}}>
