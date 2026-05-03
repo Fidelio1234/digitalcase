@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
@@ -61,18 +62,6 @@ export default function AsportoPage() {
       getImpostazioniDb(NEGOZIO_ID).then(setImpostazioni)
     }
   }, [user, loading])
-
-  // Reset contatore a mezzanotte
-  useEffect(() => {
-    const check = () => {
-      const now = new Date()
-      if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
-        import('@/lib/supabase-db').then(({ resetContatoraAsportoDb }) => resetContatoraAsportoDb(NEGOZIO_ID))
-      }
-    }
-    const interval = setInterval(check, 1000)
-    return () => clearInterval(interval)
-  }, [])
 
   async function carica() {
     const [a, r] = await Promise.all([
@@ -355,7 +344,7 @@ export default function AsportoPage() {
                 background: repartoAttivo === r.id ? r.colore+'15' : 'transparent',
                 color:'#eef0f6', fontSize:'0.82rem', display:'flex', alignItems:'center', gap:6
               }}>
-              <span>{ICONE[r.icona]||'��'}</span>
+              <span>{ICONE[r.icona]||'📦'}</span>
               <span>{r.nome}</span>
             </button>
           ))}
