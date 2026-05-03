@@ -240,7 +240,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
           background: rtConfig.attivo ? '#00e5a0' : '#5a5d6e',
           boxShadow: rtConfig.attivo ? '0 0 8px #00e5a0' : 'none'
         }} />
-        <span style={{fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", color:'#eef0f6'}}>
+        <span style={{fontSize:'0.98rem', fontFamily:"'DM Mono',monospace", color:'red'}}>
           MENU RT {rtConfig.marca?.toUpperCase()} 
         </span>
         <span style={{color:'#5a5d6e', fontSize:'0.75rem'}}>
