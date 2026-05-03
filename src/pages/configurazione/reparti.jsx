@@ -76,6 +76,8 @@ export default function RepartiPage() {
   const [expandedId, setExpandedId] = useState(null)
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
+  const [confirmElimina, setConfirmElimina] = useState(null) // {tipo, id, nome}
+
 
   useEffect(() => {
     if (!user) { if (true) router.replace('/login'); return }
@@ -119,6 +121,20 @@ export default function RepartiPage() {
   }
 
   function closeModal() { setModal(null); setForm({}) }
+
+  async function confermaEliminaAction() {
+    if (!confirmElimina) return
+    if (confirmElimina.tipo === 'reparto') {
+      await deleteRepartoDb(confirmElimina.id)
+      await loadReparti()
+      showToast('Reparto eliminato')
+    } else {
+      await deleteProdottoDb(confirmElimina.id)
+      await loadReparti()
+      showToast('Prodotto eliminato')
+    }
+    setConfirmElimina(null)
+  }
 
   async function saveReparto() {
     if (!form.nome?.trim()) { showToast('Inserisci il nome del reparto'); return }
@@ -175,18 +191,12 @@ export default function RepartiPage() {
     setSaving(false)
   }
 
-  async function deleteReparto(id) {
-    if (!confirm('Eliminare questo reparto e tutti i suoi prodotti?')) return
-    await deleteRepartoDb(id)
-    await loadReparti()
-    showToast('Reparto eliminato')
+  function deleteReparto(id) {
+    setConfirmElimina({ tipo: 'reparto', id: id, nome: reparti.find(r => r.id === id)?.nome || 'questo reparto' })
   }
 
-  async function deleteSottoreparto(srId) {
-    if (!confirm('Eliminare questo prodotto?')) return
-    await deleteProdottoDb(srId)
-    await loadReparti()
-    showToast('Prodotto eliminato')
+  function deleteSottoreparto(srId) {
+    setConfirmElimina({ tipo: 'prodotto', id: srId, nome: 'questo prodotto' })
   }
 
   async function toggleReparto(r) {
@@ -570,6 +580,58 @@ export default function RepartiPage() {
         </div>
       )}
 
+      {/* MODAL CONFERMA ELIMINA */}
+      {confirmElimina && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#111318',border:'2px solid #ff4d6a',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
+            <div style={{fontSize:'1.3rem',textAlign:'center',marginBottom:12}}>🗑️</div>
+            <div style={{fontSize:'1rem',fontWeight:700,color:'#ff4d6a',marginBottom:8,textAlign:'center'}}>
+              {confirmElimina.tipo === 'reparto' ? 'Elimina reparto' : 'Elimina prodotto'}
+            </div>
+            <div style={{fontSize:'0.85rem',color:'#5a5d6e',marginBottom:20,textAlign:'center'}}>
+              Stai per eliminare <strong style={{color:'#eef0f6'}}>{confirmElimina.nome}</strong>
+              {confirmElimina.tipo === 'reparto' && <><br/><span style={{color:'#ff4d6a'}}>e tutti i suoi prodotti</span></>}.
+              <br/>Questa operazione non può essere annullata.
+            </div>
+            <div style={{display:'flex',gap:12}}>
+              <button onClick={() => setConfirmElimina(null)}
+                style={{flex:1,padding:'12px',borderRadius:10,border:'1px solid #252830',background:'transparent',color:'#eef0f6',cursor:'pointer'}}>
+                Annulla
+              </button>
+              <button onClick={confermaEliminaAction}
+                style={{flex:1,padding:'12px',borderRadius:10,border:'none',background:'#ff4d6a',color:'white',cursor:'pointer',fontWeight:700}}>
+                Sì, elimina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL CONFERMA ELIMINA */}
+      {confirmElimina && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#111318',border:'2px solid #ff4d6a',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
+            <div style={{fontSize:'1.3rem',textAlign:'center',marginBottom:12}}>🗑️</div>
+            <div style={{fontSize:'1rem',fontWeight:700,color:'#ff4d6a',marginBottom:8,textAlign:'center'}}>
+              {confirmElimina.tipo === 'reparto' ? 'Elimina reparto' : 'Elimina prodotto'}
+            </div>
+            <div style={{fontSize:'0.85rem',color:'#5a5d6e',marginBottom:20,textAlign:'center'}}>
+              Stai per eliminare <strong style={{color:'#eef0f6'}}>{confirmElimina.nome}</strong>
+              {confirmElimina.tipo === 'reparto' && <><br/><span style={{color:'#ff4d6a'}}>e tutti i suoi prodotti</span></>}.
+              <br/>Questa operazione non può essere annullata.
+            </div>
+            <div style={{display:'flex',gap:12}}>
+              <button onClick={() => setConfirmElimina(null)}
+                style={{flex:1,padding:'12px',borderRadius:10,border:'1px solid #252830',background:'transparent',color:'#eef0f6',cursor:'pointer'}}>
+                Annulla
+              </button>
+              <button onClick={confermaEliminaAction}
+                style={{flex:1,padding:'12px',borderRadius:10,border:'none',background:'#ff4d6a',color:'white',cursor:'pointer',fontWeight:700}}>
+                Sì, elimina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <div className={styles.toast}>{toast}</div>}
     </div>
   )
