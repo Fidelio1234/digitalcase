@@ -1,10 +1,31 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 export function useCassa() {
   const [inputCents, setInputCents] = useState(0)
   const [righe, setRighe] = useState([])
   const [scontrinoAperto, setScontrinoAperto] = useState(false)
   const [ultimaChiusa, setUltimaChiusa] = useState(null)
+
+  // Carica da sessionStorage solo lato client
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('cassa_righe')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed.length > 0) setRighe(parsed)
+      }
+      if (sessionStorage.getItem('cassa_aperto') === 'true') setScontrinoAperto(true)
+    } catch {}
+  }, [])
+
+  // Sincronizza con sessionStorage
+  useEffect(() => {
+    try { sessionStorage.setItem('cassa_righe', JSON.stringify(righe)) } catch {}
+  }, [righe])
+
+  useEffect(() => {
+    try { sessionStorage.setItem('cassa_aperto', String(scontrinoAperto)) } catch {}
+  }, [scontrinoAperto])
   const [errore, setErrore] = useState('')
 
   const pressDigit = useCallback((digit) => {
@@ -115,6 +136,7 @@ export function useCassa() {
     setErrore('')
     setUltimaChiusa(null)
     setScontrinoAperto(false)
+    try { sessionStorage.removeItem('cassa_righe'); sessionStorage.removeItem('cassa_aperto') } catch {}
   }, [])
 
   const ripristinaRighe = useCallback((righeBackup) => {

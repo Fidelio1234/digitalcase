@@ -92,7 +92,7 @@
   border-radius: 14px; padding: 16px;
   text-align: center;
 }
-.displayLabel { font-size: 1.2rem; color:  #ffb830; letter-spacing: 6px; text-transform: uppercase; }
+.displayLabel { font-size: 0.90rem; color:  #ffb830; letter-spacing: 6px; text-transform: uppercase; }
 .displayValue {
   font-family: 'Unbounded', sans-serif;
   font-size: 2rem; font-weight: 700;
@@ -140,7 +140,7 @@
 .fnDanger {color: var(--danger);}
 .subtotale {
   background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 2px;
+  border-radius: 12px; padding: 12px;
 }
 .subtotaleRow {
   display: flex; justify-content: space-between;
