@@ -236,7 +236,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
         }}
       >
         <div style={{
-          width:8, height:8, borderRadius:'50%',
+          width:8, height:8, borderRadius:'50%', 
           background: rtConfig.attivo ? '#00e5a0' : '#5a5d6e',
           boxShadow: rtConfig.attivo ? '0 0 8px #00e5a0' : 'none'
         }} />

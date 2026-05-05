@@ -271,9 +271,16 @@ export default function StoricoPage() {
                       Dettaglio scontrino #{s.numeroScontrino}
                     </div>
                     {s.righe?.map((r, i) => (
-                      <div key={i} className={styles.dettaglioRiga}>
-                        <span>{r.nome} {r.quantita > 1 ? `×${r.quantita}` : ''}</span>
-                        <span>€ {fmt(r.totaleRiga)}</span>
+                      <div key={i} style={{display:'flex', flexDirection:'column'}}>
+                        <div className={styles.dettaglioRiga}>
+                          <span>{r.nome} {r.quantita > 1 ? `×${r.quantita}` : ''}</span>
+                          <span>€ {fmt(r.totaleRiga)}</span>
+                        </div>
+                        {r.nota && (
+                          <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830', paddingLeft:8, marginTop:-4, marginBottom:4}}>
+                            📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
+                          </div>
+                        )}
                       </div>
                     ))}
                     <div className={styles.dettaglioTotale}>

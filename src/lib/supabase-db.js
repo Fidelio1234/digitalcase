@@ -197,6 +197,8 @@ export async function salvaScontrinoDb(negozioId, scontrino) {
         quantita: r.quantita || 1,
         totale_riga: r.totaleRiga,
         iva: r.iva,
+        nota: r.nota || null,
+        importo_base: r.importoBase || null,
       }))
     )
   }
@@ -240,6 +242,8 @@ export async function getStoricoDb(negozioId, filtri = {}) {
       quantita: r.quantita,
       totaleRiga: r.totale_riga,
       iva: r.iva,
+      nota: r.nota || null,
+      importoBase: r.importo_base || null,
     }))
   }))
 }
@@ -403,6 +407,7 @@ export async function getImpostazioniDb(negozioId) {
     magazzinoAbilitato: data?.magazzino_abilitato || false,
     cortesiaAbilitato: data?.cortesia_abilitato || false,
     asportoAbilitato: data?.asporto_abilitato || false,
+    costoAggiunta: data?.costo_aggiunta ?? 50,
   }
 }
 
@@ -418,6 +423,7 @@ export async function salvaImpostazioniDb(negozioId, imp) {
       magazzino_abilitato: imp.magazzinoAbilitato || false,
       cortesia_abilitato: imp.cortesiaAbilitato || false,
       asporto_abilitato: imp.asportoAbilitato || false,
+      costo_aggiunta: imp.costoAggiunta ?? 50,
     }, { onConflict: 'negozio_id' })
   return !error
 }

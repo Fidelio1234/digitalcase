@@ -43,6 +43,9 @@ export default function CassaPage() {
   const [barcodeVal, setBarcodeVal] = useState('')
   const [avvisoMagazzino, setAvvisoMagazzino] = useState([])
   const [giacenzaInsuff, setGiacenzaInsuff] = useState([])
+  const [notaModal, setNotaModal] = useState(null)
+  const [notaTesto, setNotaTesto] = useState('')
+  const [notaTipo, setNotaTipo] = useState('rimozione') // rimozione | aggiunta
   const [showSconto, setShowSconto] = useState(false)
   const [tipoSconto, setTipoSconto] = useState('euro') // euro | percentuale
   const [valoreSconto, setValoreSconto] = useState('')
@@ -54,7 +57,7 @@ export default function CassaPage() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
-    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto, apriScontrino
+    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto, apriScontrino, salvaNota
   } = useCassa()
 
 
@@ -381,13 +384,17 @@ export default function CassaPage() {
               const descr = (riga.nome || '').replace(/"/g, '').substring(0, 38)
               const qta = riga.quantita > 1 ? `${riga.quantita}x ` : ''
               cmdCortesia += `"${qta}${descr}"@`
+              if (riga.nota) {
+                const nota = riga.nota.replace(/"/g, '').substring(0, 38)
+                cmdCortesia += `"  >> ${nota}"@`
+              }
             }
             cmdCortesia += 'J'
-            await new Promise(r => setTimeout(r, 1000))
+            await new Promise(r => setTimeout(r, 500))
             await fetch('/api/ditron', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia }, marca: rtConfig.marca })
+              body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
             })
           }
         } else if (rtConfig.marca === 'rch') {
@@ -500,7 +507,7 @@ export default function CassaPage() {
           <div className={styles.logoMark}>🧾</div>
           <div>
             <div className={styles.logoName}>ScontrinoDigitale</div>
-            <div className={styles.headerUser}>{user?.name} · {user?.role === 'owner' ? 'Titolare' : 'Cassiere'}</div>
+            <div className={styles.headerUser}>{user?.name} · {user?.role === 'owner' ? 'Admin' : 'Cassiere'}</div>
           </div>
         </div>
         <div className={styles.headerCenter}>
@@ -732,11 +739,21 @@ export default function CassaPage() {
                       {r.nome}
                       {r.quantita > 1 && <span className={styles.rigaQty}>×{r.quantita}</span>}
                     </div>
+                    {r.nota && (
+                      <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830', marginTop:2}}>
+                        📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
+                      </div>
+                    )}
                     <div className={styles.rigaMeta}>IVA {r.iva}% · €{fmt(r.importo)} cad.</div>
                   </div>
                   <div className={styles.rigaDestra}>
                     <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
-                    <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
+                    <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
+                      title="Aggiungi nota"
+                      style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
+                      ✏️
+                    </button>
+                  <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -957,6 +974,53 @@ export default function CassaPage() {
           </div>
         </div>
       )}
+      {/* MODAL NOTA */}
+      {notaModal !== null && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:360,display:'flex',flexDirection:'column',gap:16}}>
+            <div style={{fontSize:'0.9rem',fontWeight:700,color:'#eef0f6'}}>
+              ✏️ Variante per: {righe.find(r => r.id === notaModal)?.nome}
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={() => setNotaTipo('rimozione')}
+                style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
+                  background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
+                  color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
+                − Rimozione
+              </button>
+              <button onClick={() => setNotaTipo('aggiunta')}
+                style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
+                  background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
+                  color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
+                + Aggiunta
+              </button>
+            </div>
+            {notaTipo === 'aggiunta' && (
+              <div style={{fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px'}}>
+                💰 Verrà aggiunto +€{((impostazioni.costoAggiunta ?? 50)/100).toFixed(2).replace('.',',')} al totale
+              </div>
+            )}
+            <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value)}
+              placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi, doppia porzione...'}
+              rows={3}
+              style={{background:'#1a1c24',border:'1px solid #252830',borderRadius:10,padding:12,color:'#eef0f6',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
+            />
+            <div style={{display:'flex',gap:10}}>
+              <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione') }}
+                style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid #252830',color:'#eef0f6',cursor:'pointer'}}>
+                Annulla
+              </button>
+              <button onClick={() => {
+                  salvaNota(notaModal, notaTesto, notaTipo, impostazioni.costoAggiunta ?? 50)
+                  setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione')
+                }}
+                style={{flex:1,padding:12,borderRadius:10,background:'#00e5a0',border:'none',color:'#08090c',fontWeight:700,cursor:'pointer'}}>
+                Salva
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* MODAL AVVISO SCORTE */}
       {avvisoMagazzino.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -1055,9 +1119,18 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
         </div>
         <div className={styles.modalRighe}>
           {scontrino.righe.map(r => (
-            <div key={r.id} className={styles.modalRiga}>
-              <span>{r.nome}{r.quantita > 1 ? ` ×${r.quantita}` : ''}</span>
-              <span>€ {fmt(r.totaleRiga)}</span>
+            <div key={r.id} className={styles.modalRiga} style={{flexDirection:'column', alignItems:'flex-start', gap:2}}>
+              <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                <span>{r.nome}{r.quantita > 1 ? ` ×${r.quantita}` : ''}</span>
+                <span>€ {fmt(r.totaleRiga)}</span>
+              </div>
+              {r.nota && (
+                <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830'}}>
+                  {r.nota.startsWith('+') && r.importoBase
+                    ? `📝 ${r.nota} +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}`
+                    : `📝 ${r.nota}`}
+                </div>
+              )}
             </div>
           ))}
           <div className={styles.modalTotale}>

@@ -199,6 +199,19 @@ export default function TavoliPage() {
     setInputCents(0)
   }
 
+  function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
+    setRigheComanda(prev => prev.map(r => {
+      if (r.id !== id) return r
+      const importoBase = r.importoBase ?? r.importo
+      const totaleBase = importoBase * r.quantita
+      if (tipo === 'aggiunta' && nota) {
+        return { ...r, nota: `+${nota}`, importoBase, importo: importoBase + costoAggiunta, totaleRiga: totaleBase + (costoAggiunta * r.quantita) }
+      } else {
+        return { ...r, nota: nota ? `-${nota}` : '', importoBase, importo: importoBase, totaleRiga: totaleBase }
+      }
+    }))
+  }
+
   function eliminaRiga(id) {
     setRigheComanda(prev => prev.filter(r => r.id !== id))
   }
@@ -343,7 +356,13 @@ export default function TavoliPage() {
                       <div style={{ fontSize:'0.7rem', color:'#ffffff' }}>€ {fmt(r.importo)} cad.</div>
                     </div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:600 }}>€ {fmt(r.totaleRiga)}</div>
-                    {r.id !== 'coperto' && <button onClick={() => eliminaRiga(r.id)} style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>✕</button>}
+                    {r.id !== 'coperto' && (
+                      <>
+                        <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
+                          style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px' }}>✏️</button>
+                        <button onClick={() => eliminaRiga(r.id)} style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>✕</button>
+                      </>
+                    )}
                   </div>
                 ))}
                 <div style={{ display:'flex', justifyContent:'space-between', padding:'12px 0', fontWeight:700, fontSize:'0.9rem' }}>

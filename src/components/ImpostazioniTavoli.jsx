@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getImpostazioniDb, salvaImpostazioniDb } from '@/lib/supabase-db'
 
 export default function ImpostazioniTavoli({ negozioId, showToast }) {
-  const [imp, setImp] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10, tavoliAbilitati: true, magazzinoAbilitato: false, cortesiaAbilitato: false, asportoAbilitato: false })
+  const [imp, setImp] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10, tavoliAbilitati: true, magazzinoAbilitato: false, cortesiaAbilitato: false, asportoAbilitato: false, costoAggiunta: 50 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -68,6 +68,22 @@ export default function ImpostazioniTavoli({ negozioId, showToast }) {
             position:'relative', transition:'background 0.2s', flexShrink:0}}>
           <div style={{position:'absolute', top:2, left: imp.asportoAbilitato ? 22 : 2,
             width:20, height:20, borderRadius:'50%', background:'white', transition:'left 0.2s'}} />
+        </div>
+      </div>
+
+      {/* Costo aggiunta ingrediente */}
+      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #252830'}}>
+        <div>
+          <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6'}}>Costo aggiunta ingrediente</div>
+          <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:2}}>Importo aggiunto per ogni variante + (es. +funghi)</div>
+        </div>
+        <div style={{display:'flex', alignItems:'center', gap:6}}>
+          <span style={{color:'#5a5d6e', fontSize:'0.8rem'}}>€</span>
+          <input type="number" min="0" step="10"
+            value={(imp.costoAggiunta ?? 50) / 100}
+            onChange={e => setImp(i => ({...i, costoAggiunta: Math.round(parseFloat(e.target.value || 0) * 100)}))}
+            style={{width:70, background:'#1a1c24', border:'1px solid #252830', borderRadius:8, padding:'6px 8px', color:'#eef0f6', fontSize:'0.85rem', textAlign:'right'}}
+          />
         </div>
       </div>
 

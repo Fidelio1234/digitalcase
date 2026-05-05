@@ -165,6 +165,32 @@ export function useCassa() {
     return acc
   }, {})
 
+  function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
+    setRighe(prev => prev.map(r => {
+      if (r.id !== id) return r
+      // Rimuovi eventuale costo aggiunta precedente
+      const importoBase = r.importoBase ?? r.importo
+      const totaleBase = importoBase * r.quantita
+      if (tipo === 'aggiunta' && nota) {
+        return {
+          ...r,
+          nota: `+${nota}`,
+          importoBase,
+          importo: importoBase + costoAggiunta,
+          totaleRiga: totaleBase + (costoAggiunta * r.quantita),
+        }
+      } else {
+        return {
+          ...r,
+          nota: nota ? `-${nota}` : '',
+          importoBase,
+          importo: importoBase,
+          totaleRiga: totaleBase,
+        }
+      }
+    }))
+  }
+
   function applicaSconto(tipo, valore) {
     if (tipo === 'euro') {
       // Stessa logica della cassa: input in centesimi
@@ -209,7 +235,7 @@ export function useCassa() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, eliminaRiga, annullaTutto,
-    chiudiScontrino, ripristinaRighe, applicaSconto, scontrinoAperto,
+    chiudiScontrino, ripristinaRighe, applicaSconto, scontrinoAperto, salvaNota,
     resetScontrinoAperto: () => setScontrinoAperto(false),
     apriScontrino: () => setScontrinoAperto(true)
   }

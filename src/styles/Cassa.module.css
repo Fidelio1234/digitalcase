@@ -236,7 +236,7 @@
 }
 .repartiHeader {
   padding: 14px 16px;
-  font-size: 1.2rem; color: #ffd06b;
+  font-size: 1rem; color: #ffd06b;
   letter-spacing: 2px; text-transform: uppercase;
   border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
