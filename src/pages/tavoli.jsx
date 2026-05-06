@@ -42,6 +42,9 @@ export default function TavoliPage() {
   const [modalElimina, setModalElimina] = useState(null) // numero tavolo
   const [pinElimina, setPinElimina] = useState('')
   const [pinErrore, setPinErrore] = useState(false)
+  const [notaModal, setNotaModal] = useState(null)
+  const [notaTesto, setNotaTesto] = useState('')
+  const [notaTipo, setNotaTipo] = useState('rimozione')
   const longPressTimer = useRef(null)
 
   useEffect(() => {
@@ -212,6 +215,19 @@ export default function TavoliPage() {
     }))
   }
 
+  function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
+    setRigheComanda(prev => prev.map(r => {
+      if (r.id !== id) return r
+      const importoBase = r.importoBase ?? r.importo
+      const totaleBase = importoBase * r.quantita
+      if (tipo === 'aggiunta' && nota) {
+        return { ...r, nota: `+${nota}`, importoBase, importo: importoBase + costoAggiunta, totaleRiga: totaleBase + (costoAggiunta * r.quantita) }
+      } else {
+        return { ...r, nota: nota ? `-${nota}` : '', importoBase, importo: importoBase, totaleRiga: totaleBase }
+      }
+    }))
+  }
+
   function eliminaRiga(id) {
     setRigheComanda(prev => prev.filter(r => r.id !== id))
   }
@@ -356,9 +372,14 @@ export default function TavoliPage() {
                       <div style={{ fontSize:'0.7rem', color:'#ffffff' }}>€ {fmt(r.importo)} cad.</div>
                     </div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:600 }}>€ {fmt(r.totaleRiga)}</div>
+                    {r.nota && (
+                      <div style={{fontSize:'0.7rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830'}}>
+                        📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
+                      </div>
+                    )}
                     {r.id !== 'coperto' && (
                       <>
-                        <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
+                        <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/,'') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione') }}
                           style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px' }}>✏️</button>
                         <button onClick={() => eliminaRiga(r.id)} style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>✕</button>
                       </>
@@ -408,7 +429,44 @@ export default function TavoliPage() {
             </button>
           ))}
         </div>
-      </div>
+      {/* MODAL NOTA - inline nella vista comanda */}
+      {notaModal !== null && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700, padding:20 }}>
+          <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#eef0f6' }}>✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}</div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => setNotaTipo('rimozione')}
+                style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
+                  background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
+                  color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
+                − Rimozione
+              </button>
+              <button onClick={() => setNotaTipo('aggiunta')}
+                style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
+                  background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
+                  color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
+                + Aggiunta
+              </button>
+            </div>
+            <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value)}
+              placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi...'}
+              rows={3}
+              style={{ background:'#1a1c24', border:'1px solid #252830', borderRadius:10, padding:12, color:'#eef0f6', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}
+            />
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione') }}
+                style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>
+                Annulla
+              </button>
+              <button onClick={() => { salvaNota(notaModal, notaTesto, notaTipo, 50); setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione') }}
+                style={{ flex:1, padding:12, borderRadius:10, background:'#00e5a0', border:'none', color:'#08090c', fontWeight:700, cursor:'pointer' }}>
+                Salva
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
     )
   }
 
@@ -451,6 +509,46 @@ export default function TavoliPage() {
             <button onClick={() => confermaCoperti(modalCoperti, numCoperti)}
               style={{flex:1, padding:12, borderRadius:12, background:'#00e5a0', border:'none', color:'#08090c', fontWeight:700, cursor:'pointer'}}>
               Apri tavolo
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // MODAL NOTA
+  if (notaModal !== null) {
+    return (
+      <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
+        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#eef0f6' }}>✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}</div>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={() => setNotaTipo('rimozione')}
+              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
+                background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
+                color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
+              − Rimozione
+            </button>
+            <button onClick={() => setNotaTipo('aggiunta')}
+              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
+                background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
+                color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
+              + Aggiunta
+            </button>
+          </div>
+          <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value)}
+            placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi...'}
+            rows={3}
+            style={{ background:'#1a1c24', border:'1px solid #252830', borderRadius:10, padding:12, color:'#eef0f6', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}
+          />
+          <div style={{ display:'flex', gap:10 }}>
+            <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione') }}
+              style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>
+              Annulla
+            </button>
+            <button onClick={() => { salvaNota(notaModal, notaTesto, notaTipo, 50); setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione') }}
+              style={{ flex:1, padding:12, borderRadius:10, background:'#00e5a0', border:'none', color:'#08090c', fontWeight:700, cursor:'pointer' }}>
+              Salva
             </button>
           </div>
         </div>
