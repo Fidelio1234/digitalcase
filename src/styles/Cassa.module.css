@@ -44,7 +44,7 @@
 .cfgBtn {
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 8px; padding: 7px 12px; color: var(--accent);
-  font-family: 'DM Mono', monospace; font-size: 0.9rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.7rem; cursor: pointer;
   transition: all 0.2s;
 }
 .cfgBtn:hover { border-color: var(--accent); color: var(--accent); }
@@ -53,7 +53,7 @@
 .cfgBtn1 {
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 8px; padding: 7px 12px; color: var(--append);
-  font-family: 'DM Mono', monospace; font-size: 0.9rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.7rem; cursor: pointer;
   transition: all 0.2s;
 }
 .cfgBtn1:hover { border-color: var(--accent); color: var(--accent); }
@@ -63,7 +63,7 @@
 .logoutBtn {
   background: transparent; border: 1px solid var(--border);
   border-radius: 8px; padding: 7px 12px; color: var(--danger);
-  font-family: 'DM Mono', monospace; font-size: 1.1rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer;
   transition: all 0.2s;
 }
 .logoutBtn:hover { border-color: var(--danger); color: var(--danger); }
@@ -313,7 +313,7 @@
 .modalRiga { display: flex; justify-content: space-between; font-size: 0.82rem; }
 .modalTotale {
   display: flex; justify-content: space-between;
-  font-family: 'Unbounded', sans-serif; font-size: 1rem; font-weight: 700;
+  font-family: 'Unbounded', sans-serif; font-size: 1.2rem; font-weight: 700;
   padding-top: 8px; border-top: 1px solid var(--border);
   color: var(--accent);
 }

@@ -339,10 +339,12 @@ export default function StoricoPage() {
                     <span style={{color:'#ff9f43'}}>💵 €{fmt(c.totaleContanti)}</span>
                   </div>
                 </div>
+                 {/* STAMPA SU ODF E MANDA LA MAIL
                 <div className={styles.chiusuraActions}>
                   <button className={styles.actionBtn} onClick={() => stampaPDF(c)} title="Stampa PDF">🖨️</button>
                   <button className={styles.actionBtn} onClick={() => inviaChiusuraEmail(c)} title="Invia email">📧</button>
                 </div>
+                */}
               </div>
             ))}
           </div>

@@ -562,7 +562,7 @@ export default function RepartiPage() {
                     checked={form.abilitato ?? true}
                     onChange={e => setForm(f => ({ ...f, abilitato:e.target.checked }))}
                   />
-                  {modal.tipo === 'reparto' ? 'Reparto abilitato' : 'Prodotto abilitato'}
+                  {modal.tipo === '  reparto' ? 'Reparto abilitato' : 'Prodotto abilitato'}
                 </label>
               </div>
             </div>

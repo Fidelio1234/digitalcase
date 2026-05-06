@@ -240,7 +240,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
           background: rtConfig.attivo ? '#00e5a0' : '#5a5d6e',
           boxShadow: rtConfig.attivo ? '0 0 8px #00e5a0' : 'none'
         }} />
-        <span style={{fontSize:'0.98rem', fontFamily:"'DM Mono',monospace", color:'red'}}>
+        <span style={{fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", color:'yellow'}}>
           MENU RT {rtConfig.marca?.toUpperCase()} 
         </span>
         <span style={{color:'#5a5d6e', fontSize:'0.75rem'}}>
@@ -267,7 +267,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
             {/* Header modal */}
             <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
               <span style={{fontSize:'0.9rem', fontFamily:"'DM Mono',monospace", color:'#eef0f6', fontWeight:600}}>
-               <div style={{color:'red',fontSize:'2rem',}}>MENU RT - {rtConfig.marca?.toUpperCase()} </div>
+               <div style={{color:'yellow',fontSize:'2rem',}}>MENU RT - {rtConfig.marca?.toUpperCase()} </div>
               </span>
               <button onClick={() => setPannelloAperto(false)}
                 style={{background:'transparent', border:'none', color:'#5a5d6e', cursor:'pointer', fontSize:'1.2rem'}}>
