@@ -277,7 +277,7 @@ export default function StoricoPage() {
                           <span>€ {fmt(r.totaleRiga)}</span>
                         </div>
                         {r.nota && (
-                          <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830', paddingLeft:8, marginTop:-4, marginBottom:4}}>
+                          <div style={{fontSize:'0.82rem', color: r.nota.startsWith('+') ? 'yellow' : 'red', paddingLeft:8, marginTop:-4, marginBottom:4}}>
                             📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                           </div>
                         )}

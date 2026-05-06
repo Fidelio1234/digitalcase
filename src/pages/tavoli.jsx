@@ -302,13 +302,13 @@ export default function TavoliPage() {
       <div style={{ display:'flex', height:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans', sans-serif" }}>
 
         {/* SINISTRA — tastiera */}
-        <div style={{ width:220, background:'#111318', borderRight:'1px solid #1a1c24', display:'flex', flexDirection:'column', padding:16, gap:8, flexShrink:0 }}>
-          <button onClick={() => setVista('griglia')} style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#ffffff', padding:'8px', cursor:'pointer', fontSize:'0.8rem', marginBottom:8 }}>
+        <div style={{ width:240, background:'#111318', borderRight:'1px solid #1a1c24', display:'flex', flexDirection:'column', padding:16, gap:8, flexShrink:0 }}>
+          <button onClick={() => setVista('griglia')} style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#00e5a0', padding:'8px', cursor:'pointer', fontSize:'1.2rem', marginBottom:8 }}>
             ← Tavoli
           </button>
           <div style={{ textAlign:'center', padding:'12px', background:'#1a1c24', borderRadius:12, marginBottom:8 }}>
-            <div style={{ fontSize:'0.65rem', color:'#ffffff', letterSpacing:2 }}>TAVOLO</div>
-            <div style={{ fontSize:'2rem', fontWeight:700, color:'#00e5a0' }}>{tavoloAttivo}</div>
+            <div style={{ fontSize:'0.9rem', color:'yellow', letterSpacing:2 }}>TAVOLO</div>
+            <div style={{ fontSize:'2rem', fontWeight:700, color:'white' }}>{tavoloAttivo}</div>
             {impostazioni.copertoAbilitato && tavoloCorrente?.coperti > 0 && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:8 }}>
                 <span style={{ fontSize:'0.7rem', color:'#ffffff' }}>👤 {tavoloCorrente.coperti} coperti</span>
@@ -317,7 +317,7 @@ export default function TavoliPage() {
           </div>
 
           <div style={{ background:'#1a1c24', borderRadius:12, padding:'12px 16px', textAlign:'center', marginBottom:4 }}>
-            <div style={{ fontSize:'0.65rem', color:'#ffffff', letterSpacing:2 }}>IMPORTO</div>
+            <div style={{ fontSize:'0.85rem', color:'yellow', letterSpacing:2 }}>IMPORTO</div>
             <div style={{ fontSize:'1.8rem', fontWeight:700, color:'#00e5a0', fontFamily:"'DM Mono',monospace" }}>
               € {fmt(inputCents)}
             </div>
@@ -373,7 +373,7 @@ export default function TavoliPage() {
                     </div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:600 }}>€ {fmt(r.totaleRiga)}</div>
                     {r.nota && (
-                      <div style={{fontSize:'0.7rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830'}}>
+                      <div style={{fontSize:'0.85rem', color: r.nota.startsWith('+') ? 'yellow' : 'red'}}>
                         📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                       </div>
                     )}
@@ -413,7 +413,7 @@ export default function TavoliPage() {
 
         {/* DESTRA — reparti */}
         <div style={{ width:180, background:'#111318', borderLeft:'1px solid #1a1c24', overflow:'auto', padding:12, flexShrink:0 }}>
-          <div style={{ fontSize:'0.65rem', color:'#ffffff', letterSpacing:2, marginBottom:12 }}>REPARTI</div>
+          <div style={{ fontSize:'0.9rem', color:'#00e5a0', letterSpacing:2, marginBottom:12 }}>REPARTI</div>
           {reparti.map(r => (
             <button key={r.id}
               onClick={() => { setRepartoAttivo(r.id); if (inputCents > 0) aggiungiReparto(r) }}
@@ -612,14 +612,14 @@ export default function TavoliPage() {
   return (
     <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans', sans-serif" }}>
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 20px', background:'#111318', borderBottom:'1px solid #1a1c24' }}>
-        <button onClick={() => router.replace('/cassa')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
+        <button onClick={() => router.replace('/cassa')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#00ffb3', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           ← Cassa
         </button>
-        <button onClick={() => router.replace('/storico-tavoli')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
+        <button onClick={() => router.replace('/storico-tavoli')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'yellow', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           📋 Storico
         </button>
         <div style={{ fontWeight:700, fontSize:'1rem' }}>🍽️ Tavoli</div>
-        <button onClick={carica} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
+        <button onClick={carica} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffb830', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
           ↻ Aggiorna
         </button>
       </header>

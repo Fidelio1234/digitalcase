@@ -740,7 +740,7 @@ export default function CassaPage() {
                       {r.quantita > 1 && <span className={styles.rigaQty}>×{r.quantita}</span>}
                     </div>
                     {r.nota && (
-                      <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830', marginTop:2}}>
+                      <div style={{fontSize:'0.82rem', color: r.nota.startsWith('+') ? 'yellow' : 'red', marginTop:2}}>
                         📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                       </div>
                     )}

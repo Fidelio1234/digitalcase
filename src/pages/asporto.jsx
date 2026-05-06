@@ -204,7 +204,7 @@ export default function AsportoPage() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', borderBottom:'1px solid #1a1c24' }}>
         <button onClick={() => { if (asportoAttivo) salvaAsportoDb(NEGOZIO_ID, asportoAttivo, righeComanda); router.replace('/cassa') }}
-          style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#00ffb3', padding:'12px 19px', cursor:'pointer', fontSize:'1.2rem' }}>
+          style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#00ffb3', padding:'12px 19px', cursor:'pointer', fontSize:'1rem' }}>
           ← Cassa
         </button>
         <div style={{ flex:1 ,textAlign:'center'}}>
@@ -300,7 +300,7 @@ export default function AsportoPage() {
                   <div>
                     <div style={{ fontSize:'0.85rem', fontWeight:600 }}>{r.nome} {r.quantita > 1 && <span style={{ color:'#00e5a0' }}>×{r.quantita}</span>}</div>
                     {r.nota && (
-                      <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830', marginTop:2}}>
+                      <div style={{fontSize:'0.85rem', color: r.nota.startsWith('+') ? 'yellow' : 'red', marginTop:2}}>
                         📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                       </div>
                     )}
