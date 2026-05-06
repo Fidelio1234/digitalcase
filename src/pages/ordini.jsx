@@ -231,8 +231,8 @@ export default function OrdiniPage() {
     return (
       <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:500, padding:20 }}>
         <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:32, width:'100%', maxWidth:320, display:'flex', flexDirection:'column', gap:20, alignItems:'center' }}>
-          <div style={{ fontSize:'1rem', fontWeight:700 }}>🍽️ Tavolo {modalCoperti}</div>
-          <div style={{ fontSize:'0.82rem', color:'#5a5d6e' }}>Quante persone al tavolo?</div>
+          <div style={{ fontSize:'1.2rem', fontWeight:700, color:'#ffb830' }}>🍽️ Tavolo {modalCoperti}</div>
+          <div style={{ fontSize:'1rem', color:'#ffb830' }}>Quante persone al tavolo?</div>
           <div style={{ display:'flex', alignItems:'center', gap:24 }}>
             <button onClick={() => setNumCoperti(n => Math.max(1, n-1))}
               style={{ width:52, height:52, borderRadius:14, background:'#1a1c24', border:'1px solid #252830', color:'#eef0f6', fontSize:'1.8rem', cursor:'pointer' }}>−</button>
@@ -240,9 +240,11 @@ export default function OrdiniPage() {
             <button onClick={() => setNumCoperti(n => n+1)}
               style={{ width:52, height:52, borderRadius:14, background:'#1a1c24', border:'1px solid #252830', color:'#eef0f6', fontSize:'1.8rem', cursor:'pointer' }}>+</button>
           </div>
-          <div style={{ fontSize:'0.78rem', color:'#5a5d6e' }}>
+            {/* COSTO COMANDA COPERTO
+          <div style={{ fontSize:'0.78rem', color:'#ffb830' }}>
             Coperto: € {((impostazioni.copertoImporto * numCoperti) / 100).toFixed(2)} totale
           </div>
+        */}
           <div style={{ display:'flex', gap:12, width:'100%' }}>
             <button onClick={() => setModalCoperti(null)}
               style={{ flex:1, padding:14, borderRadius:12, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>Annulla</button>
@@ -262,13 +264,13 @@ export default function OrdiniPage() {
         {/* Header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderBottom:'1px solid #1a1c24', position:'sticky', top:0, zIndex:100 }}>
           <button onClick={() => { setVista('griglia'); carica() }}
-            style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 14px', cursor:'pointer', fontSize:'0.82rem' }}>
+            style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#00ffb3', padding:'8px 14px', cursor:'pointer', fontSize:'0.92rem' }}>
             ← Tavoli
           </button>
           <div style={{ fontWeight:700 }}>🍽️ Tavolo {tavoloAttivo}</div>
           <button onClick={inviaComanda} disabled={righeComanda.length === 0}
             style={{ padding:'8px 16px', borderRadius:10, border:'none', background: righeComanda.length === 0 ? '#1a1c24' : '#00e5a0', color: righeComanda.length === 0 ? '#5a5d6e' : '#08090c', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.82rem' }}>
-            {invioOk ? '✓ Inviato!' : '✓ Invia'}
+            {invioOk ? '✓ Inviato!' : '✓ Invia comanda'}
           </button>
         </div>
 
@@ -276,7 +278,7 @@ export default function OrdiniPage() {
         <div style={{ display:'flex', gap:8, padding:'10px 16px', overflowX:'auto', background:'#111318', borderBottom:'1px solid #1a1c24' }}>
           {reparti.map(r => (
             <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
-              style={{ flexShrink:0, padding:'6px 14px', borderRadius:20, border:'1px solid ' + (repartoAttivo === r.id ? r.colore : '#252830'), background: repartoAttivo === r.id ? r.colore + '22' : 'transparent', color: repartoAttivo === r.id ? r.colore : '#5a5d6e', fontSize:'0.78rem', cursor:'pointer', whiteSpace:'nowrap' }}>
+              style={{ flexShrink:0, padding:'6px 14px', borderRadius:20, border:'1px solid ' + (repartoAttivo === r.id ? r.colore : '#252830'), background: repartoAttivo === r.id ? r.colore + '22' : 'transparent', color: repartoAttivo === r.id ? r.colore : '#ffb830', fontSize:'0.78rem', cursor:'pointer', whiteSpace:'nowrap' }}>
               {ICONE[r.icona]||'📦'} {r.nome}
             </button>
           ))}
@@ -337,10 +339,10 @@ export default function OrdiniPage() {
 
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderBottom:'1px solid #1a1c24', position:'sticky', top:0, zIndex:100 }}>
         <div style={{ fontWeight:700, fontSize:'1rem' }}>🍽️ Tavoli</div>
-        <div style={{ fontSize:'0.75rem', color:'#5a5d6e' }}>{user?.name}</div>
+        <div style={{ fontSize:'0.75rem', color:'#ffb830' }}>{user?.name}</div>
         <button onClick={carica}
-          style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#5a5d6e', padding:'8px 14px', cursor:'pointer', fontSize:'0.82rem' }}>
-          ↻
+          style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#ffb830', padding:'8px 14px', cursor:'pointer', fontSize:'0.82rem' }}>
+          ↻ Aggiorna
         </button>
       </header>
 
@@ -358,17 +360,19 @@ export default function OrdiniPage() {
                 display:'flex', flexDirection:'column', gap:6,
               }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                <span style={{ fontSize:'0.6rem', color:'#5a5d6e', letterSpacing:2 }}>N°</span>
+                <span style={{ fontSize:'0.7rem', color:'#ffb830', letterSpacing:2 }}>N° TAVOLO</span>
                 <div style={{ width:8, height:8, borderRadius:'50%', background: occupato ? '#ff4d6a' : '#00e5a0', boxShadow:'0 0 6px ' + (occupato ? '#ff4d6a' : '#00e5a0') }} />
               </div>
               <div style={{ fontSize:'2.2rem', fontWeight:700, color: occupato ? '#ff4d6a' : '#00e5a0', lineHeight:1 }}>{t.numero}</div>
               {occupato ? (
                 <>
-                  <div style={{ fontSize:'0.75rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totTavolo)}</div>
-                  {tempo && <div style={{ fontSize:'0.62rem', color:'#ffb830' }}>⏱ {tempo}</div>}
+                  {/* VISUALIZZA IL TOTALE
+                  <div style={{ fontSize:'0.95rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totTavolo)}</div>
+                  */}
+                  {tempo && <div style={{ fontSize:'0.92rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>}
                 </>
               ) : (
-                <div style={{ fontSize:'0.72rem', color:'#5a5d6e' }}>Libero</div>
+                <div style={{ fontSize:'1rem', color:'#ffb830' }}>Libero</div>
               )}
             </button>
           )
