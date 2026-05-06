@@ -665,7 +665,7 @@ export default function CassaPage() {
                   color:'#ffb830', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
                 <span style={{fontSize:'1.4rem'}}>📦</span>
-                <span>Magazzino</span>
+                <span>Giacenze</span>
               </button>
             )}
             {impostazioni.tavoliAbilitati !== false && (

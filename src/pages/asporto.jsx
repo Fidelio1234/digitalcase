@@ -19,7 +19,7 @@ function fmt(cents) {
 
 function fmtOra(iso) {
   const d = new Date(iso)
-  return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit' }) + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
 }
 
 function Timer({ apertoAlle }) {
@@ -299,7 +299,11 @@ export default function AsportoPage() {
                   </div>
                   <div>
                     <div style={{ fontSize:'0.85rem', fontWeight:600 }}>{r.nome} {r.quantita > 1 && <span style={{ color:'#00e5a0' }}>×{r.quantita}</span>}</div>
-                    {r.nota && <div style={{fontSize:'0.72rem', color:'#ffb830', marginTop:2}}>📝 {r.nota}</div>}
+                    {r.nota && (
+                      <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830', marginTop:2}}>
+                        📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
+                      </div>
+                    )}
                     <div style={{ fontSize:'0.72rem', color:'#5a5d6e' }}>€ {fmt(r.importo)} cad.</div>
                   </div>
                 </div>
@@ -315,6 +319,8 @@ export default function AsportoPage() {
                     return prev.filter(x => x.id !== r.id)
                   })}
                     style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>×</button>
+                  <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/, '') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione') }}
+                    style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px' }}>✏️</button>
                 </div>
               </div>
             ))}

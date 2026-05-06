@@ -330,7 +330,7 @@
 .metodoGroup { display: flex; gap: 8px; }
 .metodoBtn {
   flex: 1; padding: 10px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--surface2);
+  border: 5px solid var(--border); background: var(--surface2);
   color: var(--accent); font-family: 'DM Mono', monospace;
   font-size: 0.82rem; cursor: pointer; transition: all 0.2s;
 }
@@ -341,12 +341,12 @@
 
 
 .metodoBtn1 {
-  flex: 1; padding: 10px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--danger);
-  color: var(--border); font-family: 'DM Mono', monospace;
+  flex: 1; padding: 10px; border-radius: 30px;
+  border: 5px solid var(--border); background: var(--surface2);
+  color: var(--accent); font-family: 'DM Mono', monospace;
   font-size: 0.86rem; cursor: pointer; transition: all 0.2s;
 }
-.metodoBtn1:hover { border-color: var(--accent); color: var(--accent); }
+.metodoBtn1:hover { border-color: var(--accent); }
 .metodoActive { border-color: var(--accent) !important; background: var(--accent-dim) !important; color: var(--accent) !important; }
 
 
