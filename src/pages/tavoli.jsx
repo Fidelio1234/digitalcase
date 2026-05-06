@@ -646,21 +646,21 @@ export default function TavoliPage() {
                   transition:'all 0.15s',
                 }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                  <span style={{ fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:2 }}>TAVOLO</span>
+                  <span style={{ fontSize:'0.95rem', color:'#00ffb3', letterSpacing:2 }}>TAVOLO</span>
                   <div style={{ width:10, height:10, borderRadius:'50%', background: occupato ? '#ff4d6a' : '#00e5a0', boxShadow: '0 0 8px ' + (occupato ? '#ff4d6a' : '#00e5a0') }} />
                 </div>
                 <div style={{ fontSize:'2.5rem', fontWeight:700, color: occupato ? '#ff4d6a' : '#00e5a0', lineHeight:1 }}>{t.numero}</div>
                 {occupato ? (
                   <>
-                    <div style={{ fontSize:'0.78rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totTavolo)}</div>
-                    <div style={{ fontSize:'0.68rem', color:'#5a5d6e' }}>{t.righe?.length || 0} prodotti</div>
-                    {tempo && <div style={{ fontSize:'0.65rem', color:'#ffb830' }}>⏱ {tempo}</div>}
+                    <div style={{ fontSize:'0.98rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totTavolo)}</div>
+                    <div style={{ fontSize:'0.88rem', color:'#00ffb3' }}>{t.righe?.length || 0} prodotti</div>
+                    {tempo && <div style={{ fontSize:'0.95rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>}
                     {impostazioni.copertoAbilitato && t.coperti > 0 && (
-                      <div style={{ fontSize:'0.65rem', color:'#5a5d6e' }}>👤 {t.coperti} coperti</div>
+                      <div style={{ fontSize:'0.95rem', color:'#00ffb3' }}>👤 {t.coperti} coperti</div>
                     )}
                   </>
                 ) : (
-                  <div style={{ fontSize:'0.75rem', color:'#5a5d6e' }}>Libero</div>
+                  <div style={{ fontSize:'1.3rem', color:'#00ffb3' }}>Libero</div>
                 )}
               </button>
             )

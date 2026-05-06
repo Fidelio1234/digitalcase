@@ -54,35 +54,35 @@ export default function StoricoTavoliPage() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
         <button onClick={() => router.back()}
-          style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
+          style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#00ffb3', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           ← Indietro
         </button>
         <div>
           <div style={{ fontSize:'1.1rem', fontWeight:700 }}>📋 Storico Tavoli</div>
-          <div style={{ fontSize:'0.72rem', color:'#5a5d6e' }}>{records.length} record trovati</div>
+          <div style={{ fontSize:'0.92rem', color:'#00ffb3' }}>{records.length} record trovati</div>
         </div>
       </div>
 
       {/* Filtri */}
       <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
         <div style={{ flex:1, minWidth:150 }}>
-          <label style={{ fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4 }}>DATA</label>
+          <label style={{ fontSize:'0.85rem', color:'#00ffb3', letterSpacing:1, display:'block', marginBottom:4 }}>DATA</label>
           <input type="date" value={filtroData}
             onChange={e => setFiltroData(e.target.value)}
             style={{ width:'100%', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#ffffff', fontSize:'0.85rem', boxSizing:'border-box' }}
           />
         </div>
         <div style={{ width:120 }}>
-          <label style={{ fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4 }}>TAVOLO N°</label>
+          <label style={{ fontSize:'0.85rem', color:'#00ffb3', letterSpacing:1, display:'block', marginBottom:4 }}>TAVOLO N°</label>
           <input type="number" value={filtroTavolo}
             onChange={e => setFiltroTavolo(e.target.value)}
             placeholder="Tutti"
-            style={{ width:'100%', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#ffffff', fontSize:'0.85rem', boxSizing:'border-box' }}
+            style={{ width:'100%', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#ffb830', fontSize:'0.95rem', boxSizing:'border-box' }}
           />
         </div>
         <div style={{ display:'flex', alignItems:'flex-end' }}>
           <button onClick={() => { setFiltroData(''); setFiltroTavolo('') }}
-            style={{ padding:'8px 16px', borderRadius:8, border:'1px solid #252830', background:'transparent', color:'#5a5d6e', cursor:'pointer', fontSize:'0.82rem' }}>
+            style={{ padding:'8px 16px', borderRadius:8, border:'1px solid #252830', background:'transparent', color:'#ffb830', cursor:'pointer', fontSize:'0.82rem' }}>
             Reset
           </button>
         </div>
@@ -109,10 +109,10 @@ export default function StoricoTavoliPage() {
                     Tavolo {r.numero_tavolo}
                   </div>
                   <div>
-                    <div style={{ fontSize:'0.82rem', fontWeight:600 }}>
+                    <div style={{ fontSize:'0.92rem', fontWeight:600 }}>
                       {new Date(r.chiuso_alle).toLocaleDateString('it-IT')} — {new Date(r.chiuso_alle).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'})}
                     </div>
-                    <div style={{ fontSize:'0.72rem', color:'#5a5d6e', marginTop:2 }}>
+                    <div style={{ fontSize:'0.92rem', color:'#ffb830', marginTop:2 }}>
                       {r.coperti > 0 ? `👤 ${r.coperti} coperti · ` : ''}{r.righe?.length || 0} prodotti
                     </div>
                   </div>
