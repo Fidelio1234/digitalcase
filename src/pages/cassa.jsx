@@ -360,8 +360,8 @@ export default function CassaPage() {
           }
           if (info.metodo === 'carta') {
             cmd += '3T'
-          } else {
-            // Passa importo contanti per calcolo resto
+          } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {
+            // Contanti o cortesia — stesso trattamento
             const contantiCents = info.totale + (info.resto || 0)
             if (contantiCents > info.totale) {
               cmd += `${contantiCents}H1T`
@@ -377,7 +377,8 @@ export default function CassaPage() {
           })
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
-          if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
+          console.log('metodo:', info.metodo, 'cortesiaAbilitato:', impostazioni.cortesiaAbilitato)
+          if (info.metodo === 'cortesia' || info.metodo === 'carta') {
             let cmdCortesia = 'j'
             for (const riga of scontrinoCorrente.righe) {
               if (riga.importo < 0) continue
@@ -428,7 +429,7 @@ export default function CassaPage() {
           // Pagamento
           if (info.metodo === 'carta') {
             comandi.push('=T4')
-          } else {
+          } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {
             const contantiCents = info.totale + (info.resto || 0)
             if (contantiCents > info.totale) {
               comandi.push(`=T1/$${contantiCents}`)
