@@ -16,7 +16,7 @@ function AuthProviderWrapper({ children }) {
   }
 
   return (
-    <AuthProvider negozioId={negozio?.id}>
+    <AuthProvider negozioId={negozio?.id} negozioSlug={negozio?.slug}>
       {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
         <div style={{
           background:'#ffb83022', borderBottom:'2px solid #ffb830',

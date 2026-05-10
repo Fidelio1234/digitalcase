@@ -1,10 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
 import { NEGOZIO_ID as NEGOZIO_ID_DEFAULT } from '@/lib/config'
 
 const AuthContext = createContext(null)
 
-export function AuthProvider({ children, negozioId }) {
+export function AuthProvider({ children, negozioId, negozioSlug }) {
   const NEGOZIO_ID = negozioId || NEGOZIO_ID_DEFAULT
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -15,21 +14,21 @@ export function AuthProvider({ children, negozioId }) {
       const saved = sessionStorage.getItem('sd_user')
       if (saved) setUser(JSON.parse(saved))
     } catch {}
-    caricaUtenti()
-    // Retry dopo 3 secondi se utenti non caricati
-    const retry = setTimeout(() => {
-      setUtenti(prev => {
-        if (prev.length === 0) { caricaUtenti(); }
-        return prev
-      })
-    }, 3000)
-    return () => clearTimeout(retry)
   }, [])
+
+  // Ricarica utenti ogni volta che cambia lo slug del negozio
+  useEffect(() => {
+    caricaUtenti()
+  }, [negozioSlug])
 
   async function caricaUtenti() {
     setLoading(true)
     try {
-      const res = await fetch('/api/utenti')
+      // Passa lo slug come query param così la API sa quale negozio caricare
+      const slug = negozioSlug || (typeof window !== 'undefined'
+        ? window.location.hostname.replace('.digitalcase.it', '')
+        : 'dmi')
+      const res = await fetch(`/api/utenti?slug=${slug}`)
       const data = await res.json()
       if (Array.isArray(data)) setUtenti(data)
     } catch(e) {
@@ -40,7 +39,6 @@ export function AuthProvider({ children, negozioId }) {
   }
 
   async function login(userId, pinInput) {
-    // Cerca utente nell'array già caricato
     const u = utenti.find(u => u.id === userId)
     if (!u) return { ok: false, reason: 'Utente non trovato' }
     if (!u.abilitato) return { ok: false, reason: 'Utente disabilitato' }
@@ -70,7 +68,7 @@ export function AuthProvider({ children, negozioId }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, can, utenti, loadUtenti: caricaUtenti }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, can, utenti, negozioId: NEGOZIO_ID, loadUtenti: caricaUtenti }}>
       {children}
     </AuthContext.Provider>
   )
