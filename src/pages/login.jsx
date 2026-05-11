@@ -34,7 +34,11 @@ export default function LoginPage() {
   // Aggiorna utenti quando arrivano da Supabase
   // Carica utenti direttamente se AuthContext non li ha
   useEffect(() => {
-    fetch('/api/utenti')
+    const hostname = window.location.hostname
+    const slug = (hostname === 'localhost' || hostname === '127.0.0.1')
+      ? (process.env.NEXT_PUBLIC_NEGOZIO_SLUG || 'dmi')
+      : hostname.replace('.digitalcase.it', '')
+    fetch(`/api/utenti?slug=${slug}`)
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
