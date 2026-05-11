@@ -331,7 +331,12 @@ export default function LoginPage() {
 
       <div className={styles.bottomBar}>DigitalCase v0.1 · © 2026</div>
       <button
-        onClick={() => window.close()}
+        onClick={() => {
+          // Prova window.close(), poi Alt+F4 via keyboard event
+          try { window.close() } catch(e) {}
+          // Apri una pagina vuota per "uscire" dal kiosk
+          window.location.href = 'about:blank'
+        }}
         title="Esci dal programma"
         style={{position:'fixed', top:12, right:12, background:'rgba(0,0,0,0.5)',
           border:'1px solid #ffffff22', borderRadius:8, color:'#00ffb3',
