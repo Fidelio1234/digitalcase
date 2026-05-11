@@ -55,15 +55,7 @@ function AuthProviderWrapper({ children }) {
   const router = useRouter()
 
   // Aspetta che NegozioContext abbia risolto prima di montare AuthProvider
-  if (loading) return (
-    <div style={{
-      display:'flex', alignItems:'center', justifyContent:'center',
-      height:'100vh', background:'#0d0f14',
-      color:'#5a5d6e', fontFamily:"'DM Mono',monospace", fontSize:'0.85rem'
-    }}>
-      Connessione...
-    </div>
-  )
+  if (loading) return null
 
   // Controlla licenza scaduta
   if (!loading && negozio?.scaduto && router.pathname !== '/scaduto') {
