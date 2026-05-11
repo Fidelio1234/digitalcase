@@ -529,9 +529,9 @@ export default function CassaPage() {
               </button>
             </>
           )}
-          <button className={styles.logoutBtn} onClick={() => { logout(); router.replace('/login') }}>
-            Esci
-          </button>
+         <button className={styles.logoutBtn} onClick={() => { logout(); window.location.href = '/login' }}>
+  Esci
+</button>
         </div>
       </header>
 
