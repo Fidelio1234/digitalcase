@@ -334,8 +334,8 @@ export default function LoginPage() {
         onClick={() => window.close()}
         title="Esci dal programma"
         style={{position:'fixed', top:12, right:12, background:'rgba(0,0,0,0.5)',
-          border:'1px solid #ffffff22', borderRadius:8, color:'#5a5d6e',
-          cursor:'pointer', padding:'6px 12px', fontSize:'0.75rem', zIndex:9999}}>
+          border:'1px solid #ffffff22', borderRadius:8, color:'#00ffb3',
+          cursor:'pointer', padding:'6px 12px', fontSize:'0.95rem', zIndex:9999}}>
         ✕ Esci
       </button>
     </div>
