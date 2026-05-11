@@ -1,4 +1,4 @@
-import '@/styles/globals.css'
+/*import '@/styles/globals.css'
 import { AuthProvider } from '@/context/AuthContext'
 import { NegozioProvider, useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
@@ -42,10 +42,10 @@ export default function App({ Component, pageProps }) {
   )
 }
 
+*/
 
 
-
-/*import '@/styles/globals.css'
+import '@/styles/globals.css'
 import { AuthProvider } from '@/context/AuthContext'
 import { NegozioProvider, useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
@@ -91,4 +91,3 @@ export default function App({ Component, pageProps }) {
     </NegozioProvider>
   )
 }
-*/
