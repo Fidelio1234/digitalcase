@@ -55,7 +55,7 @@ function AuthProviderWrapper({ children }) {
   const router = useRouter()
 
   // Aspetta che NegozioContext abbia risolto prima di montare AuthProvider
-  if (loading) return <div style={{height:'100vh', background:'#0d0f14'}} />
+  if (loading) return null
 
   // Controlla licenza scaduta
   if (!loading && negozio?.scaduto && router.pathname !== '/scaduto') {
@@ -66,7 +66,7 @@ function AuthProviderWrapper({ children }) {
   }
 
   return (
-    <AuthProvider negozioSlug={negozio?.slug}>
+    <AuthProvider negozioSlug={negozio?.slug || 'dmi'}>
       {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
         <div style={{
           background:'#ffb83022', borderBottom:'2px solid #ffb830',
