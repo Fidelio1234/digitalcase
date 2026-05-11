@@ -89,7 +89,6 @@ import { createContext, useContext, useState, useEffect } from 'react'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children, negozioSlug }) {
-  const slug = negozioSlug || 'dmi'
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [utenti, setUtenti] = useState([])
@@ -99,13 +98,18 @@ export function AuthProvider({ children, negozioSlug }) {
       const saved = sessionStorage.getItem('sd_user')
       if (saved) setUser(JSON.parse(saved))
     } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (!negozioSlug) return
     caricaUtenti()
-  }, [slug])
+  }, [negozioSlug])
 
   async function caricaUtenti() {
+    if (!negozioSlug) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/utenti?slug=${slug}`)
+      const res = await fetch(`/api/utenti?slug=${negozioSlug}`)
       const data = await res.json()
       if (Array.isArray(data)) setUtenti(data)
     } catch (e) {
