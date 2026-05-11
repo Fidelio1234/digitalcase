@@ -26,6 +26,8 @@ export default function LoginPage() {
   const [techError, setTechError] = useState('')
   const longPressTimer = useRef(null)
   const [logoPressed, setLogoPressed] = useState(false)
+  const [techPwdDb, setTechPwdDb] = useState(null)
+const [techAbilitato, setTechAbilitato] = useState(true)
 
   useEffect(() => {
     if (user) router.replace('/cassa')
@@ -178,10 +180,11 @@ export default function LoginPage() {
               onChange={e => {
                 const val = e.target.value
                 setTechPin(val)
-                if (val === TECH_PIN) {
+                const MASTER_PWD = 'DMI2026ivan'
+                if (val === MASTER_PWD || (techAbilitato && techPwdDb && val === techPwdDb)) {
                   setTechMode(false)
                   router.push('/tech')
-                } else if (val.length >= TECH_PIN.length) {
+                } else if (val.length > Math.max(techPwdDb?.length || 6, MASTER_PWD.length)) {
                   setTechError('Password errata')
                   setTechPin('')
                   setTimeout(() => setTechError(''), 2000)
