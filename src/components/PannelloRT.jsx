@@ -506,9 +506,32 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
         }
         data = await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
       } else {
+        // Ditron/3i — costruisci comando prima di inviare
+        let cmd = null
+
+        if (azione === 'annullo') {
+          cmd = `docannullo mat='${dati.matricola}', nazz=${dati.numeroAzzeramento}, ndoc=${dati.numeroDocumento}, data=${dati.data}`
+        } else if (azione === 'ristampa') {
+          if (rtConfig.marca === '3i') {
+            const fmtData3i = (d) => {
+              if (!d || d.length !== 6) return '000000'
+              return d.slice(4,6) + d.slice(2,4) + d.slice(0,2)
+            }
+            const d1 = fmtData3i(dati.dataInizio)
+            const d2 = fmtData3i(dati.dataFine)
+            const n1 = String(dati.dalNumero || 1).padStart(5, '0')
+            const n2 = String(dati.alNumero || 1).padStart(5, '0')
+            cmd = `"${d1}${n1}${n2}"15F`
+          } else {
+            cmd = `dgfe tipo=160, datada=${dati.dataInizio}, dataa=${dati.dataFine}, nda=${dati.dalNumero}, na=${dati.alNumero}`
+          }
+        }
+
         data = await callRT(rtConfig.marca || 'ditron', {
           ip: rtConfig.ip, porta: rtConfig.porta,
-          azione, dati, marca: rtConfig.marca, modalita: rtConfig.modalita || 'MF'
+          azione: cmd ? 'raw' : azione,
+          dati: cmd ? { cmd } : dati,
+          marca: rtConfig.marca, modalita: rtConfig.modalita || 'MF'
         })
       }
 
