@@ -1219,6 +1219,7 @@ import styles from '@/styles/Cassa.module.css'
 async function callRT(marca, body) {
   const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   if (isLocalhost) {
+    console.log('callRT - hostname:', window.location.hostname, 'isLocalhost:', isLocalhost)
     const endpoint = marca === 'rch' ? '/api/rch' : '/api/ditron'
     const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     return res.json()
