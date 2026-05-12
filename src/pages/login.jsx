@@ -36,10 +36,10 @@ const [techAbilitato, setTechAbilitato] = useState(true)
   // Aggiorna utenti quando arrivano da Supabase
   // Carica utenti direttamente se AuthContext non li ha
   useEffect(() => {
-    const hostname = window.location.hostname
-    const slug = (hostname === 'localhost' || hostname === '127.0.0.1')
+    const hn = typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+    const slug = (hn === 'localhost' || hn === '127.0.0.1') ? (process.env.NEXT_PUBLIC_NEGOZIO_SLUG || 'dmi') : hn.replace('.digitalcase.it', '')
       ? (process.env.NEXT_PUBLIC_NEGOZIO_SLUG || 'dmi')
-      : hostname.replace('.digitalcase.it', '')
+      : _hn.replace('.digitalcase.it', '')
     fetch(`/api/utenti?slug=${slug}`)
       .then(r => r.json())
       .then(data => {
@@ -180,11 +180,12 @@ const [techAbilitato, setTechAbilitato] = useState(true)
               onChange={e => {
                 const val = e.target.value
                 setTechPin(val)
+                console.log('techPwdDb:', techPwdDb, 'techAbilitato:', techAbilitato)
                 const MASTER_PWD = 'DMI2026ivan'
                 if (val === MASTER_PWD || (techAbilitato && techPwdDb && val === techPwdDb)) {
                   setTechMode(false)
                   router.push('/tech')
-                } else if (val.length > Math.max(techPwdDb?.length || 6, MASTER_PWD.length)) {
+                } else if (val.length >= Math.max(techPwdDb?.length || 6, MASTER_PWD.length)) {
                   setTechError('Password errata')
                   setTechPin('')
                   setTimeout(() => setTechError(''), 2000)

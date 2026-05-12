@@ -2,7 +2,7 @@
  * DigitalCase — Service Stampante Locale
  * Riceve richieste HTTP e le manda alla stampante via TCP ESC/POS
  */
-const http = require('http')
+/*const http = require('http')
 const net = require('net')
 
 const PORT = 3002
@@ -112,4 +112,247 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`🖨️  Service stampante attivo su http://localhost:${PORT}`)
+})
+*/
+
+
+/**
+ * DigitalCase — Service Locale
+ * - Porta 3002: stampante comande (ESC/POS)
+ * - Gestisce anche registratore telematico (Ditron/3i via TCP, RCH via HTTP)
+ */
+const http = require('http')
+const net = require('net')
+
+const PORT = 3002
+
+// ─── ESC/POS ──────────────────────────────────────────────────────────────────
+const ESC = '\x1B'
+const GS = '\x1D'
+const RESET = ESC + '@'
+const BOLD_ON = ESC + '\x45\x01'
+const BOLD_OFF = ESC + '\x45\x00'
+const CENTER = ESC + '\x61\x01'
+const LEFT = ESC + '\x61\x00'
+const RIGHT = ESC + '\x61\x02'
+const BIG = GS + '\x21\x11'
+const NORMAL = GS + '\x21\x00'
+const CUT = GS + '\x56\x00'
+const FEED = '\n'
+
+function buildComanda(tavolo, righe, tipo, uscita, totaleUscite) {
+  let doc = ''
+  doc += RESET
+  doc += CENTER + BOLD_ON + BIG
+
+  if (tipo === 'comanda') {
+    doc += `TAVOLO ${tavolo}\n`
+    doc += BOLD_OFF
+    if (uscita && totaleUscite > 1) {
+      doc += BOLD_ON + `*** USCITA ${uscita} di ${totaleUscite} ***\n` + BOLD_OFF
+    }
+    const now = new Date()
+    const dataOra = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'})
+    doc += `${dataOra}\n`
+    doc += LEFT + '--------------------------------\n'
+    doc += BOLD_ON + BIG
+    for (const r of righe) {
+      if (r.id === 'coperto') {
+        doc += `  COPERTO x${r.quantita}\n`
+      } else {
+        doc += `${r.quantita > 1 ? r.quantita + 'x ' : '   '}${r.nome}\n`
+      }
+      if (r.nota) doc += NORMAL + `   >> ${r.nota}\n` + BIG
+    }
+    doc += NORMAL + BOLD_OFF
+    doc += '--------------------------------\n'
+  } else if (tipo === 'preconto') {
+    doc += `PRECONTO\n`
+    doc += NORMAL + BOLD_OFF
+    doc += `Tavolo ${tavolo}\n`
+    doc += LEFT + '--------------------------------\n'
+    for (const r of righe) {
+      const prezzo = ((r.totaleRiga || 0) / 100).toFixed(2)
+      const nome = `${r.quantita > 1 ? r.quantita + 'x ' : '   '}${r.nome}`
+      const spazi = Math.max(1, 32 - nome.length - prezzo.length)
+      doc += nome + ' '.repeat(spazi) + prezzo + '\n'
+    }
+    doc += '--------------------------------\n'
+    const totale = (righe.reduce((s, r) => s + (r.totaleRiga || 0), 0) / 100).toFixed(2)
+    doc += BOLD_ON + RIGHT + `TOTALE: EUR ${totale}\n` + BOLD_OFF
+    doc += LEFT + '--------------------------------\n'
+    doc += CENTER + '\n'
+    doc += BOLD_ON + '*** RITIRARE LO SCONTRINO ***\n'
+    doc += '***      ALLA CASSA          ***\n' + BOLD_OFF
+  }
+
+  doc += FEED + FEED + FEED + CUT
+  return doc
+}
+
+// ─── TCP generico (Ditron / 3i) ───────────────────────────────────────────────
+
+async function inviaTCP(ip, porta, dati) {
+  return new Promise((resolve, reject) => {
+    const client = new net.Socket()
+    client.setTimeout(5000)
+    client.connect(parseInt(porta || 9100), ip, () => {
+      client.write(dati)
+      setTimeout(() => { client.destroy(); resolve('OK') }, 500)
+    })
+    client.on('error', reject)
+    client.on('timeout', () => { client.destroy(); reject(new Error('Timeout')) })
+  })
+}
+
+async function inviaTCPRT(ip, porta, comando, marca) {
+  return new Promise((resolve, reject) => {
+    const client = new net.Socket()
+    let risposta = ''
+    client.setTimeout(8000)
+    client.connect(parseInt(porta), ip, () => {
+      const terminatore = marca === '3i' ? '\r' : '\r\n'
+      client.write(comando + terminatore)
+    })
+    client.on('data', d => risposta += d.toString())
+    client.on('end', () => { client.destroy(); resolve(risposta || 'OK') })
+    client.on('close', () => { client.destroy(); resolve(risposta || 'OK') })
+    client.on('timeout', () => { client.destroy(); reject(new Error('Timeout cassa')) })
+    client.on('error', err => {
+      client.destroy()
+      if (err.code === 'ECONNRESET' || err.code === 'EPIPE') resolve(risposta || 'OK')
+      else reject(err)
+    })
+    setTimeout(() => { if (risposta) { client.destroy(); resolve(risposta) } }, 2000)
+  })
+}
+
+async function inviaTCP3i(ip, porta, comandi) {
+  let rispostaFinale = ''
+  for (const cmd of comandi) {
+    const risposta = await new Promise((resolve, reject) => {
+      const client = new net.Socket()
+      let risposta = ''
+      client.setTimeout(3000)
+      client.connect(parseInt(porta), ip, () => client.write(cmd + '\r'))
+      client.on('data', d => risposta += d.toString())
+      client.on('end', () => { client.destroy(); resolve(risposta || 'OK') })
+      client.on('close', () => { client.destroy(); resolve(risposta || 'OK') })
+      client.on('error', err => {
+        client.destroy()
+        if (err.code === 'ECONNRESET' || err.code === 'EPIPE') resolve(risposta || 'OK')
+        else reject(err)
+      })
+      client.on('timeout', () => { client.destroy(); resolve(risposta || 'OK') })
+    })
+    rispostaFinale = risposta
+    await new Promise(r => setTimeout(r, 200))
+  }
+  return rispostaFinale
+}
+
+// ─── HTTP per RCH ─────────────────────────────────────────────────────────────
+
+async function inviaRCH(ip, porta, comandi) {
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Service>\n${comandi.map(c => `  <cmd>${c}</cmd>`).join('\n')}\n</Service>`
+  const res = await fetch(`http://${ip}:${porta}/service.cgi`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/xml' },
+    body: xml,
+    signal: AbortSignal.timeout(10000)
+  })
+  const testo = await res.text()
+  const errorCode = testo.match(/<errorCode>(\d+)<\/errorCode>/)?.[1] || '0'
+  const busy = testo.match(/<busy>(\d+)<\/busy>/)?.[1] || '0'
+  const lastCmd = testo.match(/<lastCmd>(\d+)<\/lastCmd>/)?.[1] || '0'
+  if (busy === '1') throw new Error('Cassa occupata')
+  if (errorCode !== '0') throw new Error(`Errore cassa E${errorCode}`)
+  return { ok: true, lastCmd: parseInt(lastCmd) }
+}
+
+// ─── SERVER ───────────────────────────────────────────────────────────────────
+
+const server = http.createServer(async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return }
+  if (req.method !== 'POST') { res.writeHead(405); res.end(); return }
+
+  let body = ''
+  req.on('data', chunk => body += chunk)
+  req.on('end', async () => {
+    try {
+      const payload = JSON.parse(body)
+
+      // ── Registratore Telematico ──────────────────────────────────────────
+      if (payload.tipo === 'rt') {
+        const { marca, ip, porta, azione, dati, comandi } = payload
+
+        if (!ip) throw new Error('IP mancante')
+
+        let risultato
+
+        if (marca === 'rch') {
+          risultato = await inviaRCH(ip, porta || 80, comandi || [])
+        } else if (marca === '3i' && (azione === 'chiusura_fiscale' || azione === 'lettura_x')) {
+          const cmds = azione === 'chiusura_fiscale' ? ['z', '1F', 'c'] : ['x', '1F', 'c']
+          const risposta = await inviaTCP3i(ip, porta || 1723, cmds)
+          risultato = { ok: true, risposta }
+        } else {
+          let comando = dati?.cmd || ''
+          if (!comando && azione) {
+            switch (azione) {
+              case 'ping': comando = marca === '3i' ? 'K' : 'report num=2'; break
+              case 'lettura_x': comando = 'report num=2'; break
+              case 'scontrino': {
+                const lines = []
+                if (dati.contatto) lines.push(`cfis cf='${dati.contatto}'`)
+                for (const riga of (dati.righe || [])) {
+                  const rep = riga.numeroRepartoRt || 1
+                  const prezzo = (riga.importo / 100).toFixed(2)
+                  const qty = riga.quantita || 1
+                  const des = (riga.nome || '').substring(0, 24).replace(/'/g, ' ')
+                  if (qty > 1) lines.push(`vend rep=${rep}, pre=${prezzo}, qty=${qty}, des='${des}'`)
+                  else lines.push(`vend rep=${rep}, pre=${prezzo}, des='${des}'`)
+                }
+                const tot = (dati.totale / 100).toFixed(2)
+                lines.push(dati.metodo === 'contanti' ? `chius t=1, imp=${tot}` : `chius t=5, imp=${tot}`)
+                comando = lines.join('\n')
+                break
+              }
+              default: break
+            }
+          }
+          if (!comando) throw new Error('Comando RT mancante')
+          const risposta = await inviaTCPRT(ip, porta || 1471, comando, marca)
+          risultato = { ok: true, risposta }
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify(risultato))
+        return
+      }
+
+      // ── Stampante Comande ────────────────────────────────────────────────
+      const { ip, porta, tavolo, righe, tipo, uscita, totaleUscite } = payload
+      const doc = buildComanda(tavolo, righe, tipo || 'comanda', uscita, totaleUscite)
+      await inviaTCP(ip, porta || 9100, doc)
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: true }))
+      console.log(`✓ Stampato: Tavolo ${tavolo} - ${righe.length} righe - tipo: ${tipo}`)
+
+    } catch (err) {
+      console.error('Errore service:', err.message)
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: false, error: err.message }))
+    }
+  })
+})
+
+server.listen(PORT, () => {
+  console.log(`DigitalCase Service attivo su http://localhost:${PORT}`)
+  console.log(`  → Stampante comande: POST { ip, porta, tavolo, righe, tipo }`)
+  console.log(`  → Registratore RT:  POST { tipo: 'rt', marca, ip, porta, azione, dati }`)
 })
