@@ -1589,7 +1589,7 @@ export default function CassaPage() {
             }
           }
 
-          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
+          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } }, rtConfig)
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
           console.log('metodo:', info.metodo, 'cortesiaAbilitato:', impostazioni.cortesiaAbilitato)
@@ -1607,7 +1607,7 @@ export default function CassaPage() {
             }
             cmdCortesia += 'J'
             await new Promise(r => setTimeout(r, 500))
-            await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
+            await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } }, rtConfig)
           }
         } else if (rtConfig.marca === 'rch') {
           // RCH Print!F — HTTP XML
@@ -1649,7 +1649,7 @@ export default function CassaPage() {
             }
           }
 
-          await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
+          await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi }, rtConfig)
 
           // Stampa scontrino di cortesia RCH
           if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
@@ -1662,7 +1662,7 @@ export default function CassaPage() {
             }
             comandiCortesia.push('=C1')
             await new Promise(r => setTimeout(r, 1000))
-            await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia })
+            await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia }, rtConfig)
           }
         } else {
           // Ditron — TCP
@@ -1681,7 +1681,7 @@ export default function CassaPage() {
                 resto: info.resto || 0,
                 contatto: info.contatto || null,
               }
-          })
+          }, rtConfig)
         }
       } catch(e) {
         console.error('Errore stampa RT:', e)
