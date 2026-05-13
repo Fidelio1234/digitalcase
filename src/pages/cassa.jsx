@@ -1216,15 +1216,14 @@ import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
-async function callRT(marca, body, rtConfig) {
+async function callRT(marca, body) {
   const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   if (isLocalhost) {
     const endpoint = marca === 'rch' ? '/api/rch' : '/api/ditron'
     const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     return res.json()
   } else {
-    const host = rtConfig?.serviceIp || 'localhost'
-    const res = await fetch(`http://${host}:3002`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
+    const res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
     return res.json()
   }
 }
@@ -1589,7 +1588,7 @@ export default function CassaPage() {
             }
           }
 
-          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } }, rtConfig)
+          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
           console.log('metodo:', info.metodo, 'cortesiaAbilitato:', impostazioni.cortesiaAbilitato)
@@ -1607,7 +1606,7 @@ export default function CassaPage() {
             }
             cmdCortesia += 'J'
             await new Promise(r => setTimeout(r, 500))
-            await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } }, rtConfig)
+            await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
           }
         } else if (rtConfig.marca === 'rch') {
           // RCH Print!F — HTTP XML
@@ -1649,7 +1648,7 @@ export default function CassaPage() {
             }
           }
 
-          await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi }, rtConfig)
+          await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
 
           // Stampa scontrino di cortesia RCH
           if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
@@ -1662,7 +1661,7 @@ export default function CassaPage() {
             }
             comandiCortesia.push('=C1')
             await new Promise(r => setTimeout(r, 1000))
-            await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia }, rtConfig)
+            await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia })
           }
         } else {
           // Ditron — TCP
@@ -1681,7 +1680,7 @@ export default function CassaPage() {
                 resto: info.resto || 0,
                 contatto: info.contatto || null,
               }
-          }, rtConfig)
+          })
         }
       } catch(e) {
         console.error('Errore stampa RT:', e)
