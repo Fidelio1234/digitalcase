@@ -1216,18 +1216,19 @@ import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
-async function callRT(marca, body, rtConfig) {
+async function callRT(marca, body) {
   const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   if (isLocalhost) {
+    console.log('callRT - hostname:', window.location.hostname, 'isLocalhost:', isLocalhost)
     const endpoint = marca === 'rch' ? '/api/rch' : '/api/ditron'
     const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     return res.json()
   } else {
-    const host = rtConfig?.serviceIp || 'localhost'
-    const res = await fetch(`http://${host}:3002`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
+    const res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
     return res.json()
   }
 }
+
 
 const ICONE = {
   coffee:'☕', cake:'🍰', food:'🍽️', drink:'🥤', beer:'🍺',
