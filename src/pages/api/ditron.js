@@ -114,12 +114,14 @@ export default async function handler(req, res) {
         break
       }
       case 'annullo':
-        if (marca === '3i') {
-          comando = '25F'
-        } else {
-          comando = `docannullo mat='${dati.matricola}', nazz=${dati.numeroAzzeramento}, ndoc=${dati.numeroDocumento}, data=${dati.data}`
-        }
-        break
+  if (marca === '3i') {
+    const nazz = String(dati.numeroAzzeramento).padStart(4, '0')
+    const ndoc = String(dati.numeroDocumento).padStart(4, '0')
+    comando = `"${nazz}-${ndoc}"52F`
+  } else {
+    comando = `docannullo mat='${dati.matricola}', nazz=${dati.numeroAzzeramento}, ndoc=${dati.numeroDocumento}, data=${dati.data}`
+  }
+  break
       case 'ristampa':
         if (marca === '3i') {
           // Formato 3i: "aammggNNNNNNNNNN"15F
