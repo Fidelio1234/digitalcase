@@ -74,11 +74,21 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
     setTestando(true)
     setStatoConnessione(null)
     try {
-      const res = await fetch('/api/ditron', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ip: config.ip, porta: config.porta, azione: 'ping', dati: {}, marca: config.marca })
-      })
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      let res
+      if (isLocalhost) {
+        res = await fetch('/api/ditron', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ip: config.ip, porta: config.porta, azione: 'ping', dati: {}, marca: config.marca })
+        })
+      } else {
+        res = await fetch('http://localhost:3002', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo: 'rt', marca: config.marca, ip: config.ip, porta: config.porta, azione: 'ping', dati: {} })
+        })
+      }
       const data = await res.json()
       if (data.ok) {
         setStatoConnessione('ok')
