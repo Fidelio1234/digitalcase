@@ -850,6 +850,7 @@ async function callRT(marca, body) {
     const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     return res.json()
   } else {
+    console.log('callRT produzione - chiamata a localhost:3002')
     const res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
     return res.json()
   }
@@ -911,7 +912,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
             // formato: "zzzz-ssss"52F dove zzzz=num azzeramento, ssss=num scontrino
             const nazz = String(dati.numeroAzzeramento).padStart(4, '0')
             const ndoc = String(dati.numeroDocumento).padStart(4, '0')
-            cmd = `"${nazz}-${ndoc}"52F`
+            cmd = `"${nazz}-${ndoc}"500F`
           } else {
             cmd = `docannullo mat='${dati.matricola}', nazz=${dati.numeroAzzeramento}, ndoc=${dati.numeroDocumento}, data=${dati.data}`
           }
