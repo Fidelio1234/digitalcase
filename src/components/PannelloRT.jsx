@@ -912,7 +912,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
             // formato: "zzzz-ssss"52F dove zzzz=num azzeramento, ssss=num scontrino
             const nazz = String(dati.numeroAzzeramento).padStart(4, '0')
             const ndoc = String(dati.numeroDocumento).padStart(4, '0')
-            cmd = `"${nazz}-${ndoc}"500F`
+            cmd = `"${nazz}-${ndoc}"52F`
           } else {
             cmd = `docannullo mat='${dati.matricola}', nazz=${dati.numeroAzzeramento}, ndoc=${dati.numeroDocumento}, data=${dati.data}`
           }

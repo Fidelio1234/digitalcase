@@ -858,7 +858,7 @@ const server = http.createServer(async (req, res) => {
                     const errori = {'1':'Scontrino non trovato','2':'Non è documento di vendita','3':'Già annullato/reso','4':'Aliquote IVA diverse','5':'Aliquota non associata a reparto'}
                     throw new Error(errori[esito] || `Errore 3i: ${verifica}`)
                   }
-                  const risposta = await inviaTCPRT(ip, porta || 1723, `${ref}500F`, '3i')
+                  const risposta = await inviaTCPRT(ip, porta || 1723, `${ref}52F`, '3i')
                   res.writeHead(200, { 'Content-Type': 'application/json' })
                   res.end(JSON.stringify({ ok: true, risposta }))
                   return
