@@ -51,11 +51,25 @@ import { NegozioProvider, useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
 
 function AuthProviderWrapper({ children }) {
-  const { negozio, loading } = useNegozio() || {}
+  const { negozio, loading, errore } = useNegozio() || {}
   const router = useRouter()
 
-  // Aspetta che NegozioContext abbia risolto prima di montare AuthProvider
   if (loading) return null
+
+  // Negozio non trovato
+  if (errore) {
+    return (
+      <div style={{
+        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+        height:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Mono',monospace",
+        gap:16
+      }}>
+        <div style={{fontSize:'3rem'}}>🚫</div>
+        <div style={{fontSize:'1.2rem', color:'#ff4d6a'}}>Negozio non trovato</div>
+        <div style={{fontSize:'0.8rem', color:'#5a5d6e'}}>Questo indirizzo non è associato a nessun negozio attivo.</div>
+      </div>
+    )
+  }
 
   // Controlla licenza scaduta
   if (!loading && negozio?.scaduto && router.pathname !== '/scaduto') {
