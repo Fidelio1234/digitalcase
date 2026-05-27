@@ -82,7 +82,7 @@ export default function TechPage() {
 
   // ── PIN ────────────────────────────────────────────────────────────────────
   async function resetPin(utente) {
-    if (newPin.length < 4) { showToast('⚠ PIN deve essere almeno 4 cifre'); return }
+    if (newPin.length < 8) { showToast('⚠ PIN deve essere almeno 8 cifre'); return }
     const { error } = await supabase
       .from('utenti')
       .update({ pin: newPin })
@@ -273,10 +273,10 @@ export default function TechPage() {
                       <span style={{fontSize:'0.75rem',color:'#5a5d6e'}}>Nuovo:</span>
                       <input
                         type="tel"
-                        maxLength={6}
+                        maxLength={16}
                         placeholder="Nuovo PIN"
                         value={newPin}
-                        onChange={e => setNewPin(e.target.value.replace(/\D/g,'').slice(0,6))}
+                        onChange={e => setNewPin(e.target.value.slice(0,16))}
                         className={styles.pinEditInput}
                         autoFocus
                       />
