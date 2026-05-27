@@ -511,7 +511,7 @@ const server = http.createServer(async (req, res) => {
           let comando = dati?.cmd || ''
           if (!comando && azione) {
             switch (azione) {
-              case 'ping': comando = marca === '3i' ? 'K' : 'report num=2'; break
+              case 'ping': comando = marca === '3i' ? 'K' : 'report num=0'; break
               case 'lettura_x': comando = marca === '3i' ? '1F' : 'report num=2'; break
               case 'annullo': {
                 if (marca === '3i') {
