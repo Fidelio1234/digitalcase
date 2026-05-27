@@ -272,7 +272,7 @@ export default function TechPage() {
                       <span style={{color:'#5a5d6e'}}>→</span>
                       <span style={{fontSize:'0.75rem',color:'#5a5d6e'}}>Nuovo:</span>
                       <input
-                        type="tel"
+                        type="text"
                         maxLength={16}
                         placeholder="Nuovo PIN"
                         value={newPin}
