@@ -572,6 +572,7 @@ const server = http.createServer(async (req, res) => {
           }
           if (!comando) throw new Error('Comando RT mancante')
           const risposta = await inviaTCPRT(ip, porta || 1471, comando, marca)
+        
           risultato = { ok: true, risposta }
         }
 
