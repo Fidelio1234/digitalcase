@@ -732,11 +732,13 @@ export default function CassaPage() {
                   </div>
                   <div className={styles.rigaDestra}>
                     <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
-                    <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
-                      title="Aggiungi nota"
-                      style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
-                      ✏️
-                    </button>
+                    {impostazioni.cortesiaAbilitato && (
+  <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
+    title="Aggiungi nota"
+    style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
+    ✏️
+  </button>
+)}
                   <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <line x1="18" y1="6" x2="6" y2="18"/>
