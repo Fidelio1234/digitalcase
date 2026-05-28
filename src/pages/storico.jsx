@@ -65,7 +65,8 @@ export default function StoricoPage() {
       ? new Date(s.timestamp) > new Date(ultimaChiusuraDelGiorno.timestamp)
       : true
     // Gli annullati ignorano il filtro dopoChiusura
-    return dataOk && metodoOk && testOk && (s.annullato || dopoChiusura)
+   // return dataOk && metodoOk && testOk && (s.annullato || dopoChiusura)
+   return dataOk && metodoOk && testOk
   })
 
   const totaleGiornaliero = scontriniFiltrati.filter(x => !x.annullato).reduce((s, x) => s + (x.totale || 0), 0)

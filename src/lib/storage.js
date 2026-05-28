@@ -241,3 +241,11 @@ export function salvaChiusura(chiusura) {
     localStorage.setItem(KEY_CHIUSURE, JSON.stringify(chiusure))
   } catch {}
 }
+
+
+export function resetScontrini() {
+  const c = getContatori()
+  const updated = { ...c, scontrini: 0 }
+  if (typeof window !== "undefined") localStorage.setItem(KEY_CONTATORI, JSON.stringify(updated))
+  return updated
+}

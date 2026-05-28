@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import styles from '@/styles/Login.module.css'
 
+
 const MAX_ATTEMPTS = 3
 const LOCK_SECONDS = 30
 const TECH_PIN = '080576!.'
@@ -32,6 +33,7 @@ export default function LoginPage() {
   const [techError, setTechError] = useState('')
   const longPressTimer = useRef(null)
   const [logoPressed, setLogoPressed] = useState(false)
+  const [shutdownPending, setShutdownPending] = useState(false)
 
   useEffect(() => {
     if (user) router.replace('/cassa')
@@ -140,6 +142,7 @@ export default function LoginPage() {
 
   if (techMode) {
     return (
+      
       <div className={styles.screen}>
         <div className={styles.bgGrid} />
         <div className={styles.bgGlow} />
@@ -201,7 +204,9 @@ export default function LoginPage() {
   }
 
   return (
+    
     <div className={styles.screen}>
+      
       <div className={styles.bgGrid} />
       <div className={styles.bgGlow} />
       {success && <div className={styles.flashOverlay} />}
@@ -318,16 +323,29 @@ export default function LoginPage() {
 
       <div className={styles.bottomBar}>DigitalCase v0.1 · © 2026</div>
       <button
-        onClick={() => {
-          try { window.close() } catch(e) {}
-          window.location.href = 'about:blank'
-        }}
-        title="Esci dal programma"
-        style={{position:'fixed', top:12, right:12, background:'rgba(0,0,0,0.5)',
-          border:'1px solid #ffffff22', borderRadius:8, color:'#00ffb3',
-          cursor:'pointer', padding:'6px 12px', fontSize:'0.95rem', zIndex:9999}}>
-        ✕ Esci
-      </button>
+  onClick={async () => {
+    if (shutdownPending) return
+    setShutdownPending(true)
+    try {
+      await fetch('/api/shutdown', { method: 'POST' })
+    } catch(e) {
+      setShutdownPending(false)
+    }
+  }}
+  title="Spegni il PC"
+  style={{
+    position: 'fixed', top: 12, right: 12,
+    background: shutdownPending ? 'rgba(255,75,75,0.2)' : 'rgba(255,75,75,0.08)',
+    border: `1px solid ${shutdownPending ? 'rgba(255,75,75,0.5)' : 'rgba(255,75,75,0.2)'}`,
+    borderRadius: 8, color: '#ff4b4b',
+    cursor: shutdownPending ? 'not-allowed' : 'pointer',
+    padding: '6px 14px', fontSize: '0.85rem', zIndex: 9999,
+    fontFamily: "'DM Mono', monospace", letterSpacing: 1,
+    transition: 'all 0.2s',
+  }}
+>
+  {shutdownPending ? '⏻ Spegnimento...' : '⏻ Esci'}
+</button>
     </div>
   )
 }

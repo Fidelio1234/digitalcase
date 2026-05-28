@@ -3,13 +3,15 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
-import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
+
 import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza, salvaAnnulloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
 import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
+import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini } from '@/lib/storage'
+
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
 async function callRT(marca, body) {
@@ -1052,13 +1054,16 @@ export default function CassaPage() {
           </div>
         </div>
       )}
-
-      <PannelloRT
-        rtConfig={rtConfig}
-        mappatura={rtMappatura}
-        scontrino={righe.length > 0 ? { righe, metodo: 'contanti', totale, resto: 0, contatto: null } : null}
-        onStampa={() => setShowChiusura(true)}
-      />
+<PannelloRT
+  rtConfig={rtConfig}
+  mappatura={rtMappatura}
+  scontrino={righe.length > 0 ? { righe, metodo: 'contanti', totale, resto: 0, contatto: null } : null}
+  onStampa={() => setShowChiusura(true)}
+  onChiusura={() => {
+    const c = resetScontrini()
+    setContatori(c)
+  }}
+/>
     </div>
   )
 }

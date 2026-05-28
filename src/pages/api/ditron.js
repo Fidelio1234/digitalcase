@@ -336,7 +336,7 @@ export default async function handler(req, res) {
 
     let risposta
     if (marca === '3i' && (azione === 'chiusura_fiscale' || azione === 'lettura_x')) {
-      const cmds = azione === 'chiusura_fiscale' ? ['z', '1F', 'c'] : ['x', '1F', 'c']
+      const cmds = azione === 'chiusura_fiscale' ? ['z', '1F', 'c'] : ['x', '7F', 'c']
       risposta = await inviaTCP3i(ip, porta, cmds)
     } else if (comandoArray) {
       console.log('Ditron scontrino righe:', JSON.stringify(comandoArray))
