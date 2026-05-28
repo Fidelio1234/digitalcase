@@ -178,35 +178,35 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return }
   if (req.method !== 'POST') { res.writeHead(405); res.end(); return }
 
+  if (req.url === '/shutdown') {
+    const { exec } = require('child_process')
+    const os = require('os')
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: true }))
+    setTimeout(() => {
+      const platform = os.platform()
+      let cmd
+      if (platform === 'win32') {
+        cmd = 'C:\\Windows\\System32\\shutdown.exe /s /t 3'
+      } else if (platform === 'darwin') {
+        cmd = 'osascript -e \'tell app "System Events" to shut down\''
+      } else {
+        cmd = 'shutdown -h now'
+      }
+      exec(cmd, (err) => { if (err) console.error('Shutdown error:', err.message) })
+    }, 500)
+    return  // ← blocca tutto il resto
+  }
+
+
+  
   let body = ''
   req.on('data', chunk => body += chunk)
   req.on('end', async () => {
     try {
       const payload = JSON.parse(body)
-// ── Shutdown PC ─────────────────────────────────────────────────────────
-if (req.url === '/shutdown') {
-  const { exec } = require('child_process')
-  const os = require('os')
 
-  res.writeHead(200, { 'Content-Type': 'application/json' })
-  res.end(JSON.stringify({ ok: true }))
 
-  setTimeout(() => {
-    const platform = os.platform()
-    let cmd
-    if (platform === 'win32') {
-      cmd = 'C:\\Windows\\System32\\shutdown.exe /s /t 3'
-    } else if (platform === 'darwin') {
-      cmd = 'osascript -e \'tell app "System Events" to shut down\''
-    } else {
-      cmd = 'shutdown -h now'
-    }
-    exec(cmd, (err) => {
-      if (err) console.error('Shutdown error:', err.message)
-    })
-  }, 500)
-  return
-}
 
       // ── Registratore Telematico ──────────────────────────────────────────
       if (payload.tipo === 'rt') {
