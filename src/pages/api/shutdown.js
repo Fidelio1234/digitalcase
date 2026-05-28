@@ -15,11 +15,10 @@ export default function handler(req, res) {
     let cmd
 
     if (platform === 'win32') {
-      cmd = 'shutdown /s /t 3'
+      cmd = 'C:\\Windows\\System32\\shutdown.exe /s /t 3'
     } else if (platform === 'darwin') {
       cmd = 'osascript -e \'tell app "System Events" to shut down\''
     } else {
-      // Linux
       cmd = 'shutdown -h now'
     }
 
