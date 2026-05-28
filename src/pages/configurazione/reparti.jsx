@@ -19,10 +19,28 @@ const NATURA_IVA_OPTIONS = [
 
 
 const ICONE = {
-  coffee:'☕', cake:'🍰', food:'🍽️', drink:'🥤', beer:'🍺',
-  wine:'🍷', pizza:'🍕', sandwich:'🥪', ice_cream:'🍦', candy:'🍬',
-  bread:'🥐', fruit:'🍎', salad:'🥗', fish:'🐟', meat:'🥩',
-  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️', box:'��',
+  // Bevande
+  coffee:'☕', beer:'🍺', wine:'🍷', drink:'🥤', cocktail:'🍹',
+  tea:'🍵', juice:'🧃', water:'💧', champagne:'🥂', whiskey:'🥃',
+  // Cibo base
+  pizza:'🍕', sandwich:'🥪', bread:'🥐', food:'🍽️', salad:'🥗',
+  // Carne e pesce
+  meat:'🥩', fish:'🐟', chicken:'🍗', bacon:'🥓', shrimp:'🦐',
+  // Snack e fritti
+  fries:'🍟', popcorn:'🍿', chips:'🥨', hotdog:'🌭', burger:'🍔',
+  // Dolci
+  cake:'🍰', ice_cream:'🍦', candy:'🍬', donut:'🍩', cookie:'🍪',
+  chocolate:'🍫', gelato:'🧁', waffle:'🧇',
+  // Frutta e verdura
+  fruit:'🍎', lemon:'🍋', tomato:'🍅', pepper:'🌶️', mushroom:'🍄',
+  corn:'🌽', avocado:'🥑', olive:'🫒', garlic:'🧄', onion:'🧅',
+  // Formaggio e latticini
+  cheese:'🧀', egg:'🥚', butter:'🧈',
+  // Pasta e riso
+  pasta:'🍝', rice:'🍚', soup:'🍜', taco:'🌮', burrito:'🌯',
+  // Altro
+  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️', box:'📦',
+  fire:'🔥', heart:'❤️', leaf:'🌿',
 }
 
 const COLORI = [
