@@ -327,7 +327,7 @@ export default function LoginPage() {
     if (shutdownPending) return
     setShutdownPending(true)
     try {
-      await fetch('/api/shutdown', { method: 'POST' })
+      await fetch('http://localhost:3002/shutdown', { method: 'POST' })
     } catch(e) {
       setShutdownPending(false)
     }
