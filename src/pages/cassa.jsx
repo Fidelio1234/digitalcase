@@ -990,7 +990,7 @@ export default function CassaPage() {
 
       {/* Tipo */}
       <div style={{display:'flex',gap:8}}>
-        <button onClick={() => { setNotaTipo('rimozione'); setCostoAggiuntaCustom(null) }}
+      <button onClick={() => { setNotaTipo('rimozione'); setAggiunte([]) }}
           style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
             background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
             color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
