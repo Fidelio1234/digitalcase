@@ -85,7 +85,7 @@ export default function CassaPage() {
   const longPressTimer = useRef(null)
   const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: false, magazzinoAbilitato: false })
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
-  const [costoAggiuntaCustom, setCostoAggiuntaCustom] = useState(null)
+  const [aggiunte, setAggiunte] = useState([]) // [{nome, costo}]
 
   const {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
@@ -1005,69 +1005,77 @@ export default function CassaPage() {
       </div>
 
       {/* Aggiunte rapide */}
-      {notaTipo === 'aggiunta' && (
-        <div style={{display:'flex',flexDirection:'column',gap:8}}>
-          <div style={{fontSize:'0.7rem',color:'#5a5d6e',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
-          {[
-            { gruppo: '€ 1,00', costo: 100, items: ['Olive','Ortaggi','Patatine','Wurstel','Funghi','Doppia mozzarella fiordilatte'] },
-            { gruppo: '€ 1,50', costo: 150, items: ['Prosciutto cotto','Salsiccia fresca','Mortadella','Salamino piccante','Nduja','Stracciatella','Grana','Tonno'] },
-            { gruppo: '€ 2,00', costo: 200, items: ['Bresaola','Prosciutto crudo','Speck','Granella di pistacchio','Mozzarella senza lattosio','Mozzarella di bufala','Impasti speciali'] },
-          ].map(({ gruppo, costo, items }) => (
-            <div key={gruppo}>
-              <div style={{fontSize:'0.72rem',color:'#ffb830',marginBottom:4}}>{gruppo}</div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                {items.map(item => {
-                  const selected = notaTesto === item && costoAggiuntaCustom === costo
-                  return (
-                    <button key={item}
-                      onClick={() => { setNotaTesto(item); setCostoAggiuntaCustom(costo) }}
-                      style={{
-                        padding:'6px 12px', borderRadius:8, fontSize:'0.78rem', cursor:'pointer',
-                        border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
-                        background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
-                        color: selected ? '#00e5a0' : '#eef0f6',
-                        fontWeight: selected ? 700 : 400,
-                      }}>
-                      {item}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-          {costoAggiuntaCustom && (
-            <div style={{fontSize:'0.75rem',color:'#00e5a0',background:'rgba(0,229,160,0.1)',borderRadius:8,padding:'6px 10px'}}>
-              💰 Verrà aggiunto +€{(costoAggiuntaCustom/100).toFixed(2).replace('.',',')} al totale
-            </div>
-          )}
-          {!costoAggiuntaCustom && notaTesto && (
-            <div style={{fontSize:'0.75rem',color:'#ffb830',background:'rgba(255,184,48,0.1)',borderRadius:8,padding:'6px 10px'}}>
-              💰 Verrà aggiunto +€{((impostazioni.costoAggiunta ?? 50)/100).toFixed(2).replace('.',',')} al totale (prezzo default)
-            </div>
-          )}
+{notaTipo === 'aggiunta' && (
+  <div style={{display:'flex',flexDirection:'column',gap:8}}>
+    <div style={{fontSize:'0.7rem',color:'#5a5d6e',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
+    {[
+      { gruppo: '€ 1,00', costo: 100, items: ['Olive','Ortaggi','Patatine','Wurstel','Funghi','Doppia mozzarella fiordilatte'] },
+      { gruppo: '€ 1,50', costo: 150, items: ['Prosciutto cotto','Salsiccia fresca','Mortadella','Salamino piccante','Nduja','Stracciatella','Grana','Tonno'] },
+      { gruppo: '€ 2,00', costo: 200, items: ['Bresaola','Prosciutto crudo','Speck','Granella di pistacchio','Mozzarella senza lattosio','Mozzarella di bufala','Impasti speciali'] },
+    ].map(({ gruppo, costo, items }) => (
+      <div key={gruppo}>
+        <div style={{fontSize:'0.72rem',color:'#ffb830',marginBottom:4}}>{gruppo}</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+          {items.map(item => {
+            const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
+            return (
+              <button key={item}
+                onClick={() => {
+                  setAggiunte(prev => {
+                    const esiste = prev.find(a => a.nome === item)
+                    if (esiste) return prev.filter(a => a.nome !== item)
+                    return [...prev, { nome: item, costo }]
+                  })
+                }}
+                style={{
+                  padding:'6px 12px', borderRadius:8, fontSize:'0.78rem', cursor:'pointer',
+                  border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
+                  background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
+                  color: selected ? '#00e5a0' : '#eef0f6',
+                  fontWeight: selected ? 700 : 400,
+                }}>
+                {item}
+              </button>
+            )
+          })}
         </div>
-      )}
-
+      </div>
+    ))}
+    {aggiunte.length > 0 && (
+      <div style={{fontSize:'0.75rem',color:'#00e5a0',background:'rgba(0,229,160,0.1)',borderRadius:8,padding:'6px 10px'}}>
+        💰 Totale aggiunte: +€{(aggiunte.reduce((s,a) => s + a.costo, 0)/100).toFixed(2).replace('.',',')}
+        {' — '}{aggiunte.map(a => a.nome).join(', ')}
+      </div>
+    )}
+  </div>
+)}
       {/* Campo manuale */}
-      <textarea value={notaTesto} onChange={e => { setNotaTesto(e.target.value); setCostoAggiuntaCustom(null) }}
+      <textarea value={notaTesto} onChange={e => { setNotaTesto(e.target.value) }}
         placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'oppure scrivi una variante personalizzata...'}
         rows={2}
         style={{background:'#1a1c24',border:'1px solid #252830',borderRadius:10,padding:12,color:'#eef0f6',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
       />
 
       <div style={{display:'flex',gap:10}}>
-        <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setCostoAggiuntaCustom(null) }}
+      <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
           style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid #252830',color:'#eef0f6',cursor:'pointer'}}>
           Annulla
         </button>
         <button onClick={() => {
-            const costo = notaTipo === 'aggiunta' ? (costoAggiuntaCustom ?? impostazioni.costoAggiunta ?? 50) : 0
-            salvaNota(notaModal, notaTesto, notaTipo, costo)
-            setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setCostoAggiuntaCustom(null)
-          }}
-          style={{flex:1,padding:12,borderRadius:10,background:'#00e5a0',border:'none',color:'#08090c',fontWeight:700,cursor:'pointer'}}>
-          Salva
-        </button>
+    const tutteLeAggiunte = [
+      ...aggiunte.map(a => a.nome),
+      ...(notaTesto.trim() ? [notaTesto.trim()] : [])
+    ]
+    const costoTotale = aggiunte.length > 0
+      ? aggiunte.reduce((s,a) => s + a.costo, 0)
+      : (impostazioni.costoAggiunta ?? 50)
+    const testoFinale = tutteLeAggiunte.join(', ')
+    if (testoFinale) salvaNota(notaModal, testoFinale, notaTipo, costoTotale)
+    setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([])
+  }}
+  style={{flex:1,padding:12,borderRadius:10,background:'#00e5a0',border:'none',color:'#08090c',fontWeight:700,cursor:'pointer'}}>
+  Salva
+</button>
       </div>
     </div>
   </div>
