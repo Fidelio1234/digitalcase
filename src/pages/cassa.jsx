@@ -1005,7 +1005,7 @@ export default function CassaPage() {
       </div>
 
       {/* Aggiunte rapide */}
-{notaTipo === 'aggiunta' && (
+      {notaTipo === 'aggiunta' && negozio?.slug === 'poesia' && (
   <div style={{display:'flex',flexDirection:'column',gap:8}}>
     <div style={{fontSize:'0.7rem',color:'#5a5d6e',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
     {[
