@@ -1007,16 +1007,19 @@ export default function CassaPage() {
       {/* Aggiunte rapide 
 {notaTipo === 'aggiunta' && (  QUESTO SE VUOI FARE LA MODIFICHE SU TUTTI I CLIENTI*/}
 
-{notaTipo === 'aggiunta' && negozio?.slug === 'poesia' && (
+ {/* QUESTO MODIFICA SOLO IL CLIENTE POESIA */}
+
+{notaTipo === 'aggiunta' && negozio?.slug === 'poesia' && (  
+
   <div style={{display:'flex',flexDirection:'column',gap:8}}>
-    <div style={{fontSize:'0.7rem',color:'#5a5d6e',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
+    <div style={{fontSize:'0.8rem',color:'#00ffb3',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
     {[
       { gruppo: '€ 1,00', costo: 100, items: ['Olive','Ortaggi','Patatine','Wurstel','Funghi','Doppia mozzarella fiordilatte'] },
       { gruppo: '€ 1,50', costo: 150, items: ['Prosciutto cotto','Salsiccia fresca','Mortadella','Salamino piccante','Nduja','Stracciatella','Grana','Tonno'] },
       { gruppo: '€ 2,00', costo: 200, items: ['Bresaola','Prosciutto crudo','Speck','Granella di pistacchio','Mozzarella senza lattosio','Mozzarella di bufala','Impasti speciali'] },
     ].map(({ gruppo, costo, items }) => (
       <div key={gruppo}>
-        <div style={{fontSize:'0.72rem',color:'#ffb830',marginBottom:4}}>{gruppo}</div>
+        <div style={{fontSize:'0.82rem',color:'#ffb830',marginBottom:4}}>{gruppo}</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
           {items.map(item => {
             const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
@@ -1030,7 +1033,7 @@ export default function CassaPage() {
                   })
                 }}
                 style={{
-                  padding:'6px 12px', borderRadius:8, fontSize:'0.78rem', cursor:'pointer',
+                  padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
                   border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
                   background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
                   color: selected ? '#00e5a0' : '#eef0f6',
