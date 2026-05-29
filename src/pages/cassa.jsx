@@ -402,6 +402,10 @@ export default function CassaPage() {
             } else {
               cmd += '1T'
             }
+            // Apertura cassetto
+            if (info.metodo === 'contanti') {
+              cmd += 'a'
+            }
           }
 
           await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
@@ -492,7 +496,7 @@ export default function CassaPage() {
       }
     }
   }
-
+  
   return (
     <div className={styles.page}>
 
