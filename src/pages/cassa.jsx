@@ -925,7 +925,7 @@ export default function CassaPage() {
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#111318',border:'2px solid #00e5a0',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
             <div style={{fontSize:'1.1rem',fontWeight:700,color:'#00e5a0',marginBottom:8}}>✂️ Applica Sconto</div>
-            <div style={{fontSize:'0.75rem',color:'#5a5d6e',marginBottom:20}}>
+            <div style={{fontSize:'0.95rem',color:'#ffb830',marginBottom:20}}>
               Totale attuale: <strong style={{color:'#eef0f6'}}>€ {fmt(totale)}</strong>
             </div>
             <div style={{display:'flex',gap:8,marginBottom:16}}>
@@ -984,7 +984,7 @@ export default function CassaPage() {
       {notaModal !== null && (
   <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
     <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:420,maxHeight:'90vh',overflowY:'auto',display:'flex',flexDirection:'column',gap:14}}>
-      <div style={{fontSize:'0.9rem',fontWeight:700,color:'#eef0f6'}}>
+      <div style={{fontSize:'0.99rem',fontWeight:700,color:'#ffb830'}}>
         ✏️ Variante per: {righe.find(r => r.id === notaModal)?.nome}
       </div>
 
