@@ -518,10 +518,13 @@ export default function CassaPage() {
           {errore && <div className={styles.errore}>⚠ {errore}</div>}
         </div>
         <div className={styles.headerRight}>
+
+            {/* NASCONDE GLI SCONTRINI E LE CHIUSURE
           <div className={styles.contatori}>
             <span title="Scontrini oggi">🧾 {contatori.scontrini}</span>
             <span title="Chiusure oggi">🔒 {contatori.chiusure}</span>
-          </div>
+          </div>*/}
+
           {user?.role === 'owner' && (
             <>
               <button className={styles.cfgBtn1} onClick={() => router.push('/storico')}>
