@@ -1004,8 +1004,10 @@ export default function CassaPage() {
         </button>
       </div>
 
-      {/* Aggiunte rapide */}
-      {notaTipo === 'aggiunta' && negozio?.slug === 'poesia' && (
+      {/* Aggiunte rapide 
+{notaTipo === 'aggiunta' && (  QUESTO SE VUOI FARE LA MODIFICHE SU TUTTI I CLIENTI*/}
+
+{notaTipo === 'aggiunta' && negozio?.slug === 'poesia' && (
   <div style={{display:'flex',flexDirection:'column',gap:8}}>
     <div style={{fontSize:'0.7rem',color:'#5a5d6e',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
     {[
