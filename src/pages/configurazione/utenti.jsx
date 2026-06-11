@@ -22,8 +22,8 @@ export default function UtentiPage() {
   const [utenti, setUtenti] = useState([])
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
-  const [pinInput, setPinInput] = useState(['', '', '', ''])
-  const [pinConfirm, setPinConfirm] = useState(['', '', '', ''])
+  const [pinInput, setPinInput] = useState(['','','','','','','',''])
+  const [pinConfirm, setPinConfirm] = useState(['','','','','','','',''])
   const [errore, setErrore] = useState('')
   const [showPin, setShowPin] = useState(false)
   const [toast, setToast] = useState('')
@@ -65,8 +65,9 @@ export default function UtentiPage() {
 
   function openEdit(u) {
     setForm({ ...u })
-    setPinInput(u.pin.split(''))
-    setPinConfirm(u.pin.split(''))
+    const pinArr = u.pin.split('').concat(Array(8).fill('')).slice(0,8)
+    setPinInput(pinArr)
+    setPinConfirm(pinArr)
     setErrore('')
     setModal('edit')
     setTimeout(() => document.getElementById('pin-0')?.focus(), 100)
@@ -97,7 +98,7 @@ export default function UtentiPage() {
     if (!form.nome?.trim()) { setErrore('Inserisci il nome'); return }
     const pin = pinInput.join('')
     const confirm = pinConfirm.join('')
-    if (pin.length < 4) { setErrore('Il PIN deve essere di 4 cifre'); return }
+    if (pin.length < 4) { setErrore('Il PIN deve essere di almeno 4 cifre'); return }
     if (pin !== confirm) { setErrore('I PIN non coincidono'); return }
 
     const duplicato = utenti.find(u => u.pin === pin && u.id !== form.id)
@@ -198,7 +199,7 @@ export default function UtentiPage() {
 
     return (
       <div className={styles.pinBoxes}>
-        {[0,1,2,3].map(i => (
+       {[0,1,2,3,4,5,6,7].map(i => (
           <div key={i} className={styles.pinBoxWrap}>
             <input
               id={`${which}-${i}`}
@@ -260,7 +261,7 @@ export default function UtentiPage() {
                   <div className={styles.userMeta}>
                     <span style={{ color: ruolo?.colore }}>{ruolo?.label}</span>
                     <span className={styles.dot}>·</span>
-                    <span>PIN: {'●'.repeat(4)}</span>
+                    <span>PIN: {'●'.repeat(u.pin?.length || 4)}</span>
                   </div>
                 </div>
               </div>
@@ -334,7 +335,7 @@ export default function UtentiPage() {
 
               <div className={styles.field}>
                 <label style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                  <span>PIN (4 cifre)</span>
+                <span>PIN (4-8 cifre)</span>
                   <div style={{display:'flex',gap:8}}>
                     <button
                       type="button"

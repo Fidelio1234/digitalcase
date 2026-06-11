@@ -155,7 +155,7 @@
 .field input::placeholder { color: var(--muted); }
 
 /* PIN boxes */
-.pinBoxes { display: flex; gap: 12px; }
+.pinBoxes { display: flex; gap: 6px; }
 .pinBox {
   width: 56px; height: 56px; border-radius: 12px;
   background: var(--surface2); border: 1px solid var(--border);
@@ -266,7 +266,7 @@
 /* ─── PIN BOX v2 ─────────────────────────────────────────────────────────── */
 .pinBoxWrap {
   position: relative;
-  width: 56px; height: 56px;
+  width: 40px; height: 44px;
 }
 .pinInput {
   position: absolute; inset: 0;
@@ -275,7 +275,7 @@
   font-size: 1px;
 }
 .pinDisplay2 {
-  width: 56px; height: 56px; border-radius: 12px;
+  width: 40px; height: 44px; border-radius: 10px;
   background: var(--surface2); border: 2px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -287,7 +287,7 @@
 }
 .pinDigit {
   font-family: 'Unbounded', sans-serif;
-  font-size: 1.4rem; color: var(--accent);
+  font-size: 1rem; color: var(--accent);
   animation: digitPop 0.15s ease;
 }
 @keyframes digitPop {
@@ -295,7 +295,7 @@
   to   { transform: scale(1);   opacity: 1 }
 }
 .pinBullet {
-  font-size: 1.2rem; color: var(--accent);
+  font-size: 0.9rem; color: var(--accent);
   animation: bulletIn 0.15s ease;
 }
 @keyframes bulletIn {
@@ -303,7 +303,7 @@
   to   { transform: scale(1) }
 }
 .pinEmpty {
-  font-size: 1.2rem; color: var(--border);
+  font-size: 0.9rem; color: var(--border);
 }
 
 /* ─── MODAL CONFERMA ELIMINA ─────────────────────────────────────────────── */

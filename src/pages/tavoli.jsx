@@ -92,21 +92,25 @@ export default function TavoliPage() {
   }
 
   async function verificaPinEdElimina(pin) {
+   
     const { data: utenti } = await supabase
       .from('utenti')
       .select('pin, ruolo')
       .eq('negozio_id', NEGOZIO_ID)
       .eq('ruolo', 'owner')
       .single()
+     
 
-    if (!utenti || utenti.pin !== pin) {
+
+      if (!utenti || utenti.pin !== pin) {
       setPinErrore(true)
       setPinElimina('')
       setTimeout(() => setPinErrore(false), 1500)
       return
     }
-
+   
     await chiudiTavoloDb(NEGOZIO_ID, modalElimina)
+   
     setModalElimina(null)
     setPinElimina('')
     await carica()
@@ -570,7 +574,7 @@ export default function TavoliPage() {
 
           {/* Display PIN */}
           <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
-            {[0,1,2,3].map(i => (
+          {[0,1,2,3,4,5,6,7].map(i => (
               <div key={i} style={{
                 width:12, height:12, borderRadius:'50%',
                 background: i < pinElimina.length ? (pinErrore ? '#ff4d6a' : '#00e5a0') : '#252830',
@@ -585,7 +589,7 @@ export default function TavoliPage() {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, width:'100%' }}>
             {[1,2,3,4,5,6,7,8,9].map(n => (
               <button key={n}
-                onClick={() => { if(pinElimina.length < 4) { const nuovo = pinElimina + n; setPinElimina(nuovo); if(nuovo.length === 4) setTimeout(() => verificaPinEdElimina(nuovo), 100) }}}
+                onClick={() => { if(pinElimina.length < 8) { const nuovo = pinElimina + n; setPinElimina(nuovo); if(nuovo.length === 8) setTimeout(() => verificaPinEdElimina(nuovo), 100) }}}
                 style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>
                 {n}
               </button>

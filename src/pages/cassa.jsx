@@ -16,6 +16,7 @@ import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini }
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
 async function callRT(marca, body) {
   const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  console.log('callRT:', marca, 'isLocalhost:', isLocalhost, 'porta:', body.porta)
   if (isLocalhost) {
     const endpoint = marca === 'rch' ? '/api/rch' : '/api/ditron'
     const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })

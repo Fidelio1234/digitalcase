@@ -231,6 +231,7 @@ const server = http.createServer(async (req, res) => {
               case 'lettura_x': comando = marca === '3i' ? '1F' : 'report num=2'; break
               case 'annullo': {
                 if (marca === '3i') {
+                  
                   const nazz = String(dati.numeroAzzeramento).padStart(4, '0')
                   const ndoc = String(dati.numeroDocumento).padStart(4, '0')
                   const ref = `"${nazz}-${ndoc}"`

@@ -94,7 +94,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
             cmd = `dgfe tipo=160, datada=${dati.dataInizio}, dataa=${dati.dataFine}, nda=${dati.dalNumero}, na=${dati.alNumero}`
           }
         }
-
+      
         data = await callRT(rtConfig.marca || 'ditron', {
           ip: rtConfig.ip, porta: rtConfig.porta,
           azione: cmd ? 'raw' : azione,
@@ -268,7 +268,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
             <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
               <div style={{color:'yellow', fontSize:'2rem'}}>MENU RT - {rtConfig.marca?.toUpperCase()}</div>
               <button onClick={() => setPannelloAperto(false)}
-                style={{background:'transparent', border:'none', color:'#5a5d6e', cursor:'pointer', fontSize:'1.2rem'}}>✕</button>
+                style={{background:'transparent', border:'none', color:'red', cursor:'pointer', fontSize:'1.2rem'}}>X</button>
             </div>
 
             {scontrino && (
