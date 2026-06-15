@@ -1,0 +1,14 @@
+{
+    "name": "DigitalCase",
+    "short_name": "DigitalCase",
+    "description": "Sistema POS DigitalCase",
+    "start_url": "/ordini",
+    "display": "standalone",
+    "background_color": "#0a0e1a",
+    "theme_color": "#00e5a0",
+    "orientation": "portrait",
+    "icons": [
+      { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+      { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
+  }
