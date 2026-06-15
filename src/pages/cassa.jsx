@@ -798,18 +798,40 @@ export default function CassaPage() {
                       </div>
                     ) : (
                       <div className={styles.prodottiGrid}>
-                        {prodotti.map(sr => (
-                          <button key={sr.id}
-                            className={styles.prodottoCard}
-                            style={{borderColor: rep?.colore + '66'}}
-                            onClick={() => handleSottorepartoClick(rep, sr)}
-                          >
-                            <div className={styles.prodottoNome}>{sr.nome}</div>
-                            <div className={styles.prodottoPrezzo} style={{color: rep?.colore}}>
-                              € {fmt(sr.prezzoFisso)}
-                            </div>
-                          </button>
-                        ))}
+                       {prodotti.map(sr => {
+  const qtaInScontrino = righe
+    .filter(r => r.nome === sr.nome && r.importo === sr.prezzoFisso)
+    .reduce((s, r) => s + r.quantita, 0)
+
+  return (
+    <button key={sr.id}
+      className={styles.prodottoCard}
+      style={{borderColor: rep?.colore + '66', position:'relative'}}
+      onClick={() => handleSottorepartoClick(rep, sr)}
+    >
+      {qtaInScontrino > 0 && (
+        <div style={{
+          position:'absolute', top:-8, right:-8,
+          background: rep?.colore,
+          color:'#08090c',
+          borderRadius:'50%',
+          width:22, height:22,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:'0.72rem', fontWeight:700,
+          fontFamily:"'DM Mono',monospace",
+          boxShadow:`0 0 8px ${rep?.colore}88`,
+          zIndex:1,
+        }}>
+          {qtaInScontrino}
+        </div>
+      )}
+      <div className={styles.prodottoNome}>{sr.nome}</div>
+      <div className={styles.prodottoPrezzo} style={{color: rep?.colore}}>
+        € {fmt(sr.prezzoFisso)}
+      </div>
+    </button>
+  )
+})}
                       </div>
                     )}
                   </>
