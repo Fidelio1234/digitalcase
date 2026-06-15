@@ -25,6 +25,9 @@ export default function TechPage() {
   const [toast, setToast] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const [dashboardPassword, setDashboardPassword] = useState('')
+const [showDashboardPassword, setShowDashboardPassword] = useState(false)
+
   useEffect(() => { load() }, [])
 
   async function load() {
@@ -69,8 +72,10 @@ export default function TechPage() {
         telefono: negozioData.telefono,
         sitoWeb: negozioData.sito_web,
         numeroRt: negozioData.numero_rt,
+        
       }
       setNegozio(n)
+      setDashboardPassword(negozioData.dashboard_password || '')
     }
     setLoading(false)
   }
@@ -125,6 +130,21 @@ export default function TechPage() {
     setEditNegozio(false)
     showToast('✓ Intestazione salvata')
   }
+
+
+
+  async function saveDashboardPassword() {
+    if (!dashboardPassword.trim()) { showToast('⚠ Inserisci una password'); return }
+    const { error } = await supabase
+      .from('negozi')
+      .update({ dashboard_password: dashboardPassword.trim() })
+      .eq('id', NEGOZIO_ID)
+    if (error) { showToast('⚠ Errore: ' + error.message); return }
+    showToast('✓ Password dashboard salvata')
+  }
+
+
+
 
   // ── REPARTI ────────────────────────────────────────────────────────────────
   async function toggleReparto(r) {
@@ -264,6 +284,75 @@ export default function TechPage() {
                       {u.abilitato ? 'ATTIVO' : 'DISABILITATO'}
                     </span>
                   </div>
+
+
+
+{/* ── DASHBOARD TITOLARE ── */}
+<div className={styles.section}>
+  <div className={styles.sectionTitle}>📊 Dashboard Titolare</div>
+  <div style={{display:'flex', flexDirection:'column', gap:16}}>
+    <div style={{fontSize:'0.78rem', color:'#5a5d6e'}}>
+      Password per accedere alla dashboard di monitoraggio remoto.<br/>
+      Il titolare la usa su <strong style={{color:'#00e5a0'}}>dmi.digitalcase.it/dashboard</strong>
+    </div>
+    <div style={{display:'flex', alignItems:'flex-end', gap:10}}>
+      <div style={{flex:1}}>
+        <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6', marginBottom:6}}>
+          Password dashboard
+        </div>
+        <div style={{position:'relative'}}>
+          <input
+            type={showDashboardPassword ? 'text' : 'password'}
+            value={dashboardPassword}
+            onChange={e => setDashboardPassword(e.target.value)}
+            placeholder="Es. Ristorante2026!"
+            style={{
+              width:'100%', background:'#1a1c24', border:'1px solid #252830',
+              borderRadius:10, padding:'10px 40px 10px 12px',
+              color:'#00e5a0', fontFamily:"'DM Mono',monospace",
+              fontSize:'1rem', letterSpacing:2, boxSizing:'border-box',
+            }}
+          />
+          <button
+            onClick={() => setShowDashboardPassword(v => !v)}
+            style={{
+              position:'absolute', right:10, top:'50%', transform:'translateY(-50%)',
+              background:'none', border:'none', cursor:'pointer',
+              color:'#5a5d6e', fontSize:'0.85rem',
+            }}
+          >
+            {showDashboardPassword ? '🙈' : '👁'}
+          </button>
+        </div>
+      </div>
+      <button
+        onClick={saveDashboardPassword}
+        style={{
+          padding:'10px 16px', borderRadius:10, border:'none',
+          background:'#00e5a0', color:'#08090c',
+          fontWeight:700, cursor:'pointer', marginBottom:0,
+          whiteSpace:'nowrap',
+        }}
+      >
+        Salva
+      </button>
+    </div>
+    <button
+      onClick={() => window.open('/dashboard', '_blank')}
+      style={{
+        padding:'10px 16px', borderRadius:10,
+        border:'1px solid #00e5a044', background:'rgba(0,229,160,0.08)',
+        color:'#00e5a0', cursor:'pointer', fontSize:'0.82rem',
+        fontFamily:"'DM Mono',monospace", textAlign:'left',
+      }}
+    >
+      → Apri dashboard
+    </button>
+  </div>
+</div>
+
+
+
 
                   {/* PIN display/edit */}
                   {editingPin === u.id ? (
