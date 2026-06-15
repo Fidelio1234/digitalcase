@@ -845,24 +845,47 @@ export default function CassaPage() {
         <div className={styles.colRight}>
           <div className={styles.repartiHeader}>REPARTI</div>
           <div className={styles.repartiList}>
-            {reparti.map(r => (
-              <button key={r.id}
-                className={`${styles.repartoBtn} ${repartoAttivo === r.id ? styles.repartoActive : ''}`}
-                style={{
-                  borderColor: repartoAttivo === r.id ? r.colore : 'transparent',
-                  background: repartoAttivo === r.id ? r.colore + '15' : 'transparent',
-                }}
-                onClick={() => handleRepartoClick(r)}
-              >
-                <span className={styles.repartoIcn}>{ICONE[r.icona]||'📦'}</span>
-                <span className={styles.repartoNm}>{r.nome}</span>
-                {inputCents > 0 && (
-                  <span className={styles.repartoEuro} style={{background:r.colore+'22',color:r.colore}}>
-                    + €{fmt(inputCents)}
-                  </span>
-                )}
-              </button>
-            ))}
+          {reparti.map(r => {
+  const qtaReparto = righe
+    .filter(riga => riga.repartoId === r.id)
+    .reduce((s, riga) => s + riga.quantita, 0)
+
+  return (
+    <button key={r.id}
+      className={`${styles.repartoBtn} ${repartoAttivo === r.id ? styles.repartoActive : ''}`}
+      style={{
+        borderColor: repartoAttivo === r.id ? r.colore : 'transparent',
+        background: repartoAttivo === r.id ? r.colore + '15' : 'transparent',
+        position: 'relative',
+      }}
+      onClick={() => handleRepartoClick(r)}
+    >
+      {qtaReparto > 0 && (
+        <div style={{
+          position: 'absolute', top: -6, right: -6,
+          background: r.colore,
+          color: '#08090c',
+          borderRadius: '50%',
+          width: 20, height: 20,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.68rem', fontWeight: 700,
+          fontFamily: "'DM Mono',monospace",
+          boxShadow: `0 0 6px ${r.colore}88`,
+          zIndex: 1,
+        }}>
+          {qtaReparto}
+        </div>
+      )}
+      <span className={styles.repartoIcn}>{ICONE[r.icona]||'📦'}</span>
+      <span className={styles.repartoNm}>{r.nome}</span>
+      {inputCents > 0 && (
+        <span className={styles.repartoEuro} style={{background:r.colore+'22',color:r.colore}}>
+          + €{fmt(inputCents)}
+        </span>
+      )}
+    </button>
+  )
+})}
           </div>
         </div>
       </div>

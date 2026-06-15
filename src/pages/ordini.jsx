@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback  } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getTavoliDb, salvaTavoloDb, getRepartiDb, getImpostazioniDb } from '@/lib/supabase-db'
 import { stampaComanda } from '@/lib/stampante'
 import { useNegozioId } from '@/hooks/useNegozioId'
+import { supabase } from '@/lib/supabase'
 
 const ICONE = {
   coffee:'☕', beer:'🍺', wine:'🍷', cocktail:'🍹', pizza:'🍕',
@@ -31,33 +32,20 @@ export default function OrdiniPage() {
   const [tavoli, setTavoli] = useState([])
   const [reparti, setReparti] = useState([])
   const [impostazioni, setImpostazioni] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10 })
-  const [vista, setVista] = useState('griglia') // griglia | comanda
+  const [vista, setVista] = useState('griglia')
   const [tavoloAttivo, setTavoloAttivo] = useState(null)
   const [repartoAttivo, setRepartoAttivo] = useState(null)
   const [righeComanda, setRigheComanda] = useState([])
-  const [notaModal, setNotaModal] = useState(null) // { rigaId }
+  const [notaModal, setNotaModal] = useState(null)
   const [notaTesto, setNotaTesto] = useState('')
   const [modalCoperti, setModalCoperti] = useState(null)
   const [numCoperti, setNumCoperti] = useState(2)
   const [invioOk, setInvioOk] = useState(false)
   const [timer, setTimer] = useState(0)
 
-  useEffect(() => {
-    if (loading) return
-    if (!user) {
-      router.replace('/login')
-      return
-    }
-    carica()
-  }, [user, loading])
-
-  useEffect(() => {
-    const interval = setInterval(() => setTimer(t => t + 1), 30000)
-    return () => clearInterval(interval)
-  }, [])
-
-  async function carica() {
-    console.log('Carico tavoli...')
+  // 1. PRIMA carica
+  const carica = useCallback(async () => {
+    if (!NEGOZIO_ID) return
     const [t, imp, r] = await Promise.all([
       getTavoliDb(NEGOZIO_ID),
       getImpostazioniDb(NEGOZIO_ID),
@@ -71,8 +59,34 @@ export default function OrdiniPage() {
     setTavoli(tutti)
     setImpostazioni(imp)
     setReparti(r.filter(r => r.abilitato))
-    if (r.length > 0) setRepartoAttivo(r.filter(r => r.abilitato)[0]?.id)
-  }
+    if (r.length > 0) setRepartoAttivo(prev => prev || r.filter(r => r.abilitato)[0]?.id)
+  }, [NEGOZIO_ID])
+
+  // 2. POI gli useEffect
+  useEffect(() => {
+    if (loading) return
+    if (!user) { router.replace('/login'); return }
+    carica()
+  }, [user, loading, carica])
+
+  useEffect(() => {
+    const interval = setInterval(() => setTimer(t => t + 1), 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    if (!NEGOZIO_ID) return
+    const channel = supabase
+      .channel(`tavoli-${NEGOZIO_ID}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tavoli',
+        filter: `negozio_id=eq.${NEGOZIO_ID}`
+      }, () => { carica() })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [NEGOZIO_ID, carica])
 
   function apriTavolo(tavolo) {
     if (impostazioni.copertoAbilitato && tavolo.stato === 'libero') {
@@ -84,7 +98,8 @@ export default function OrdiniPage() {
     setVista('comanda')
   }
 
-  function confermaCoperti(numero, coperti) {
+
+function confermaCoperti(numero, coperti) {
     const updated = tavoli.map(t => t.numero === numero ? {...t, coperti} : t)
     setTavoli(updated)
     setModalCoperti(null)
