@@ -3,11 +3,14 @@ import '@/styles/globals.css'
 import { AuthProvider } from '@/context/AuthContext'
 import { NegozioProvider, useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 
 function AuthProviderWrapper({ children }) {
   const { negozio, loading, errore } = useNegozio() || {}
   const router = useRouter()
 
+
+  
   if (loading) return null
 
   // Negozio non trovato
@@ -34,6 +37,7 @@ function AuthProviderWrapper({ children }) {
   }
 
   return (
+    
     <AuthProvider negozioSlug={negozio?.slug || 'dmi'}>
       {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
         <div style={{
@@ -51,6 +55,13 @@ function AuthProviderWrapper({ children }) {
 }
 
 export default function App({ Component, pageProps }) {
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registrato:', reg))
+        .catch(err => console.error('SW errore:', err))
+    }
+  }, [])
   return (
     <NegozioProvider>
       <AuthProviderWrapper>
