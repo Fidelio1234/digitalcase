@@ -1,7 +1,7 @@
 {
   "name": "DigitalCase",
   "short_name": "DigitalCase",
-  "start_url": "/",
+  "start_url": "/ordini",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0a0e1a",
