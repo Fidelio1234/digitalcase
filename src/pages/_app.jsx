@@ -4,7 +4,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { NegozioProvider, useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
-import InstallButton from '../components/InstallButton';
+
 
 function AuthProviderWrapper({ children }) {
   const { negozio, loading, errore } = useNegozio() || {}
@@ -67,7 +67,7 @@ export default function App({ Component, pageProps }) {
     <NegozioProvider>
       <AuthProviderWrapper>
         <Component {...pageProps} />
-        <InstallButton />
+      
       </AuthProviderWrapper>
     </NegozioProvider>
   )
