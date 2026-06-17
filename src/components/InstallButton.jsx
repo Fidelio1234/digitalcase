@@ -57,10 +57,13 @@ const InstallButton = () => {
       <button 
         onClick={() => {
           alert(
-            'Per installare DigitalCase:\n\n' +
-            '1. Apri il menu di Chrome (⋮)\n' +
-            '2. Seleziona "Installa app" o "Aggiungi alla schermata Home"\n' +
-            '3. Segui le istruzioni'
+            'Per installare DigitalCase su questo telefono:\n\n' +
+            '1. Questo è il browser ' + navigator.userAgent + '.\n' +
+            '2. Se non stai usando Chrome, aprilo e vai su: https://dmi.digitalcase.it/login\n' +
+            '3. Nel menu di Chrome (⋮), tocca "Aggiungi alla schermata Home".\n' +
+            '4. Se la voce non c\'è, tocca "Installa app".\n' +
+            '5. Segui le istruzioni.\n\n' +
+            'Nota: Se l\'opzione non compare, prova ad interagire con l\'app (clicca su qualcosa!) e riprova.'
           );
         }} 
         style={{...buttonStyle, backgroundColor: '#ffb830'}}
