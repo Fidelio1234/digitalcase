@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { NegozioProvider, useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
+import InstallButton from '../components/InstallButton';
 
 function AuthProviderWrapper({ children }) {
   const { negozio, loading, errore } = useNegozio() || {}
@@ -53,7 +54,7 @@ function AuthProviderWrapper({ children }) {
     </AuthProvider>
   )
 }
-
+<InstallButton />
 export default function App({ Component, pageProps }) {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
