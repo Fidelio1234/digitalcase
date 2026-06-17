@@ -59,10 +59,18 @@ export default function App({ Component, pageProps }) {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('SW registrato:', reg))
-        .catch(err => console.error('SW errore:', err))
+        .then(async (reg) => {
+          console.log('SW registrato');
+  
+          await reg.update();
+  
+          // 🔥 FORZA CONTROLLO IMMEDIATO
+          if (navigator.serviceWorker.controller === null) {
+            window.location.reload();
+          }
+        });
     }
-  }, [])
+  }, []);
   return (
     <NegozioProvider>
       <AuthProviderWrapper>
