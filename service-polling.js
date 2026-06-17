@@ -19,7 +19,7 @@ const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_KEY = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const NEGOZIO_ID = env.NEXT_PUBLIC_NEGOZIO_ID
 const STAMPANTE_SERVICE = 'http://localhost:3002'
-const POLL_INTERVAL = 5000
+const POLL_INTERVAL = 2000
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('❌ Variabili .env.local mancanti!')

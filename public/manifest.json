@@ -2,7 +2,7 @@
     "name": "DigitalCase",
     "short_name": "DigitalCase",
     "description": "Sistema POS DigitalCase",
-    "start_url": "/ordini",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#0a0e1a",
     "theme_color": "#00e5a0",
