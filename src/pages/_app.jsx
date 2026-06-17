@@ -54,7 +54,7 @@ function AuthProviderWrapper({ children }) {
     </AuthProvider>
   )
 }
-<InstallButton />
+
 export default function App({ Component, pageProps }) {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -67,6 +67,7 @@ export default function App({ Component, pageProps }) {
     <NegozioProvider>
       <AuthProviderWrapper>
         <Component {...pageProps} />
+        <InstallButton />
       </AuthProviderWrapper>
     </NegozioProvider>
   )
