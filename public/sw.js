@@ -5,9 +5,10 @@ self.addEventListener('install', (event) => {
   self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
   });
-
-  self.addEventListener('message', (event) => {
-    if (event.data?.type === 'SKIP_WAITING') {
-      self.skipWaiting();
-    }
+  
+  // 🔥 questo è il punto chiave
+  self.addEventListener('fetch', (event) => {
+    event.respondWith(
+      fetch(event.request)
+    );
   });
