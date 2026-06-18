@@ -130,6 +130,34 @@ export function useCassa() {
     setRighe(prev => prev.filter(r => r.id !== id))
   }, [])
 
+
+
+
+
+
+
+  function aggiornaQuantita(id, delta) {
+    setRighe(prev => prev
+      .map(r => r.id === id
+        ? { ...r,
+            quantita: Math.max(0, r.quantita + delta),
+            totaleRiga: r.importo * Math.max(0, r.quantita + delta)
+          }
+        : r
+      )
+      .filter(r => r.quantita > 0)
+    )
+  }
+
+
+
+
+
+
+
+
+
+
   const annullaTutto = useCallback(() => {
     setRighe([])
     setInputCents(0)
@@ -235,7 +263,7 @@ export function useCassa() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, eliminaRiga, annullaTutto,
-    chiudiScontrino, ripristinaRighe, applicaSconto, scontrinoAperto, salvaNota,
+    chiudiScontrino, ripristinaRighe,aggiornaQuantita, applicaSconto, scontrinoAperto, salvaNota,
     resetScontrinoAperto: () => setScontrinoAperto(false),
     apriScontrino: () => setScontrinoAperto(true)
   }

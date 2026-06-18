@@ -93,7 +93,7 @@ export default function CassaPage() {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
-    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto, apriScontrino, salvaNota
+    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto, apriScontrino, salvaNota, aggiornaQuantita
   } = useCassa()
 
 
@@ -759,22 +759,54 @@ export default function CassaPage() {
                     )}
                     <div className={styles.rigaMeta}>IVA {r.iva}% · €{fmt(r.importo)} cad.</div>
                   </div>
+
+
+
+
+
+
+
                   <div className={styles.rigaDestra}>
-                    <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
-                    {impostazioni.cortesiaAbilitato && (
+  <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
+  
+  {/* Bottoni quantità */}
+  <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+    <button
+      onClick={() => aggiornaQuantita(r.id, -1)}
+      style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+    >−</button>
+    <span style={{ fontSize:'0.82rem', color:'#eef0f6', minWidth:16, textAlign:'center', fontFamily:"'DM Mono',monospace" }}>
+      {r.quantita}
+    </span>
+    <button
+      onClick={() => aggiornaQuantita(r.id, 1)}
+      style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+    >+</button>
+  </div>
+
   <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
     title="Aggiungi nota"
     style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
     ✏️
   </button>
-)}
-                  <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
-                    </button>
-                  </div>
+  <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+</div>
+
+
+
+
+
+
+
+
+
+
+
                 </div>
               ))}
             </div>
