@@ -361,7 +361,11 @@ function confermaCoperti(numero, coperti) {
           ↻ Aggiorna
         </button>
       </header>
-<InstallPWAButton />
+
+
+
+
+
       <div style={{ padding:16, display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(120px,1fr))', gap:12 }}>
         {tavoli.map(t => {
           const occupato = t.stato === 'occupato'
@@ -394,10 +398,12 @@ function confermaCoperti(numero, coperti) {
             
           )
         })}
+         <InstallPWAButton />
         <>
 
 </>
       </div>
+     
     </div>
   )
 }
