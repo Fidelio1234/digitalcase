@@ -66,7 +66,12 @@ export default function OrdiniPage() {
   // 2. POI gli useEffect
   useEffect(() => {
     if (loading) return
-    if (!user) { router.replace('/login'); return }
+    if (!user) {
+      sessionStorage.setItem('login_redirect', '/ordini')
+      router.replace('/login')
+      return
+    }
+    console.log('ordini: utente loggato, carico dati')
     carica()
   }, [user, loading, carica])
 
@@ -87,7 +92,7 @@ export default function OrdiniPage() {
       }, () => { carica() })
       .subscribe()
     return () => supabase.removeChannel(channel)
-  }, [NEGOZIO_ID, carica])
+  },)
 
   function apriTavolo(tavolo) {
     if (impostazioni.copertoAbilitato && tavolo.stato === 'libero') {

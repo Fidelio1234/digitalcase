@@ -65,9 +65,7 @@ export default function App({ Component, pageProps }) {
           await reg.update();
   
           // 🔥 FORZA CONTROLLO IMMEDIATO
-          if (navigator.serviceWorker.controller === null) {
-            window.location.reload();
-          }
+    
         });
     }
   }, []);
