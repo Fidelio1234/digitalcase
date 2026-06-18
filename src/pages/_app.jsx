@@ -57,10 +57,12 @@ function AuthProviderWrapper({ children }) {
 
 export default function App({ Component, pageProps }) {
   useEffect(() => {
+    
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(async (reg) => {
           console.log('SW registrato');
+          
   
           await reg.update();
   

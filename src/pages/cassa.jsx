@@ -57,6 +57,7 @@ function fmt(cents) {
 }
 
 export default function CassaPage() {
+  console.log('🔴 CASSA MONTATA - stack:', new Error().stack.split('\n')[2])
   const NEGOZIO_ID = useNegozioId()
   const { negozio } = useNegozio() || {}
   const { user, logout, loading } = useAuth()

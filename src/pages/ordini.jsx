@@ -92,8 +92,12 @@ export default function OrdiniPage() {
       }, () => { carica() })
       .subscribe()
     return () => supabase.removeChannel(channel)
-  },)
+  })
 
+
+
+
+  
   function apriTavolo(tavolo) {
     if (impostazioni.copertoAbilitato && tavolo.stato === 'libero') {
       setModalCoperti(tavolo.numero)

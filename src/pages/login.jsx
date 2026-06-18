@@ -35,7 +35,7 @@ export default function LoginPage() {
   const [logoPressed, setLogoPressed] = useState(false)
   const [shutdownPending, setShutdownPending] = useState(false)
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (user) {
       setTimeout(() => {
         const redirect = sessionStorage.getItem('login_redirect') || '/cassa'
@@ -43,7 +43,7 @@ export default function LoginPage() {
         router.replace(redirect)
       }, 100)
     }
-  }, [user, router])
+  }, [user, router])*/
 
   // Carica utenti via API con slug corretto
   useEffect(() => {
