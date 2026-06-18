@@ -770,7 +770,7 @@ export default function CassaPage() {
   <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
   
   {/* Bottoni quantità */}
-  <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+  <div style={{ display:'flex', alignItems:'center', gap:4, marginRight: 18 }}>
     <button
       onClick={() => aggiornaQuantita(r.id, -1)}
       style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
