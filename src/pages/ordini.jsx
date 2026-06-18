@@ -5,6 +5,7 @@ import { getTavoliDb, salvaTavoloDb, getRepartiDb, getImpostazioniDb } from '@/l
 import { stampaComanda } from '@/lib/stampante'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
+import InstallPWAButton from '@/components/InstallPWAButton'
 
 const ICONE = {
   coffee:'☕', beer:'🍺', wine:'🍷', cocktail:'🍹', pizza:'🍕',
@@ -360,7 +361,7 @@ function confermaCoperti(numero, coperti) {
           ↻ Aggiorna
         </button>
       </header>
-
+<InstallPWAButton />
       <div style={{ padding:16, display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(120px,1fr))', gap:12 }}>
         {tavoli.map(t => {
           const occupato = t.stato === 'occupato'
@@ -390,8 +391,12 @@ function confermaCoperti(numero, coperti) {
                 <div style={{ fontSize:'1rem', color:'#ffb830' }}>Libero</div>
               )}
             </button>
+            
           )
         })}
+        <>
+
+</>
       </div>
     </div>
   )
