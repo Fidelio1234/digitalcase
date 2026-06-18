@@ -5,7 +5,7 @@ import { getTavoliDb, salvaTavoloDb, getRepartiDb, getImpostazioniDb } from '@/l
 import { stampaComanda } from '@/lib/stampante'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
-import InstallPWAButton from '@/components/InstallPWAButton'
+
 
 const ICONE = {
   coffee:'☕', beer:'🍺', wine:'🍷', cocktail:'🍹', pizza:'🍕',
@@ -398,7 +398,7 @@ function confermaCoperti(numero, coperti) {
             
           )
         })}
-         <InstallPWAButton />
+       
         <>
 
 </>
