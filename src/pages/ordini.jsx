@@ -1,6 +1,3 @@
-
-
-
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
@@ -45,6 +42,8 @@ export default function OrdiniPage() {
   const [numCoperti, setNumCoperti] = useState(2)
   const [invioOk, setInvioOk] = useState(false)
   const [timer, setTimer] = useState(0)
+  const [showErrore, setShowErrore] = useState(false)
+const [erroreMsg, setErroreMsg] = useState('')
 
   const carica = useCallback(async () => {
     if (!NEGOZIO_ID) return
@@ -173,11 +172,23 @@ export default function OrdiniPage() {
   const repAttivo = reparti.find(r => r.id === repartoAttivo)
   const tavoloCorrente = tavoli.find(t => t.numero === tavoloAttivo)
 
-  async function inviaComanda() {
-    
-    if (righeComanda.length === 0) return
-    const ora = new Date().toISOString()
 
+
+
+
+
+
+
+
+
+
+
+
+ async function inviaComanda() {
+  if (righeComanda.length === 0) return
+  const ora = new Date().toISOString()
+
+  try {
     const righeVecchie = tavoloCorrente?.righe || []
 
     const righeUnite = righeVecchie.map(r => ({ ...r }))
@@ -213,8 +224,27 @@ export default function OrdiniPage() {
       setVista('griglia')
       setTavoloAttivo(null)
       carica()
-    }, 1500)
+    }, 2000)
+
+  } catch (e) {
+    console.error('Errore invio comanda:', e)
+    setErroreMsg(e.message || 'Errore di connessione')
+    setShowErrore(true)
   }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   if (notaModal !== null) {
     const riga = righeComanda.find(r => r.id === notaModal)
@@ -333,10 +363,75 @@ export default function OrdiniPage() {
               </div>
             ))}
           </div>
+          
         )}
+        {/* MODAL SUCCESSO */}
+{invioOk && (
+  <div style={{
+    position:'fixed', inset:0, zIndex:9999,
+    background:'rgba(8,9,12,0.85)',
+    display:'flex', alignItems:'center', justifyContent:'center',
+  }}>
+    <div style={{
+      background:'#111318', border:'2px solid #00e5a0',
+      borderRadius:24, padding:'40px 56px',
+      display:'flex', flexDirection:'column', alignItems:'center', gap:16,
+      boxShadow:'0 0 64px rgba(0,229,160,0.3)',
+      animation:'popIn 0.3s ease',
+    }}>
+      <div style={{
+        width:64, height:64, borderRadius:'50%',
+        background:'rgba(0,229,160,0.15)', border:'2px solid #00e5a0',
+        display:'flex', alignItems:'center', justifyContent:'center',
+      }}>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
       </div>
-    )
-  }
+      <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#00e5a0' }}>Comanda inviata!</div>
+    </div>
+    <style>{`@keyframes popIn { from { transform:scale(0.7); opacity:0 } to { transform:scale(1); opacity:1 } }`}</style>
+  </div>
+)}
+
+{/* MODAL ERRORE */}
+{showErrore && (
+  <div style={{
+    position:'fixed', inset:0, zIndex:9999,
+    background:'rgba(8,9,12,0.9)',
+    display:'flex', alignItems:'center', justifyContent:'center',
+  }} onClick={() => setShowErrore(false)}>
+    <div style={{
+      background:'#111318', border:'2px solid #ff4d6a',
+      borderRadius:24, padding:'32px 40px',
+      display:'flex', flexDirection:'column', alignItems:'center', gap:16,
+      maxWidth:320,
+    }} onClick={e => e.stopPropagation()}>
+      <div style={{
+        width:64, height:64, borderRadius:'50%',
+        background:'rgba(255,77,106,0.15)', border:'2px solid #ff4d6a',
+        display:'flex', alignItems:'center', justifyContent:'center',
+      }}>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff4d6a" strokeWidth="3">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      <div style={{ fontSize:'1rem', fontWeight:700, color:'#ff4d6a', textAlign:'center' }}>
+        Errore invio comanda
+      </div>
+      <div style={{ fontSize:'0.78rem', color:'#5a5d6e', textAlign:'center' }}>
+        {erroreMsg}
+      </div>
+      <button onClick={() => setShowErrore(false)}
+        style={{ padding:'10px 24px', borderRadius:10, background:'#ff4d6a', border:'none', color:'white', fontWeight:700, cursor:'pointer' }}>
+        Riprova
+      </button>
+    </div>
+  </div>
+)}
+      </div>
+       )
+    }
 
   return (
     <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif" }}>

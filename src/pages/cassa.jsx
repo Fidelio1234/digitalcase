@@ -89,6 +89,8 @@ export default function CassaPage() {
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
   const [aggiunte, setAggiunte] = useState([]) // [{nome, costo}]
 
+  const [tavoliOccupati, setTavoliOccupati] = useState(0)
+
   const {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
@@ -153,6 +155,27 @@ export default function CassaPage() {
       } catch(e) { console.error(e) }
     }
   }, [])
+
+
+
+
+  useEffect(() => {
+    if (!NEGOZIO_ID) return
+    async function contaTavoli() {
+      const { data } = await supabase
+        .from('tavoli')
+        .select('numero', { count: 'exact' })
+        .eq('negozio_id', NEGOZIO_ID)
+        .eq('stato', 'occupato')
+      setTavoliOccupati(data?.length || 0)
+    }
+    contaTavoli()
+    const interval = setInterval(contaTavoli, 5000)
+    return () => clearInterval(interval)
+  }, [NEGOZIO_ID])
+
+
+
 
   // Carica config RT separatamente
   useEffect(() => {
@@ -681,15 +704,42 @@ export default function CassaPage() {
                 <span>Giacenze</span>
               </button>
             )}
+
+
+
+
+
+
+
+
             {impostazioni.tavoliAbilitati !== false && (
-              <button onClick={() => router.push('/tavoli')}
-                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-                  color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
-                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
-                <span style={{fontSize:'1.4rem'}}>🍽️</span>
-                <span>Tavoli</span>
-              </button>
-            )}
+  <button onClick={() => router.push('/tavoli')}
+    style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+      color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+      position:'relative'}}>
+    {tavoliOccupati > 0 && (
+      <div style={{
+        position:'absolute', top:-6, right:-6,
+        background:'#ff4d6a', color:'white',
+        borderRadius:'50%', width:20, height:20,
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontSize:'0.68rem', fontWeight:700,
+        fontFamily:"'DM Mono',monospace",
+        boxShadow:'0 0 8px rgba(255,77,106,0.6)',
+      }}>
+        {tavoliOccupati}
+      </div>
+    )}
+    <span style={{fontSize:'1.4rem'}}>🍽️</span>
+    <span>Tavoli</span>
+  </button>
+)}
+
+
+
+
+
           </div>
           {scontrinoAperto && righe.length === 0 && (
             <button className={styles.chiudiBtn}
