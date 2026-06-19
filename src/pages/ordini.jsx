@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef, useCallback  } from 'react'
+
+
+
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getTavoliDb, salvaTavoloDb, getRepartiDb, getImpostazioniDb } from '@/lib/supabase-db'
 import { stampaComanda } from '@/lib/stampante'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
-
 
 const ICONE = {
   coffee:'☕', beer:'🍺', wine:'🍷', cocktail:'🍹', pizza:'🍕',
@@ -44,7 +46,6 @@ export default function OrdiniPage() {
   const [invioOk, setInvioOk] = useState(false)
   const [timer, setTimer] = useState(0)
 
-  // 1. PRIMA carica
   const carica = useCallback(async () => {
     if (!NEGOZIO_ID) return
     const [t, imp, r] = await Promise.all([
@@ -63,7 +64,6 @@ export default function OrdiniPage() {
     if (r.length > 0) setRepartoAttivo(prev => prev || r.filter(r => r.abilitato)[0]?.id)
   }, [NEGOZIO_ID])
 
-  // 2. POI gli useEffect
   useEffect(() => {
     if (loading) return
     if (!user) {
@@ -71,7 +71,6 @@ export default function OrdiniPage() {
       router.replace('/login')
       return
     }
-    console.log('ordini: utente loggato, carico dati')
     carica()
   }, [user, loading, carica])
 
@@ -92,32 +91,26 @@ export default function OrdiniPage() {
       }, () => { carica() })
       .subscribe()
     return () => supabase.removeChannel(channel)
-  })
+  }, [NEGOZIO_ID, carica])
 
-
-
-
-  
   function apriTavolo(tavolo) {
     if (impostazioni.copertoAbilitato && tavolo.stato === 'libero') {
       setModalCoperti(tavolo.numero)
       return
     }
     setTavoloAttivo(tavolo.numero)
-    setRigheComanda([...tavolo.righe])
+    setRigheComanda([])
     setVista('comanda')
   }
 
-
-function confermaCoperti(numero, coperti) {
+  function confermaCoperti(numero, coperti) {
     const updated = tavoli.map(t => t.numero === numero ? {...t, coperti} : t)
     setTavoli(updated)
     setModalCoperti(null)
     setTavoloAttivo(numero)
-    const tavolo = updated.find(t => t.numero === numero)
-    const righe = [...(tavolo.righe || [])]
+    const righe = []
     if (coperti > 0) {
-      righe.unshift({
+      righe.push({
         id: 'coperto',
         nome: 'Coperto',
         importo: impostazioni.copertoImporto,
@@ -181,47 +174,48 @@ function confermaCoperti(numero, coperti) {
   const tavoloCorrente = tavoli.find(t => t.numero === tavoloAttivo)
 
   async function inviaComanda() {
+    
     if (righeComanda.length === 0) return
     const ora = new Date().toISOString()
 
-    // Calcola solo le nuove righe
     const righeVecchie = tavoloCorrente?.righe || []
-    const righeNuove = righeComanda.filter(r => {
-      const vecchia = righeVecchie.find(v => v.id === r.id)
-      if (!vecchia) return true
-      if (r.id === 'coperto') return false
-      return r.quantita > vecchia.quantita
-    }).map(r => {
-      const vecchia = righeVecchie.find(v => v.id === r.id)
-      if (!vecchia) return r
-      const diff = r.quantita - vecchia.quantita
-      return { ...r, quantita: diff, totaleRiga: r.importo * diff }
-    })
+
+    const righeUnite = righeVecchie.map(r => ({ ...r }))
+    for (const nuova of righeComanda) {
+      const esistente = righeUnite.find(v =>
+        v.nome === nuova.nome && v.importo === nuova.importo && v.nota === nuova.nota
+      )
+      if (esistente) {
+        esistente.quantita += nuova.quantita
+        esistente.totaleRiga = esistente.importo * esistente.quantita
+      } else {
+        righeUnite.push({ ...nuova })
+      }
+    }
 
     await salvaTavoloDb(NEGOZIO_ID, {
       numero: tavoloAttivo,
       stato: 'occupato',
       coperti: tavoloCorrente?.coperti || 0,
-      righe: righeComanda,
+      righe: righeUnite,
       ultimoOrdine: ora,
       apertoAlle: tavoloCorrente?.apertoAlle || ora,
     })
 
-    // Stampa comanda
-    if (righeNuove.length > 0) {
-      await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti)
+    if (righeComanda.length > 0) {
+      await stampaComanda(tavoloAttivo, righeComanda, 'comanda', reparti)
     }
 
     setInvioOk(true)
     setTimeout(() => {
       setInvioOk(false)
+      setRigheComanda([])
       setVista('griglia')
       setTavoloAttivo(null)
       carica()
     }, 1500)
   }
 
-  // ── MODAL NOTA ───────────────────────────────────────────────────────────
   if (notaModal !== null) {
     const riga = righeComanda.find(r => r.id === notaModal)
     return (
@@ -251,7 +245,6 @@ function confermaCoperti(numero, coperti) {
     )
   }
 
-  // ── MODAL COPERTI ────────────────────────────────────────────────────────
   if (modalCoperti !== null) {
     return (
       <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:500, padding:20 }}>
@@ -265,11 +258,6 @@ function confermaCoperti(numero, coperti) {
             <button onClick={() => setNumCoperti(n => n+1)}
               style={{ width:52, height:52, borderRadius:14, background:'#1a1c24', border:'1px solid #252830', color:'#eef0f6', fontSize:'1.8rem', cursor:'pointer' }}>+</button>
           </div>
-            {/* COSTO COMANDA COPERTO
-          <div style={{ fontSize:'0.78rem', color:'#ffb830' }}>
-            Coperto: € {((impostazioni.copertoImporto * numCoperti) / 100).toFixed(2)} totale
-          </div>
-        */}
           <div style={{ display:'flex', gap:12, width:'100%' }}>
             <button onClick={() => setModalCoperti(null)}
               style={{ flex:1, padding:14, borderRadius:12, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>Annulla</button>
@@ -281,12 +269,10 @@ function confermaCoperti(numero, coperti) {
     )
   }
 
-  // ── VISTA COMANDA ────────────────────────────────────────────────────────
   if (vista === 'comanda') {
     return (
       <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column' }}>
 
-        {/* Header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderBottom:'1px solid #1a1c24', position:'sticky', top:0, zIndex:100 }}>
           <button onClick={() => { setVista('griglia'); carica() }}
             style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#00ffb3', padding:'8px 14px', cursor:'pointer', fontSize:'0.92rem' }}>
@@ -299,7 +285,6 @@ function confermaCoperti(numero, coperti) {
           </button>
         </div>
 
-        {/* Reparti */}
         <div style={{ display:'flex', gap:8, padding:'10px 16px', overflowX:'auto', background:'#111318', borderBottom:'1px solid #1a1c24' }}>
           {reparti.map(r => (
             <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
@@ -309,20 +294,17 @@ function confermaCoperti(numero, coperti) {
           ))}
         </div>
 
-        {/* Prodotti */}
         {repAttivo && (
           <div style={{ padding:'12px 16px', display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(100px,1fr))', gap:8 }}>
             {repAttivo.sottoreparti?.filter(s => s.abilitato).map(sr => (
               <button key={sr.id} onClick={() => aggiungiProdotto(repAttivo, sr)}
-                style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, active:{transform:'scale(0.95)'} }}>
+                style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
                 <div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500, textAlign:'center', lineHeight:1.2 }}>{sr.nome}</div>
-
               </button>
             ))}
           </div>
         )}
 
-        {/* Scontrino in corso */}
         {righeComanda.length > 0 && (
           <div style={{ marginTop:'auto', background:'#111318', borderTop:'1px solid #1a1c24', padding:'12px 16px', maxHeight:'40vh', overflowY:'auto' }}>
             <div style={{ fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:2, marginBottom:8 }}>COMANDA</div>
@@ -345,20 +327,17 @@ function confermaCoperti(numero, coperti) {
                     style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
                   <button onClick={() => aggiornaQuantita(r.id, 1)}
                     style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
-
                   {r.id !== 'coperto' && <button onClick={() => eliminaRiga(r.id)}
                     style={{ background:'transparent', border:'none', color:'#ffffff', cursor:'pointer', fontSize:'1rem' }}>✕</button>}
                 </div>
               </div>
             ))}
-
           </div>
         )}
       </div>
     )
   }
 
-  // ── VISTA GRIGLIA TAVOLI ─────────────────────────────────────────────────
   return (
     <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif" }}>
 
@@ -371,15 +350,10 @@ function confermaCoperti(numero, coperti) {
         </button>
       </header>
 
-
-
-
-
       <div style={{ padding:16, display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(120px,1fr))', gap:12 }}>
         {tavoli.map(t => {
           const occupato = t.stato === 'occupato'
           const tempo = t.ultimoOrdine ? tempoTrascorso(t.ultimoOrdine) : null
-          const totTavolo = t.righe?.reduce((s, r) => s + r.totaleRiga, 0) || 0
           return (
             <button key={t.numero} onClick={() => apriTavolo(t)}
               style={{
@@ -394,25 +368,14 @@ function confermaCoperti(numero, coperti) {
               </div>
               <div style={{ fontSize:'2.2rem', fontWeight:700, color: occupato ? '#ff4d6a' : '#00e5a0', lineHeight:1 }}>{t.numero}</div>
               {occupato ? (
-                <>
-                  {/* VISUALIZZA IL TOTALE
-                  <div style={{ fontSize:'0.95rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totTavolo)}</div>
-                  */}
-                  {tempo && <div style={{ fontSize:'0.92rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>}
-                </>
+                tempo && <div style={{ fontSize:'0.92rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>
               ) : (
                 <div style={{ fontSize:'1rem', color:'#ffb830' }}>Libero</div>
               )}
             </button>
-            
           )
         })}
-       
-        <>
-
-</>
       </div>
-     
     </div>
   )
 }
