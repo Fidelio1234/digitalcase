@@ -154,7 +154,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
       .from('chiusure').select('timestamp_chiusura')
       .eq('negozio_id', NEGOZIO_ID)
       .order('timestamp_chiusura', { ascending: false })
-      .limit(1).single()
+      .limit(1).maybeSingle()
     const dataFrom = ultimaChiusura?.timestamp_chiusura || (oggi + 'T00:00:00')
     const { data: scontrini } = await supabase
       .from('scontrini').select('totale, metodo')
