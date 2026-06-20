@@ -10,7 +10,11 @@ function AuthProviderWrapper({ children }) {
   const { negozio, loading, errore } = useNegozio() || {}
   const router = useRouter()
 
-
+  // Pagine pubbliche — bypassano completamente il controllo negozio
+  const paginePubbliche = ['/quiz', '/dashboard']
+  if (paginePubbliche.includes(router.pathname)) {
+    return children
+  }
   
   if (loading) return null
 
@@ -57,20 +61,15 @@ function AuthProviderWrapper({ children }) {
 
 export default function App({ Component, pageProps }) {
   useEffect(() => {
-    
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
-        .then(async (reg) => {
-          console.log('SW registrato');
-          
-  
-          await reg.update();
-  
-          // 🔥 FORZA CONTROLLO IMMEDIATO
-    
-        });
+        .then(() => console.log('SW registrato'))
+        .catch(err => console.error('SW errore:', err))
     }
-  }, []);
+  }, [])
+
+
+
   return (
     <NegozioProvider>
       <AuthProviderWrapper>
