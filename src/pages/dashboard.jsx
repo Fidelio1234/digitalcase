@@ -17,11 +17,8 @@ function fmtOra(iso) {
   return new Date(iso).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
 }
 
-function fmtData(iso) {
-  return new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
 const COLORI = ['#00e5a0', '#6482ff', '#ffb830', '#ff4d6a', '#a78bfa', '#34d399', '#fb923c', '#38bdf8']
+const PERIODI = ['giorno', 'settimana', 'mese', 'anno']
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -32,13 +29,13 @@ export default function DashboardPage() {
   const [negozioNome, setNegozioNome] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Dati dashboard
   const [filtroData, setFiltroData] = useState(() => new Date().toISOString().split('T')[0])
+  const [periodoGrafico, setPeriodoGrafico] = useState('giorno')
   const [scontrini, setScontrini] = useState([])
+  const [scontriniGrafico, setScontriniGrafico] = useState([])
   const [tavoli, setTavoli] = useState([])
   const [loadingDati, setLoadingDati] = useState(false)
 
-  // Verifica se già autenticato in sessione
   useEffect(() => {
     const auth = sessionStorage.getItem('dashboard_auth')
     if (auth) {
@@ -53,21 +50,18 @@ export default function DashboardPage() {
     if (autenticato && negozioId) {
       caricaDati()
     }
-  }, [autenticato, negozioId, filtroData])
+  }, [autenticato, negozioId, filtroData, periodoGrafico])
 
   async function login() {
     if (!passwordInput.trim()) return
     setLoading(true)
     setErroreLogin('')
     const slug = getSlug()
-    const { data: neg, error } = await supabase
-    .from('negozi')
-    .select('id, ragione_sociale, dashboard_password')
-    .eq('slug', slug)
-    .single()
-      console.log('Negozio:', neg)
-      
-
+    const { data: neg } = await supabase
+      .from('negozi')
+      .select('id, ragione_sociale, dashboard_password')
+      .eq('slug', slug)
+      .single()
 
     if (!neg) { setErroreLogin('Negozio non trovato'); setLoading(false); return }
     if (!neg.dashboard_password) { setErroreLogin('Dashboard non configurata — contatta il tecnico'); setLoading(false); return }
@@ -77,35 +71,80 @@ export default function DashboardPage() {
       return
     }
 
-    sessionStorage.setItem('dashboard_auth', JSON.stringify({ negozioId: neg.id, negozioNome: neg.nome }))
+    sessionStorage.setItem('dashboard_auth', JSON.stringify({ negozioId: neg.id, negozioNome: neg.ragione_sociale || 'Negozio' }))
     setNegozioId(neg.id)
-    setNegozioNome(neg.ragione_sociale || neg.name || 'Negozio')
+    setNegozioNome(neg.ragione_sociale || 'Negozio')
     setAutenticato(true)
     setLoading(false)
+  }
+
+  function getRangeGrafico() {
+    const giorno = new Date(filtroData)
+    const dataFineGiorno = filtroData + 'T23:59:59.999Z'
+
+    if (periodoGrafico === 'giorno') {
+      return { inizio: filtroData + 'T00:00:00.000Z', fine: dataFineGiorno }
+    }
+    if (periodoGrafico === 'settimana') {
+      const inizio = new Date(giorno)
+      inizio.setDate(giorno.getDate() - 6)
+      return { inizio: inizio.toISOString().split('T')[0] + 'T00:00:00.000Z', fine: dataFineGiorno }
+    }
+    if (periodoGrafico === 'mese') {
+      const inizio = new Date(giorno.getFullYear(), giorno.getMonth(), 1)
+      return { inizio: inizio.toISOString().split('T')[0] + 'T00:00:00.000Z', fine: dataFineGiorno }
+    }
+    if (periodoGrafico === 'anno') {
+      const inizio = new Date(giorno.getFullYear(), 0, 1)
+      return { inizio: inizio.toISOString().split('T')[0] + 'T00:00:00.000Z', fine: dataFineGiorno }
+    }
+    return { inizio: filtroData + 'T00:00:00.000Z', fine: dataFineGiorno }
   }
 
   async function caricaDati() {
     setLoadingDati(true)
     const dataInizio = filtroData + 'T00:00:00.000Z'
     const dataFine = filtroData + 'T23:59:59.999Z'
+    const rangeGrafico = getRangeGrafico()
 
-    const [{ data: sc }, { data: tav }] = await Promise.all([
-      supabase
-        .from('scontrini')
-        .select('*')
-        .eq('negozio_id', negozioId)
-        .gte('timestamp_emissione', dataInizio)
-        .lte('timestamp_emissione', dataFine)
-        .order('timestamp_emissione', { ascending: true }),
-      supabase
-        .from('tavoli')
-        .select('*')
-        .eq('negozio_id', negozioId)
-        .eq('stato', 'occupato')
-    ])
+
+
+
+
+
+
+   const [{ data: sc }, { data: tav }, { data: scGraf }] = await Promise.all([
+  supabase
+    .from('scontrini')
+    .select('*, righe_scontrino(*)')   // ← AGGIUNGI il join
+    .eq('negozio_id', negozioId)
+    .gte('timestamp_emissione', dataInizio)
+    .lte('timestamp_emissione', dataFine)
+    .order('timestamp_emissione', { ascending: true }),
+  supabase
+    .from('tavoli')
+    .select('*')
+    .eq('negozio_id', negozioId)
+    .eq('stato', 'occupato'),
+  supabase
+    .from('scontrini')
+    .select('totale, timestamp_emissione')
+    .eq('negozio_id', negozioId)
+    .gte('timestamp_emissione', rangeGrafico.inizio)
+    .lte('timestamp_emissione', rangeGrafico.fine)
+    .order('timestamp_emissione', { ascending: true })
+])
+
+
+
+
+
+
+
 
     setScontrini(sc || [])
     setTavoli(tav || [])
+    setScontriniGrafico(scGraf || [])
     setLoadingDati(false)
   }
 
@@ -116,33 +155,62 @@ export default function DashboardPage() {
     setPasswordInput('')
   }
 
-  // ── KPI ────────────────────────────────────────────────────────────────────
   const totaleGiorno = scontrini.reduce((s, sc) => s + sc.totale, 0)
   const totaleContanti = scontrini.filter(s => s.metodo === 'contanti').reduce((s, sc) => s + sc.totale, 0)
   const totaleCarta = scontrini.filter(s => s.metodo === 'carta').reduce((s, sc) => s + sc.totale, 0)
   const numeroScontrini = scontrini.length
   const scontrinoMedio = numeroScontrini > 0 ? totaleGiorno / numeroScontrini : 0
 
-  // ── Grafico vendite per ora ────────────────────────────────────────────────
-  const venditePerOra = Array.from({ length: 24 }, (_, h) => {
-    const sc = scontrini.filter(s => new Date(s.timestamp_emissione).getHours() === h)
-    return { ora: h, totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
-  })
-  const maxOra = Math.max(...venditePerOra.map(v => v.totale), 1)
+  function getDatiGrafico() {
+    if (periodoGrafico === 'giorno') {
+      return Array.from({ length: 24 }, (_, h) => {
+        const sc = scontriniGrafico.filter(s => new Date(s.timestamp_emissione).getHours() === h)
+        return { label: String(h), totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
+      })
+    }
+    if (periodoGrafico === 'settimana') {
+      return Array.from({ length: 7 }, (_, i) => {
+        const giorno = new Date(filtroData)
+        giorno.setDate(giorno.getDate() - 6 + i)
+        const giornoStr = giorno.toISOString().split('T')[0]
+        const sc = scontriniGrafico.filter(s => s.timestamp_emissione.startsWith(giornoStr))
+        const label = giorno.toLocaleDateString('it-IT', { weekday: 'short' })
+        return { label, totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
+      })
+    }
+    if (periodoGrafico === 'mese') {
+      const giorno = new Date(filtroData)
+      const giorniNelMese = new Date(giorno.getFullYear(), giorno.getMonth() + 1, 0).getDate()
+      return Array.from({ length: giorniNelMese }, (_, i) => {
+        const g = i + 1
+        const sc = scontriniGrafico.filter(s => new Date(s.timestamp_emissione).getDate() === g)
+        return { label: String(g), totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
+      })
+    }
+    if (periodoGrafico === 'anno') {
+      const mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
+      return Array.from({ length: 12 }, (_, m) => {
+        const sc = scontriniGrafico.filter(s => new Date(s.timestamp_emissione).getMonth() === m)
+        return { label: mesi[m], totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
+      })
+    }
+    return []
+  }
 
-  // ── Top prodotti ───────────────────────────────────────────────────────────
+  const datiGrafico = getDatiGrafico()
+  const maxGrafico = Math.max(...datiGrafico.map(v => v.totale), 1)
+
   const prodottiMap = {}
   for (const sc of scontrini) {
-    for (const riga of (sc.righe || [])) {
+    for (const riga of (sc.righe_scontrino || [])) {
       if (!riga.nome) continue
       if (!prodottiMap[riga.nome]) prodottiMap[riga.nome] = { nome: riga.nome, quantita: 0, totale: 0 }
       prodottiMap[riga.nome].quantita += riga.quantita || 1
-      prodottiMap[riga.nome].totale += riga.totaleRiga || 0
+      prodottiMap[riga.nome].totale += riga.totale_riga || 0  // ← snake_case
     }
   }
   const topProdotti = Object.values(prodottiMap).sort((a, b) => b.quantita - a.quantita).slice(0, 8)
 
-  // ── LOGIN ──────────────────────────────────────────────────────────────────
   if (!autenticato) {
     return (
       <div style={{
@@ -176,7 +244,7 @@ export default function DashboardPage() {
               autoFocus
               style={{
                 width: '100%', boxSizing: 'border-box',
-                background: '#1a1c24', border: `1px solid ${erroreLogin ? '#ff4d6a' : '#252830'}`,
+                background: '#1a1c24', border: '1px solid #252830',
                 borderRadius: 12, padding: '14px 16px',
                 color: '#eef0f6', fontSize: '1rem',
                 fontFamily: "'DM Mono',monospace",
@@ -209,15 +277,14 @@ export default function DashboardPage() {
     )
   }
 
-  // ── DASHBOARD ──────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: '#08090c', color: '#eef0f6', fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* HEADER */}
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '16px 24px', background: '#111318',
         borderBottom: '1px solid #1a1c24', position: 'sticky', top: 0, zIndex: 100,
+        flexWrap: 'wrap', gap: 12,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ fontSize: '1.4rem' }}>📊</div>
@@ -269,22 +336,21 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* KPI */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
           {[
-            { label: 'Incasso totale', valore: `€ ${fmt(totaleGiorno)}`, colore: '#00e5a0', icona: '💰' },
-            { label: 'Contanti', valore: `€ ${fmt(totaleContanti)}`, colore: '#ffb830', icona: '💵' },
-            { label: 'Carta / POS', valore: `€ ${fmt(totaleCarta)}`, colore: '#6482ff', icona: '💳' },
+            { label: 'Incasso totale', valore: '€ ' + fmt(totaleGiorno), colore: '#00e5a0', icona: '💰' },
+            { label: 'Contanti', valore: '€ ' + fmt(totaleContanti), colore: '#ffb830', icona: '💵' },
+            { label: 'Carta / POS', valore: '€ ' + fmt(totaleCarta), colore: '#6482ff', icona: '💳' },
             { label: 'Scontrini', valore: numeroScontrini, colore: '#ff4d6a', icona: '🧾' },
-            { label: 'Scontrino medio', valore: `€ ${fmt(scontrinoMedio)}`, colore: '#a78bfa', icona: '📈' },
+            { label: 'Scontrino medio', valore: '€ ' + fmt(scontrinoMedio), colore: '#a78bfa', icona: '📈' },
             { label: 'Tavoli aperti', valore: tavoli.length, colore: '#34d399', icona: '🍽️' },
           ].map(({ label, valore, colore, icona }) => (
             <div key={label} style={{
-              background: '#111318', border: `1px solid ${colore}22`,
+              background: '#111318', border: '1px solid ' + colore + '22',
               borderRadius: 16, padding: '20px 24px',
               display: 'flex', flexDirection: 'column', gap: 8,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8  }}>
                 <span style={{ fontSize: '1.2rem' }}>{icona}</span>
                 <span style={{ fontSize: '0.72rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace", letterSpacing: 1 }}>{label.toUpperCase()}</span>
               </div>
@@ -295,38 +361,53 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* GRAFICO VENDITE ORA PER ORA */}
         <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-            📈 Vendite ora per ora — {fmtData(filtroData + 'T12:00:00')}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6' }}>
+              📈 Vendite
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {PERIODI.map(p => (
+                <button key={p} onClick={() => setPeriodoGrafico(p)}
+                  style={{
+                    padding: '5px 14px', borderRadius: 8, fontSize: '0.72rem',
+                    border: '1px solid ' + (periodoGrafico === p ? '#00e5a0' : '#252830'),
+                    background: periodoGrafico === p ? 'rgba(0,229,160,0.15)' : 'transparent',
+                    color: periodoGrafico === p ? '#00e5a0' : 'yellow',
+                    cursor: 'pointer', fontFamily: "'DM Mono',monospace",
+                    textTransform: 'capitalize', fontWeight: periodoGrafico === p ? 700 : 400,
+                  }}>
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 120, padding: '0 4px' }}>
-            {venditePerOra.map(({ ora, totale, count }) => {
-              const altezza = totale > 0 ? Math.max(8, (totale / maxOra) * 100) : 0
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: periodoGrafico === 'mese' ? 2 : 4, height: 120, padding: '0 4px', overflowX: 'auto' }}>
+            {datiGrafico.map((item, i) => {
+              const altezza = item.totale > 0 ? Math.max(8, (item.totale / maxGrafico) * 100) : 0
+              const mostraLabel = periodoGrafico === 'giorno' ? i % 3 === 0 : periodoGrafico === 'mese' ? i % 5 === 0 : true
               return (
-                <div key={ora} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  {totale > 0 && (
-                    <div style={{
-                      fontSize: '0.55rem', color: '#00e5a0',
-                      fontFamily: "'DM Mono',monospace", whiteSpace: 'nowrap',
-                    }}>
-                      {count}
+                <div key={i} style={{ flex: '1 0 auto', minWidth: periodoGrafico === 'mese' ? 14 : periodoGrafico === 'giorno' ? 16 : 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  {item.totale > 0 && periodoGrafico !== 'mese' && (
+                    <div style={{ fontSize: '0.95rem', color: '#00e5a0', fontFamily: "'DM Mono',monospace", whiteSpace: 'nowrap'  }}>
+                      {item.count}
                     </div>
                   )}
                   <div
-                    title={`${ora}:00 — €${fmt(totale)} (${count} scontrini)`}
+                    title={item.label + ' — €' + fmt(item.totale) + ' (' + item.count + ' scontrini)'}
                     style={{
                       width: '100%', height: altezza,
-                      background: totale > 0 ? '#00e5a0' : '#1a1c24',
+                      background: item.totale > 0 ? '#00e5a0' : '#1a1c24',
                       borderRadius: '4px 4px 0 0',
                       transition: 'height 0.3s ease',
-                      cursor: totale > 0 ? 'pointer' : 'default',
-                      opacity: totale > 0 ? 1 : 0.3,
+                      cursor: item.totale > 0 ? 'pointer' : 'default',
+                      opacity: item.totale > 0 ? 1 : 0.3,
+                      
                     }}
                   />
-                  {(ora % 3 === 0) && (
-                    <div style={{ fontSize: '0.55rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace" }}>
-                      {ora}
+                  {mostraLabel && (
+                    <div style={{ fontSize: '0.75rem', color: 'white', fontFamily: "'DM Mono',monospace" }}>
+                      {item.label}
                     </div>
                   )}
                 </div>
@@ -337,7 +418,6 @@ export default function DashboardPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
-          {/* TOP PRODOTTI */}
           <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
               🏆 Top prodotti
@@ -346,10 +426,10 @@ export default function DashboardPage() {
               <div style={{ color: '#5a5d6e', fontSize: '0.8rem', textAlign: 'center', padding: 20 }}>Nessun dato</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {topProdotti.map(({ nome, quantita, totale }, i) => {
+                {topProdotti.map((p, i) => {
                   const maxQ = topProdotti[0].quantita
                   return (
-                    <div key={nome} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div key={p.nome} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{
@@ -358,12 +438,12 @@ export default function DashboardPage() {
                             fontFamily: "'DM Mono',monospace",
                             minWidth: 16,
                           }}>#{i + 1}</span>
-                          <span style={{ fontSize: '0.82rem', color: '#eef0f6' }}>{nome}</span>
+                          <span style={{ fontSize: '0.82rem', color: '#eef0f6' }}>{p.nome}</span>
                         </div>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#5a5d6e' }}>×{quantita}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#5a5d6e' }}>×{p.quantita}</span>
                           <span style={{ fontSize: '0.82rem', color: COLORI[i % COLORI.length], fontFamily: "'DM Mono',monospace" }}>
-                            €{fmt(totale)}
+                            €{fmt(p.totale)}
                           </span>
                         </div>
                       </div>
@@ -371,7 +451,7 @@ export default function DashboardPage() {
                         <div style={{
                           height: '100%', borderRadius: 2,
                           background: COLORI[i % COLORI.length],
-                          width: `${(quantita / maxQ) * 100}%`,
+                          width: (p.quantita / maxQ * 100) + '%',
                           transition: 'width 0.5s ease',
                         }} />
                       </div>
@@ -382,7 +462,6 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* TAVOLI APERTI */}
           <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
               <span>🍽️ Tavoli aperti ora</span>
@@ -430,7 +509,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ULTIMI SCONTRINI */}
         <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
           <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
             🧾 Scontrini del giorno
@@ -442,11 +520,11 @@ export default function DashboardPage() {
               {[...scontrini].reverse().map((sc, i) => (
                 <div key={sc.id || i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 14px', background: '#1a1c24',
+                  padding: '10px 14px', background: '#00e5a0',
                   borderRadius: 10, border: '1px solid #252830',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '0.72rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
+                    <span style={{ fontSize: '0.72rem', color: 'black', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
                       {fmtOra(sc.timestamp_emissione)}
                     </span>
                     <span style={{
@@ -458,10 +536,10 @@ export default function DashboardPage() {
                       {sc.metodo === 'contanti' ? '💵' : '💳'}
                     </span>
                     {sc.operatore_nome && (
-                      <span style={{ fontSize: '0.72rem', color: '#5a5d6e' }}>{sc.operatore_nome}</span>
+                      <span style={{ fontSize: '0.82rem', color: 'black' }}>{sc.operatore_nome}</span>
                     )}
                   </div>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#eef0f6', fontFamily: "'DM Mono',monospace" }}>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'black', fontFamily: "'DM Mono',monospace" }}>
                     € {fmt(sc.totale)}
                   </span>
                 </div>
