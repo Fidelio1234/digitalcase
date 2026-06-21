@@ -142,7 +142,7 @@ export default function QuizPage() {
                 }}>
                   🇮🇹 Per le PMI italiane
                 </div>
-                <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 30, lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 18 }}>
+                <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 25, lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 18 }}>
                   Gestisci ancora cassa, magazzino e comande <em style={{ fontStyle: 'normal', color: '#00C27A' }}>a mano?</em>
                 </h1>
                 <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55, maxWidth: 380 }}>
@@ -177,7 +177,7 @@ export default function QuizPage() {
                 <ProgressDots active={1} />
               </div>
 
-              <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 24, letterSpacing: '-0.03em', lineHeight: 1.12, marginBottom: 8 }}>
+              <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: '-0.03em', lineHeight: 1.12, marginBottom: 8 }}>
                 Che attività hai?
               </h2>
               <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', marginBottom: 28 }}>
