@@ -89,7 +89,7 @@ export default function QuizPage() {
   const card = {
     display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4,
     background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 18, padding: '22px 20px', cursor: 'pointer', textAlign: 'left',
+    borderRadius: 14, padding: '16px 14px', cursor: 'pointer', textAlign: 'left',
     fontFamily: "'DM Sans', sans-serif", transition: 'transform .15s, border-color .2s, background .2s',
     color: '#fff', width: '100%',
   }
