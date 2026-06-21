@@ -89,7 +89,7 @@ export default function QuizPage() {
   const card = {
     display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4,
     background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 14, padding: '16px 14px', cursor: 'pointer', textAlign: 'left',
+    borderRadius: 12, padding: '14px 12px', cursor: 'pointer', textAlign: 'left',
     fontFamily: "'DM Sans', sans-serif", transition: 'transform .15s, border-color .2s, background .2s',
     color: '#fff', width: '100%',
   }
@@ -142,7 +142,7 @@ export default function QuizPage() {
                 }}>
                   🇮🇹 Per le PMI italiane
                 </div>
-                <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 25, lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 18 }}>
+                <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 18 }}>
                   Gestisci ancora cassa, magazzino e comande <em style={{ fontStyle: 'normal', color: '#00C27A' }}>a mano?</em>
                 </h1>
                 <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55, maxWidth: 380 }}>
@@ -177,7 +177,7 @@ export default function QuizPage() {
                 <ProgressDots active={1} />
               </div>
 
-              <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: '-0.03em', lineHeight: 1.12, marginBottom: 8 }}>
+              <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em', lineHeight: 1.12, marginBottom: 8 }}>
                 Che attività hai?
               </h2>
               <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', marginBottom: 28 }}>
