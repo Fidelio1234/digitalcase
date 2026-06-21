@@ -313,7 +313,7 @@ export default function DashboardPage() {
               color: '#ffb830', fontSize: '0.82rem', cursor: 'pointer',
             }}
           >
-            ↻
+            Aggiorna
           </button>
           <button
             onClick={logout}

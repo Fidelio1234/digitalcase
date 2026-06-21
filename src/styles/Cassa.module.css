@@ -365,7 +365,7 @@
 .restoBox {
   background: var(--accent-dim); border: 1px solid var(--accent);
   border-radius: 8px; padding: 8px 14px;
-  font-size: 0.85rem; color: var(--accent);
+  font-size: 1.3rem; color: var(--accent);
 }
 
 .clienteInput {
