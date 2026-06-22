@@ -1,10 +1,18 @@
+
+
+
+
+
+
+
+
+
+
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabase'
 import Head from 'next/head'
-
-
-
 
 function getSlug() {
   if (typeof window === 'undefined') return 'dmi'
@@ -111,40 +119,27 @@ export default function DashboardPage() {
     const dataFine = filtroData + 'T23:59:59.999Z'
     const rangeGrafico = getRangeGrafico()
 
-
-
-
-
-
-
-   const [{ data: sc }, { data: tav }, { data: scGraf }] = await Promise.all([
-  supabase
-    .from('scontrini')
-    .select('*, righe_scontrino(*)')   // ← AGGIUNGI il join
-    .eq('negozio_id', negozioId)
-    .gte('timestamp_emissione', dataInizio)
-    .lte('timestamp_emissione', dataFine)
-    .order('timestamp_emissione', { ascending: true }),
-  supabase
-    .from('tavoli')
-    .select('*')
-    .eq('negozio_id', negozioId)
-    .eq('stato', 'occupato'),
-  supabase
-    .from('scontrini')
-    .select('totale, timestamp_emissione')
-    .eq('negozio_id', negozioId)
-    .gte('timestamp_emissione', rangeGrafico.inizio)
-    .lte('timestamp_emissione', rangeGrafico.fine)
-    .order('timestamp_emissione', { ascending: true })
-])
-
-
-
-
-
-
-
+    const [{ data: sc }, { data: tav }, { data: scGraf }] = await Promise.all([
+      supabase
+        .from('scontrini')
+        .select('*, righe_scontrino(*)')
+        .eq('negozio_id', negozioId)
+        .gte('timestamp_emissione', dataInizio)
+        .lte('timestamp_emissione', dataFine)
+        .order('timestamp_emissione', { ascending: true }),
+      supabase
+        .from('tavoli')
+        .select('*')
+        .eq('negozio_id', negozioId)
+        .eq('stato', 'occupato'),
+      supabase
+        .from('scontrini')
+        .select('totale, timestamp_emissione, annullato')
+        .eq('negozio_id', negozioId)
+        .gte('timestamp_emissione', rangeGrafico.inizio)
+        .lte('timestamp_emissione', rangeGrafico.fine)
+        .order('timestamp_emissione', { ascending: true })
+    ])
 
     setScontrini(sc || [])
     setTavoli(tav || [])
@@ -159,16 +154,22 @@ export default function DashboardPage() {
     setPasswordInput('')
   }
 
-  const totaleGiorno = scontrini.reduce((s, sc) => s + sc.totale, 0)
-  const totaleContanti = scontrini.filter(s => s.metodo === 'contanti').reduce((s, sc) => s + sc.totale, 0)
-  const totaleCarta = scontrini.filter(s => s.metodo === 'carta').reduce((s, sc) => s + sc.totale, 0)
-  const numeroScontrini = scontrini.length
+  // Separa scontrini validi dagli annullati
+  const scontriniValidi = scontrini.filter(s => !s.annullato)
+  const scontriniAnnullati = scontrini.filter(s => s.annullato)
+
+  const totaleGiorno = scontriniValidi.reduce((s, sc) => s + sc.totale, 0)
+  const totaleContanti = scontriniValidi.filter(s => s.metodo === 'contanti').reduce((s, sc) => s + sc.totale, 0)
+  const totaleCarta = scontriniValidi.filter(s => s.metodo === 'carta').reduce((s, sc) => s + sc.totale, 0)
+  const numeroScontrini = scontriniValidi.length
   const scontrinoMedio = numeroScontrini > 0 ? totaleGiorno / numeroScontrini : 0
+  const totaleAnnullati = scontriniAnnullati.reduce((s, sc) => s + sc.totale, 0)
 
   function getDatiGrafico() {
+    const validi = scontriniGrafico.filter(s => !s.annullato)
     if (periodoGrafico === 'giorno') {
       return Array.from({ length: 24 }, (_, h) => {
-        const sc = scontriniGrafico.filter(s => new Date(s.timestamp_emissione).getHours() === h)
+        const sc = validi.filter(s => new Date(s.timestamp_emissione).getHours() === h)
         return { label: String(h), totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
       })
     }
@@ -177,7 +178,7 @@ export default function DashboardPage() {
         const giorno = new Date(filtroData)
         giorno.setDate(giorno.getDate() - 6 + i)
         const giornoStr = giorno.toISOString().split('T')[0]
-        const sc = scontriniGrafico.filter(s => s.timestamp_emissione.startsWith(giornoStr))
+        const sc = validi.filter(s => s.timestamp_emissione.startsWith(giornoStr))
         const label = giorno.toLocaleDateString('it-IT', { weekday: 'short' })
         return { label, totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
       })
@@ -187,14 +188,14 @@ export default function DashboardPage() {
       const giorniNelMese = new Date(giorno.getFullYear(), giorno.getMonth() + 1, 0).getDate()
       return Array.from({ length: giorniNelMese }, (_, i) => {
         const g = i + 1
-        const sc = scontriniGrafico.filter(s => new Date(s.timestamp_emissione).getDate() === g)
+        const sc = validi.filter(s => new Date(s.timestamp_emissione).getDate() === g)
         return { label: String(g), totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
       })
     }
     if (periodoGrafico === 'anno') {
       const mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
       return Array.from({ length: 12 }, (_, m) => {
-        const sc = scontriniGrafico.filter(s => new Date(s.timestamp_emissione).getMonth() === m)
+        const sc = validi.filter(s => new Date(s.timestamp_emissione).getMonth() === m)
         return { label: mesi[m], totale: sc.reduce((sum, s) => sum + s.totale, 0), count: sc.length }
       })
     }
@@ -205,12 +206,12 @@ export default function DashboardPage() {
   const maxGrafico = Math.max(...datiGrafico.map(v => v.totale), 1)
 
   const prodottiMap = {}
-  for (const sc of scontrini) {
+  for (const sc of scontriniValidi) {
     for (const riga of (sc.righe_scontrino || [])) {
       if (!riga.nome) continue
       if (!prodottiMap[riga.nome]) prodottiMap[riga.nome] = { nome: riga.nome, quantita: 0, totale: 0 }
       prodottiMap[riga.nome].quantita += riga.quantita || 1
-      prodottiMap[riga.nome].totale += riga.totale_riga || 0  // ← snake_case
+      prodottiMap[riga.nome].totale += riga.totale_riga || 0
     }
   }
   const topProdotti = Object.values(prodottiMap).sort((a, b) => b.quantita - a.quantita).slice(0, 8)
@@ -222,6 +223,9 @@ export default function DashboardPage() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: "'DM Sans', sans-serif", padding: 20,
       }}>
+        <Head>
+          <link rel="manifest" href="/manifest-dashboard.json" />
+        </Head>
         <div style={{
           background: '#111318', border: '1px solid #1e2230',
           borderRadius: 20, padding: '48px 40px',
@@ -282,11 +286,12 @@ export default function DashboardPage() {
   }
 
   return (
-    
     <div style={{ minHeight: '100vh', background: '#08090c', color: '#eef0f6', fontFamily: "'DM Sans', sans-serif" }}>
-       <Head>
-  <link rel="manifest" href="/manifest-dashboard.json" />
-</Head>
+
+      <Head>
+        <link rel="manifest" href="/manifest-dashboard.json" />
+      </Head>
+
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '16px 24px', background: '#111318',
@@ -333,8 +338,6 @@ export default function DashboardPage() {
             Esci
           </button>
         </div>
- 
-
       </header>
 
       <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -359,7 +362,7 @@ export default function DashboardPage() {
               borderRadius: 16, padding: '20px 24px',
               display: 'flex', flexDirection: 'column', gap: 8,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8  }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: '1.2rem' }}>{icona}</span>
                 <span style={{ fontSize: '0.72rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace", letterSpacing: 1 }}>{label.toUpperCase()}</span>
               </div>
@@ -382,7 +385,7 @@ export default function DashboardPage() {
                     padding: '5px 14px', borderRadius: 8, fontSize: '0.72rem',
                     border: '1px solid ' + (periodoGrafico === p ? '#00e5a0' : '#252830'),
                     background: periodoGrafico === p ? 'rgba(0,229,160,0.15)' : 'transparent',
-                    color: periodoGrafico === p ? '#00e5a0' : 'yellow',
+                    color: periodoGrafico === p ? '#00e5a0' : '#5a5d6e',
                     cursor: 'pointer', fontFamily: "'DM Mono',monospace",
                     textTransform: 'capitalize', fontWeight: periodoGrafico === p ? 700 : 400,
                   }}>
@@ -398,7 +401,7 @@ export default function DashboardPage() {
               return (
                 <div key={i} style={{ flex: '1 0 auto', minWidth: periodoGrafico === 'mese' ? 14 : periodoGrafico === 'giorno' ? 16 : 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   {item.totale > 0 && periodoGrafico !== 'mese' && (
-                    <div style={{ fontSize: '0.95rem', color: '#00e5a0', fontFamily: "'DM Mono',monospace", whiteSpace: 'nowrap'  }}>
+                    <div style={{ fontSize: '0.65rem', color: '#00e5a0', fontFamily: "'DM Mono',monospace", whiteSpace: 'nowrap' }}>
                       {item.count}
                     </div>
                   )}
@@ -411,11 +414,10 @@ export default function DashboardPage() {
                       transition: 'height 0.3s ease',
                       cursor: item.totale > 0 ? 'pointer' : 'default',
                       opacity: item.totale > 0 ? 1 : 0.3,
-                      
                     }}
                   />
                   {mostraLabel && (
-                    <div style={{ fontSize: '0.75rem', color: 'white', fontFamily: "'DM Mono',monospace" }}>
+                    <div style={{ fontSize: '0.6rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace" }}>
                       {item.label}
                     </div>
                   )}
@@ -522,18 +524,18 @@ export default function DashboardPage() {
           <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
             🧾 Scontrini del giorno
           </div>
-          {scontrini.length === 0 ? (
+          {scontriniValidi.length === 0 ? (
             <div style={{ color: '#5a5d6e', fontSize: '0.8rem', textAlign: 'center', padding: 20 }}>Nessuno scontrino</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {[...scontrini].reverse().map((sc, i) => (
+              {[...scontriniValidi].reverse().map((sc, i) => (
                 <div key={sc.id || i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 14px', background: '#00e5a0',
+                  padding: '10px 14px', background: '#1a1c24',
                   borderRadius: 10, border: '1px solid #252830',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '0.72rem', color: 'black', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
+                    <span style={{ fontSize: '0.72rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
                       {fmtOra(sc.timestamp_emissione)}
                     </span>
                     <span style={{
@@ -545,10 +547,10 @@ export default function DashboardPage() {
                       {sc.metodo === 'contanti' ? '💵' : '💳'}
                     </span>
                     {sc.operatore_nome && (
-                      <span style={{ fontSize: '0.82rem', color: 'black' }}>{sc.operatore_nome}</span>
+                      <span style={{ fontSize: '0.72rem', color: '#5a5d6e' }}>{sc.operatore_nome}</span>
                     )}
                   </div>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'black', fontFamily: "'DM Mono',monospace" }}>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#eef0f6', fontFamily: "'DM Mono',monospace" }}>
                     € {fmt(sc.totale)}
                   </span>
                 </div>
@@ -556,6 +558,37 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* SCONTRINI ANNULLATI — sezione separata */}
+        {scontriniAnnullati.length > 0 && (
+          <div style={{ background: '#111318', border: '1px solid #ff4d6a33', borderRadius: 16, padding: 24 }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ff4d6a', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+              <span>🗑️ Scontrini annullati</span>
+              <span style={{ fontFamily: "'DM Mono',monospace" }}>{scontriniAnnullati.length} · €{fmt(totaleAnnullati)}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {[...scontriniAnnullati].reverse().map((sc, i) => (
+                <div key={sc.id || i} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 14px', background: '#1a1c24',
+                  borderRadius: 10, border: '1px solid #ff4d6a22',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: '0.72rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
+                      {fmtOra(sc.timestamp_emissione)}
+                    </span>
+                    {sc.annullato_da && (
+                      <span style={{ fontSize: '0.72rem', color: '#5a5d6e' }}>annullato da {sc.annullato_da}</span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#ff4d6a', fontFamily: "'DM Mono',monospace", textDecoration: 'line-through' }}>
+                    € {fmt(sc.totale)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
