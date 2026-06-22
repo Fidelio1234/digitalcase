@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabase'
+import Head from 'next/head'
+
+
+
 
 function getSlug() {
   if (typeof window === 'undefined') return 'dmi'
@@ -278,8 +282,11 @@ export default function DashboardPage() {
   }
 
   return (
+    
     <div style={{ minHeight: '100vh', background: '#08090c', color: '#eef0f6', fontFamily: "'DM Sans', sans-serif" }}>
-
+       <Head>
+  <link rel="manifest" href="/manifest-dashboard.json" />
+</Head>
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '16px 24px', background: '#111318',
@@ -326,6 +333,8 @@ export default function DashboardPage() {
             Esci
           </button>
         </div>
+ 
+
       </header>
 
       <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
