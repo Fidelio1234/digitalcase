@@ -1229,7 +1229,7 @@ export default function CassaPage() {
             {avvisoMagazzino.map((a,i) => (
               <div key={i} style={{padding:'8px 0',borderBottom:'1px solid #252830',fontSize:'0.85rem'}}>
                 <strong>{a.nome}</strong>
-                <div style={{fontSize:'0.78rem',color:'#5a5d6e',marginTop:4}}>
+                <div style={{fontSize:'0.78rem',color:'white',marginTop:4}}>
                   Rimasti: <strong style={{color:'#ffb830'}}>{a.giacenza}</strong> · Soglia minima: {a.minima}
                 </div>
               </div>
@@ -1255,7 +1255,7 @@ export default function CassaPage() {
             {giacenzaInsuff.map((r,i) => (
               <div key={i} style={{padding:'8px 0',borderBottom:'1px solid #252830',fontSize:'0.85rem'}}>
                 <strong>{r.nome}</strong>
-                <div style={{fontSize:'0.78rem',color:'#5a5d6e',marginTop:4}}>
+                <div style={{fontSize:'0.78rem',color:'white',marginTop:4}}>
                   Disponibili: <strong style={{color:'#ff4d6a'}}>{r.giacenza}</strong> · Richiesti: <strong>{r.quantita}</strong>
                 </div>
               </div>
