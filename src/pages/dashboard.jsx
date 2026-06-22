@@ -1,14 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabase'
@@ -364,7 +353,7 @@ export default function DashboardPage() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: '1.2rem' }}>{icona}</span>
-                <span style={{ fontSize: '0.72rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace", letterSpacing: 1 }}>{label.toUpperCase()}</span>
+                <span style={{ fontSize: '0.9rem', color: 'white', fontFamily: "'DM Mono',monospace", letterSpacing: 1 }}>{label.toUpperCase()}</span>
               </div>
               <div style={{ fontSize: '1.8rem', fontWeight: 700, color: colore, fontFamily: "'DM Mono',monospace" }}>
                 {valore}
@@ -375,7 +364,7 @@ export default function DashboardPage() {
 
         <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6' }}>
+            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#eef0f6' }}>
               📈 Vendite
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -417,7 +406,7 @@ export default function DashboardPage() {
                     }}
                   />
                   {mostraLabel && (
-                    <div style={{ fontSize: '0.6rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace" }}>
+                    <div style={{ fontSize: '0.7rem', color: 'white', fontFamily: "'DM Mono',monospace" }}>
                       {item.label}
                     </div>
                   )}
@@ -430,7 +419,7 @@ export default function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
           <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
+            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
               🏆 Top prodotti
             </div>
             {topProdotti.length === 0 ? (
@@ -474,7 +463,7 @@ export default function DashboardPage() {
           </div>
 
           <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
               <span>🍽️ Tavoli aperti ora</span>
               <span style={{ color: '#00e5a0', fontFamily: "'DM Mono',monospace" }}>{tavoli.length}</span>
             </div>
@@ -521,7 +510,7 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
+          <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
             🧾 Scontrini del giorno
           </div>
           {scontriniValidi.length === 0 ? (
@@ -535,7 +524,7 @@ export default function DashboardPage() {
                   borderRadius: 10, border: '1px solid #252830',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '0.72rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
+                    <span style={{ fontSize: '0.92rem', color: 'white', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
                       {fmtOra(sc.timestamp_emissione)}
                     </span>
                     <span style={{
@@ -547,7 +536,7 @@ export default function DashboardPage() {
                       {sc.metodo === 'contanti' ? '💵' : '💳'}
                     </span>
                     {sc.operatore_nome && (
-                      <span style={{ fontSize: '0.72rem', color: '#5a5d6e' }}>{sc.operatore_nome}</span>
+                      <span style={{ fontSize: '0.92rem', color: 'white' }}>{sc.operatore_nome}</span>
                     )}
                   </div>
                   <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#eef0f6', fontFamily: "'DM Mono',monospace" }}>
@@ -562,7 +551,7 @@ export default function DashboardPage() {
         {/* SCONTRINI ANNULLATI — sezione separata */}
         {scontriniAnnullati.length > 0 && (
           <div style={{ background: '#111318', border: '1px solid #ff4d6a33', borderRadius: 16, padding: 24 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ff4d6a', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#ff4d6a', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
               <span>🗑️ Scontrini annullati</span>
               <span style={{ fontFamily: "'DM Mono',monospace" }}>{scontriniAnnullati.length} · €{fmt(totaleAnnullati)}</span>
             </div>
@@ -574,11 +563,11 @@ export default function DashboardPage() {
                   borderRadius: 10, border: '1px solid #ff4d6a22',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '0.72rem', color: '#5a5d6e', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
+                    <span style={{ fontSize: '0.92rem', color: 'white', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
                       {fmtOra(sc.timestamp_emissione)}
                     </span>
                     {sc.annullato_da && (
-                      <span style={{ fontSize: '0.72rem', color: '#5a5d6e' }}>annullato da {sc.annullato_da}</span>
+                      <span style={{ fontSize: '0.92rem', color: 'white' }}>annullato da {sc.annullato_da}</span>
                     )}
                   </div>
                   <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#ff4d6a', fontFamily: "'DM Mono',monospace", textDecoration: 'line-through' }}>
