@@ -352,7 +352,7 @@ export default function DashboardPage() {
               display: 'flex', flexDirection: 'column', gap: 8,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: '1.2rem' }}>{icona}</span>
+                <span style={{ fontSize: '1.9rem' }}>{icona}</span>
                 <span style={{ fontSize: '0.9rem', color: 'white', fontFamily: "'DM Mono',monospace", letterSpacing: 1 }}>{label.toUpperCase()}</span>
               </div>
               <div style={{ fontSize: '1.8rem', fontWeight: 700, color: colore, fontFamily: "'DM Mono',monospace" }}>
@@ -524,11 +524,11 @@ export default function DashboardPage() {
                   borderRadius: 10, border: '1px solid #252830',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '0.92rem', color: 'white', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
+                    <span style={{ fontSize: '0.92rem', color: 'yellow', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
                       {fmtOra(sc.timestamp_emissione)}
                     </span>
                     <span style={{
-                      fontSize: '0.7rem', padding: '2px 8px', borderRadius: 6,
+                      fontSize: '0.99rem', padding: '2px 8px', borderRadius: 6,
                       background: sc.metodo === 'contanti' ? 'rgba(255,184,48,0.15)' : 'rgba(100,130,255,0.15)',
                       color: sc.metodo === 'contanti' ? '#ffb830' : '#6482ff',
                       fontFamily: "'DM Mono',monospace",
@@ -536,10 +536,10 @@ export default function DashboardPage() {
                       {sc.metodo === 'contanti' ? '💵' : '💳'}
                     </span>
                     {sc.operatore_nome && (
-                      <span style={{ fontSize: '0.92rem', color: 'white' }}>{sc.operatore_nome}</span>
+                      <span style={{ fontSize: '0.92rem', color: 'yellow' }}>{sc.operatore_nome}</span>
                     )}
                   </div>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#eef0f6', fontFamily: "'DM Mono',monospace" }}>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'yellow', fontFamily: "'DM Mono',monospace" }}>
                     € {fmt(sc.totale)}
                   </span>
                 </div>
