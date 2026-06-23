@@ -3,26 +3,61 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
-import { incrementaScontrino, incrementaChiusura, getContatori } from '@/lib/storage'
+
 import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza, salvaAnnulloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
 import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
+import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini } from '@/lib/storage'
 
-const ICONE = {
-  coffee:'☕', cake:'🍰', food:'🍽️', drink:'🥤', beer:'🍺',
-  wine:'🍷', pizza:'🍕', sandwich:'🥪', ice_cream:'🍦', candy:'🍬',
-  bread:'🥐', fruit:'🍎', salad:'🥗', fish:'🐟', meat:'🥩',
-  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️', box:'📦',
+
+// Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
+async function callRT(marca, body) {
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  console.log('callRT:', marca, 'isLocalhost:', isLocalhost, 'porta:', body.porta)
+  if (isLocalhost) {
+    const endpoint = marca === 'rch' ? '/api/rch' : '/api/ditron'
+    const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    return res.json()
+  } else {
+    const res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
+    return res.json()
+  }
 }
 
+
+const ICONE = {
+  // Bevande
+  coffee:'☕', beer:'🍺', wine:'🍷', drink:'🥤', cocktail:'🍹',
+  tea:'🍵', juice:'🧃', water:'💧', champagne:'🥂', whiskey:'🥃',
+  // Cibo base
+  pizza:'🍕', sandwich:'🥪', bread:'🥐', food:'🍽️', salad:'🥗',
+  // Carne e pesce
+  meat:'🥩', fish:'🐟', chicken:'🍗', bacon:'🥓', shrimp:'🦐',
+  // Snack e fritti
+  fries:'🍟', popcorn:'🍿', chips:'🥨', hotdog:'🌭', burger:'🍔',
+  // Dolci
+  cake:'🍰', ice_cream:'🍦', candy:'🍬', donut:'🍩', cookie:'🍪',
+  chocolate:'🍫', gelato:'🧁', waffle:'🧇',
+  // Frutta e verdura
+  fruit:'🍎', lemon:'🍋', tomato:'🍅', pepper:'🌶️', mushroom:'🍄',
+  corn:'🌽', avocado:'🥑', olive:'🫒', garlic:'🧄', onion:'🧅',
+  // Formaggio e latticini
+  cheese:'🧀', egg:'🥚', butter:'🧈',
+  // Pasta e riso
+  pasta:'🍝', rice:'🍚', soup:'🍜', taco:'🌮', burrito:'🌯',
+  // Altro
+  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️', box:'📦',
+  fire:'🔥', heart:'❤️', leaf:'🌿',
+}
 function fmt(cents) {
   return (cents / 100).toFixed(2).replace('.', ',')
 }
 
 export default function CassaPage() {
+  console.log('🔴 CASSA MONTATA - stack:', new Error().stack.split('\n')[2])
   const NEGOZIO_ID = useNegozioId()
   const { negozio } = useNegozio() || {}
   const { user, logout, loading } = useAuth()
@@ -46,21 +81,26 @@ export default function CassaPage() {
   const [notaModal, setNotaModal] = useState(null)
   const [notaTesto, setNotaTesto] = useState('')
   const [notaTipo, setNotaTipo] = useState('rimozione') // rimozione | aggiunta
-  const [aggiunte, setAggiunte] = useState([]) // voci selezionate dalla lista "aggiunte rapide" (per negozio)
   const [showSconto, setShowSconto] = useState(false)
   const [tipoSconto, setTipoSconto] = useState('euro') // euro | percentuale
   const [valoreSconto, setValoreSconto] = useState('')
   const longPressTimer = useRef(null)
   const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: false, magazzinoAbilitato: false })
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
+  const [aggiunte, setAggiunte] = useState([]) // [{nome, costo}]
+
   const [tavoliOccupati, setTavoliOccupati] = useState(0)
 
   const {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
     pressDigit, pressDoubleZero, pressClear,
     aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
-    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto, apriScontrino, salvaNota
+    ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto, apriScontrino, salvaNota, aggiornaQuantita
   } = useCassa()
+
+
+
+
 
   function cercaProdottoBarcode(barcode) {
     for (const reparto of reparti) {
@@ -83,6 +123,7 @@ export default function CassaPage() {
     loadReparti()
     getImpostazioniDb(NEGOZIO_ID).then(imp => setImpostazioni(imp))
     setContatori(getContatori())
+    // Mostra benvenuto solo se arriva dal login
     if (sessionStorage.getItem('appena_loggato')) {
       sessionStorage.removeItem('appena_loggato')
       setBenvenuto(true)
@@ -90,7 +131,9 @@ export default function CassaPage() {
     }
   }, [user, router])
 
+  // Carica righe da tavolo quando la pagina si monta
   useEffect(() => {
+    // Gestisci ritorno da asporto
     const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
     if (asportoDaChiudere) {
       try {
@@ -101,43 +144,55 @@ export default function CassaPage() {
         }, 300)
       } catch(e) { console.error(e) }
     }
+
     const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
+    console.log('Check tavolo:', tavoloDaChiudere)
     if (tavoloDaChiudere) {
       try {
         const { righe } = JSON.parse(tavoloDaChiudere)
+        console.log('Righe tavolo trovate:', righe?.length)
         setTimeout(() => caricaRigheEsterne(righe), 300)
       } catch(e) { console.error(e) }
     }
   }, [])
 
-  // ── Conteggio tavoli occupati per il badge sul bottone "Tavoli" ─────────
+
+
+
   useEffect(() => {
     if (!NEGOZIO_ID) return
     async function contaTavoli() {
-      const { count } = await supabase
+      const { data } = await supabase
         .from('tavoli')
-        .select('numero', { count: 'exact', head: true })
+        .select('numero', { count: 'exact' })
         .eq('negozio_id', NEGOZIO_ID)
         .eq('stato', 'occupato')
-      setTavoliOccupati(count || 0)
+      setTavoliOccupati(data?.length || 0)
     }
     contaTavoli()
     const interval = setInterval(contaTavoli, 5000)
     return () => clearInterval(interval)
   }, [NEGOZIO_ID])
 
+
+
+
+  // Carica config RT separatamente
   useEffect(() => {
     supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single().then(({ data }) => {
+      console.log('RT config caricata:', JSON.stringify(data?.rt_config))
       if (data?.rt_config?.config) setRtConfig(data.rt_config.config)
       if (data?.rt_config?.mappatura) setRtMappatura(data.rt_config.mappatura)
     })
   }, [])
 
+  // ── Avviso mezzanotte ──────────────────────────────────────────────────
   useEffect(() => {
     const check = () => {
       const now = new Date()
       if (now.getHours() === 23 && now.getMinutes() === 50 && now.getSeconds() === 0) {
         setShowAvvisoMezzanotte(true)
+        // suono beep
         try {
           const ctx = new (window.AudioContext || window.webkitAudioContext)()
           const osc = ctx.createOscillator()
@@ -158,6 +213,7 @@ export default function CassaPage() {
   useEffect(() => {
     const handler = (e) => {
       if (showChiusura || showConfirmAnnulla || showSuccesso || showAvvisoMezzanotte) return
+      // Ignora se si sta digitando in un input/select
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return
       if (e.key >= '0' && e.key <= '9') pressDigit(e.key)
       else if (e.key === 'Backspace') pressClear()
@@ -180,6 +236,8 @@ export default function CassaPage() {
 
   async function handleChiudi() {
     if (righe.length === 0) return
+
+    // Controlla giacenze insufficienti leggendo dal DB
     if (impostazioni.magazzinoAbilitato) {
       const prodottiConGiacenza = righe.filter(r => r.sottoRepartoId)
       if (prodottiConGiacenza.length > 0) {
@@ -188,14 +246,18 @@ export default function CassaPage() {
           .from('prodotti')
           .select('id, giacenza, giacenza_minima')
           .in('id', ids)
+
         const giacenzeMap = {}
         for (const p of prodottiDb || []) giacenzeMap[p.id] = p
+
+        // Aggrega quantità per prodotto
         const qtaPerProdotto = {}
         for (const r of righe) {
           if (r.sottoRepartoId) {
             qtaPerProdotto[r.sottoRepartoId] = (qtaPerProdotto[r.sottoRepartoId] || 0) + r.quantita
           }
         }
+
         const insufficienti = []
         for (const [id, qta] of Object.entries(qtaPerProdotto)) {
           const p = giacenzeMap[id]
@@ -204,12 +266,14 @@ export default function CassaPage() {
             insufficienti.push({ nome: riga?.nome || id, giacenza: p.giacenza, quantita: qta })
           }
         }
+
         if (insufficienti.length > 0) {
           setGiacenzaInsuff(insufficienti)
           return
         }
       }
     }
+
     setRigheBackup([...righe])
     const sc = chiudiScontrino()
     const c = incrementaScontrino()
@@ -226,6 +290,7 @@ export default function CassaPage() {
   }
 
   async function handleConfermAnnulla() {
+    // Chiudi asporto pendente se presente
     const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
     let righeAsporto = null
     let totaleAsporto = 0
@@ -239,6 +304,8 @@ export default function CassaPage() {
         sessionStorage.removeItem('asporto_da_chiudere')
       } catch(e) {}
     }
+
+    // Salva annullo se scontrino è aperto (anche se vuoto)
     if (scontrinoAperto) {
       const righeEffettive = righe.length > 0 ? righe : (righeAsporto || [])
       const totaleEffettivo = righe.length > 0 ? totale : totaleAsporto
@@ -254,10 +321,12 @@ export default function CassaPage() {
   }
 
   async function handleSuccesso(info) {
+    // Chiudi tavolo su Supabase se scontrino viene da un tavolo
     const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
     if (tavoloDaChiudere) {
       try {
         const { numero } = JSON.parse(tavoloDaChiudere)
+        // Salva storico tavolo
         await salvaStoricoTavolo(NEGOZIO_ID, {
           numero,
           righe: JSON.parse(tavoloDaChiudere).righe || [],
@@ -268,6 +337,8 @@ export default function CassaPage() {
         sessionStorage.removeItem('tavolo_da_chiudere')
       } catch(e) {}
     }
+
+    // Chiudi asporto se viene da asporto
     const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
     if (asportoDaChiudere) {
       try {
@@ -277,6 +348,8 @@ export default function CassaPage() {
         sessionStorage.removeItem('asporto_da_chiudere')
       } catch(e) {}
     }
+
+    // Salva nello storico su Supabase
     salvaScontrinoDb(NEGOZIO_ID, {
       timestamp: new Date().toISOString(),
       righe: scontrinoCorrente?.righe || [],
@@ -294,6 +367,7 @@ export default function CassaPage() {
     setRigheBackup([])
     resetScontrinoAperto()
 
+    // Scala giacenze magazzino
     if (impostazioni.magazzinoAbilitato) {
       const avvisi = []
       for (const riga of scontrinoCorrente?.righe || []) {
@@ -308,12 +382,15 @@ export default function CassaPage() {
       if (avvisi.length > 0) setAvvisoMagazzino(avvisi)
     }
 
+    // Stampa su RT se configurato
     if (rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0) {
       try {
         if (rtConfig.marca === '3i') {
+          // 3i Solution — TCP/IP XON/XOFF
           let cmd = ''
           const mappatura = rtMappatura || {}
           for (const riga of scontrinoCorrente.righe) {
+            // Salta righe sconto — le gestiamo separatamente
             if (riga.repartoId === null && riga.importo < 0) continue
             const reparto = mappatura[riga.repartoId]?.numeroRt || 1
             const importoCents = Math.round(riga.importo)
@@ -324,15 +401,18 @@ export default function CassaPage() {
               cmd += `"${descr}"${importoCents}H${reparto}R`
             }
           }
+          // Applica sconti sul subtotale
           const righeSconto = scontrinoCorrente.righe.filter(r => r.repartoId === null && r.importo < 0)
           if (righeSconto.length > 0) {
-            cmd += '='
+            cmd += '='  // subtotale
             for (const sconto of righeSconto) {
               const scontoCents = Math.abs(Math.round(sconto.importo))
               if (sconto.nome.includes('%')) {
+                // Sconto percentuale: formato 10.00*2M
                 const perc = sconto.nome.match(/(\d+(?:\.\d+)?)%/)?.[1] || '0'
                 cmd += `${perc}*2M`
               } else {
+                // Sconto in euro: formato 150H4M
                 cmd += `${scontoCents}H4M`
               }
             }
@@ -340,19 +420,24 @@ export default function CassaPage() {
           if (info.metodo === 'carta') {
             cmd += '3T'
           } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {
+            // Contanti o cortesia — stesso trattamento
             const contantiCents = info.totale + (info.resto || 0)
             if (contantiCents > info.totale) {
               cmd += `${contantiCents}H1T`
             } else {
               cmd += '1T'
             }
+            // Apertura cassetto
+            if (info.metodo === 'contanti') {
+              cmd += 'a'
+            }
           }
-          await fetch('/api/ditron', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
-          })
-          if (info.metodo === 'cortesia' || info.metodo === 'carta') {
+
+          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
+
+          // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
+          console.log('metodo:', info.metodo, 'cortesiaAbilitato:', impostazioni.cortesiaAbilitato)
+          if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
             let cmdCortesia = 'j'
             for (const riga of scontrinoCorrente.righe) {
               if (riga.importo < 0) continue
@@ -366,13 +451,10 @@ export default function CassaPage() {
             }
             cmdCortesia += 'J'
             await new Promise(r => setTimeout(r, 500))
-            await fetch('/api/ditron', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
-            })
+            await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
           }
         } else if (rtConfig.marca === 'rch') {
+          // RCH Print!F — HTTP XML
           const comandi = []
           for (const riga of scontrinoCorrente.righe) {
             if (riga.repartoId === null && riga.importo < 0) continue
@@ -385,6 +467,7 @@ export default function CassaPage() {
               comandi.push(`=R${ivaIndice}/$${importoCents}/(${descr})`)
             }
           }
+          // Sconti RCH
           const righeSconto = scontrinoCorrente.righe.filter(r => r.repartoId === null && r.importo < 0)
           if (righeSconto.length > 0) {
             comandi.push('=S')
@@ -398,6 +481,7 @@ export default function CassaPage() {
               }
             }
           }
+          // Pagamento
           if (info.metodo === 'carta') {
             comandi.push('=T4')
           } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {
@@ -408,11 +492,10 @@ export default function CassaPage() {
               comandi.push('=T1')
             }
           }
-          await fetch('/api/rch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
-          })
+
+          await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
+
+          // Stampa scontrino di cortesia RCH
           if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
             const comandiCortesia = ['=C0']
             for (const riga of scontrinoCorrente.righe) {
@@ -423,40 +506,22 @@ export default function CassaPage() {
             }
             comandiCortesia.push('=C1')
             await new Promise(r => setTimeout(r, 1000))
-            await fetch('/api/rch', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia })
-            })
+            await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia })
           }
         } else {
+          // Ditron — TCP
           const righeConRt = scontrinoCorrente.righe.map(riga => ({
             ...riga,
             numeroRepartoRt: rtMappatura[riga.repartoId]?.numeroRt || 1,
           }))
-          await fetch('/api/ditron', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ip: rtConfig.ip,
-              porta: rtConfig.porta,
-              azione: 'scontrino',
-              dati: {
-                righe: righeConRt,
-                metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo,
-                totale: info.totale,
-                resto: info.resto || 0,
-                contatto: info.contatto || null,
-              }
-            })
-          })
+          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta, azione: 'scontrino', dati: { righe: righeConRt, metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo, totale: info.totale, resto: info.resto || 0, contatto: info.contatto || null } })
         }
       } catch(e) {
         console.error('Errore stampa RT:', e)
       }
     }
   }
-
+  
   return (
     <div className={styles.page}>
 
@@ -482,10 +547,13 @@ export default function CassaPage() {
           {errore && <div className={styles.errore}>⚠ {errore}</div>}
         </div>
         <div className={styles.headerRight}>
+
+            {/* NASCONDE GLI SCONTRINI E LE CHIUSURE
           <div className={styles.contatori}>
             <span title="Scontrini oggi">🧾 {contatori.scontrini}</span>
             <span title="Chiusure oggi">🔒 {contatori.chiusure}</span>
-          </div>
+          </div>*/}
+
           {user?.role === 'owner' && (
             <>
               <button className={styles.cfgBtn1} onClick={() => router.push('/storico')}>
@@ -502,6 +570,7 @@ export default function CassaPage() {
         </div>
       </header>
 
+      {/* BENVENUTO */}
       {benvenuto && user && (
         <div style={{
           position:'fixed', inset:0, zIndex:500,
@@ -552,6 +621,7 @@ export default function CassaPage() {
 
       <div className={styles.main}>
 
+        {/* SINISTRA */}
         <div className={styles.colLeft}>
           <div className={styles.displayImporto}>
             <div className={styles.displayLabel}>TOTALE IMPORTO</div>
@@ -614,6 +684,7 @@ export default function CassaPage() {
             </div>
           )}
 
+
           <div style={{display:'flex', gap:8, marginBottom:8, flexWrap:'wrap'}}>
             {impostazioni.asportoAbilitato && (
               <button onClick={() => router.push('/asporto')}
@@ -633,28 +704,42 @@ export default function CassaPage() {
                 <span>Giacenze</span>
               </button>
             )}
+
+
+
+
+
+
+
+
             {impostazioni.tavoliAbilitati !== false && (
-              <button onClick={() => router.push('/tavoli')}
-                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-                  color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
-                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
-                  position:'relative'}}>
-                {tavoliOccupati > 0 && (
-                  <span style={{
-                    position:'absolute', top:-6, right:-6,
-                    background:'#ff4d6a', color:'white', borderRadius:10,
-                    minWidth:20, height:20, padding:'0 5px',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize:'0.68rem', fontWeight:700, lineHeight:1,
-                    boxShadow:'0 0 0 2px black',
-                  }}>
-                    {tavoliOccupati}
-                  </span>
-                )}
-                <span style={{fontSize:'1.4rem'}}>🍽️</span>
-                <span>Tavoli</span>
-              </button>
-            )}
+  <button onClick={() => router.push('/tavoli')}
+    style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+      color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+      position:'relative'}}>
+    {tavoliOccupati > 0 && (
+      <div style={{
+        position:'absolute', top:-6, right:-6,
+        background:'#ff4d6a', color:'white',
+        borderRadius:'50%', width:20, height:20,
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontSize:'0.68rem', fontWeight:700,
+        fontFamily:"'DM Mono',monospace",
+        boxShadow:'0 0 8px rgba(255,77,106,0.6)',
+      }}>
+        {tavoliOccupati}
+      </div>
+    )}
+    <span style={{fontSize:'1.4rem'}}>🍽️</span>
+    <span>Tavoli</span>
+  </button>
+)}
+
+
+
+
+
           </div>
           {scontrinoAperto && righe.length === 0 && (
             <button className={styles.chiudiBtn}
@@ -669,7 +754,9 @@ export default function CassaPage() {
           </button>
         </div>
 
+        {/* CENTRO */}
         <div className={styles.colCenter}>
+          {/* SCONTRINO IN CORSO - metà superiore */}
           <div className={styles.colCenterTop}>
             <div className={styles.displayHeader}>
               <div style={{display:'flex', alignItems:'center', gap:8, flex:1}}>
@@ -722,25 +809,60 @@ export default function CassaPage() {
                     )}
                     <div className={styles.rigaMeta}>IVA {r.iva}% · €{fmt(r.importo)} cad.</div>
                   </div>
+
+
+
+
+
+
+
                   <div className={styles.rigaDestra}>
-                    <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
-                    <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || ''); setAggiunte([]) }}
-                      title="Aggiungi nota"
-                      style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
-                      ✏️
-                    </button>
-                  <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
-                    </button>
-                  </div>
+  <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
+  
+  {/* Bottoni quantità */}
+  <div style={{ display:'flex', alignItems:'center', gap:4, marginRight: 18 }}>
+    <button
+      onClick={() => aggiornaQuantita(r.id, -1)}
+      style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+    >−</button>
+    <span style={{ fontSize:'0.82rem', color:'#eef0f6', minWidth:16, textAlign:'center', fontFamily:"'DM Mono',monospace" }}>
+      {r.quantita}
+    </span>
+    <button
+      onClick={() => aggiornaQuantita(r.id, 1)}
+      style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+    >+</button>
+  </div>
+
+  <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
+    title="Aggiungi nota"
+    style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
+    ✏️
+  </button>
+  <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+</div>
+
+
+
+
+
+
+
+
+
+
+
                 </div>
               ))}
             </div>
           </div>
 
+          {/* PRODOTTI REPARTO - metà inferiore */}
           {repartoAttivo && (
             <div className={styles.colCenterBottom}>
               {(() => {
@@ -759,18 +881,40 @@ export default function CassaPage() {
                       </div>
                     ) : (
                       <div className={styles.prodottiGrid}>
-                        {prodotti.map(sr => (
-                          <button key={sr.id}
-                            className={styles.prodottoCard}
-                            style={{borderColor: rep?.colore + '66'}}
-                            onClick={() => handleSottorepartoClick(rep, sr)}
-                          >
-                            <div className={styles.prodottoNome}>{sr.nome}</div>
-                            <div className={styles.prodottoPrezzo} style={{color: rep?.colore}}>
-                              € {fmt(sr.prezzoFisso)}
-                            </div>
-                          </button>
-                        ))}
+                       {prodotti.map(sr => {
+  const qtaInScontrino = righe
+    .filter(r => r.nome === sr.nome && r.importo === sr.prezzoFisso)
+    .reduce((s, r) => s + r.quantita, 0)
+
+  return (
+    <button key={sr.id}
+      className={styles.prodottoCard}
+      style={{borderColor: rep?.colore + '66', position:'relative'}}
+      onClick={() => handleSottorepartoClick(rep, sr)}
+    >
+      {qtaInScontrino > 0 && (
+        <div style={{
+          position:'absolute', top:-8, right:-8,
+          background: rep?.colore,
+          color:'#08090c',
+          borderRadius:'50%',
+          width:22, height:22,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:'0.72rem', fontWeight:700,
+          fontFamily:"'DM Mono',monospace",
+          boxShadow:`0 0 8px ${rep?.colore}88`,
+          zIndex:1,
+        }}>
+          {qtaInScontrino}
+        </div>
+      )}
+      <div className={styles.prodottoNome}>{sr.nome}</div>
+      <div className={styles.prodottoPrezzo} style={{color: rep?.colore}}>
+        € {fmt(sr.prezzoFisso)}
+      </div>
+    </button>
+  )
+})}
                       </div>
                     )}
                   </>
@@ -780,31 +924,56 @@ export default function CassaPage() {
           )}
         </div>
 
+        {/* DESTRA */}
         <div className={styles.colRight}>
           <div className={styles.repartiHeader}>REPARTI</div>
           <div className={styles.repartiList}>
-            {reparti.map(r => (
-              <button key={r.id}
-                className={`${styles.repartoBtn} ${repartoAttivo === r.id ? styles.repartoActive : ''}`}
-                style={{
-                  borderColor: repartoAttivo === r.id ? r.colore : 'transparent',
-                  background: repartoAttivo === r.id ? r.colore + '15' : 'transparent',
-                }}
-                onClick={() => handleRepartoClick(r)}
-              >
-                <span className={styles.repartoIcn}>{ICONE[r.icona]||'📦'}</span>
-                <span className={styles.repartoNm}>{r.nome}</span>
-                {inputCents > 0 && (
-                  <span className={styles.repartoEuro} style={{background:r.colore+'22',color:r.colore}}>
-                    + €{fmt(inputCents)}
-                  </span>
-                )}
-              </button>
-            ))}
+          {reparti.map(r => {
+  const qtaReparto = righe
+    .filter(riga => riga.repartoId === r.id)
+    .reduce((s, riga) => s + riga.quantita, 0)
+
+  return (
+    <button key={r.id}
+      className={`${styles.repartoBtn} ${repartoAttivo === r.id ? styles.repartoActive : ''}`}
+      style={{
+        borderColor: repartoAttivo === r.id ? r.colore : 'transparent',
+        background: repartoAttivo === r.id ? r.colore + '15' : 'transparent',
+        position: 'relative',
+      }}
+      onClick={() => handleRepartoClick(r)}
+    >
+      {qtaReparto > 0 && (
+        <div style={{
+          position: 'absolute', top: -6, right: -6,
+          background: r.colore,
+          color: '#08090c',
+          borderRadius: '50%',
+          width: 20, height: 20,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.68rem', fontWeight: 700,
+          fontFamily: "'DM Mono',monospace",
+          boxShadow: `0 0 6px ${r.colore}88`,
+          zIndex: 1,
+        }}>
+          {qtaReparto}
+        </div>
+      )}
+      <span className={styles.repartoIcn}>{ICONE[r.icona]||'📦'}</span>
+      <span className={styles.repartoNm}>{r.nome}</span>
+      {inputCents > 0 && (
+        <span className={styles.repartoEuro} style={{background:r.colore+'22',color:r.colore}}>
+          + €{fmt(inputCents)}
+        </span>
+      )}
+    </button>
+  )
+})}
           </div>
         </div>
       </div>
 
+      {/* MODAL CHIUSURA */}
       {showChiusura && scontrinoCorrente && (
         <ChiusuraModal
           scontrino={scontrinoCorrente}
@@ -814,6 +983,7 @@ export default function CassaPage() {
         />
       )}
 
+      {/* MODAL CONFERMA ANNULLA */}
       {showConfirmAnnulla && (
         <div className={styles.overlay} onClick={() => setShowConfirmAnnulla(false)}>
           <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
@@ -835,6 +1005,7 @@ export default function CassaPage() {
         </div>
       )}
 
+      {/* MODAL SUCCESSO */}
       {showSuccesso && (
         <div className={styles.overlay} onClick={() => setShowSuccesso(null)}>
           <div className={styles.successModal} onClick={e => e.stopPropagation()}
@@ -859,10 +1030,12 @@ export default function CassaPage() {
               {showSuccesso.metodo === 'contanti' && showSuccesso.resto > 0 &&
                 ` · Resto €${fmt(showSuccesso.resto)}`}
             </div>
+
           </div>
         </div>
       )}
 
+      {/* AVVISO MEZZANOTTE */}
       {showAvvisoMezzanotte && (
         <div className={styles.overlay}>
           <div className={styles.avvisoModal}>
@@ -883,11 +1056,12 @@ export default function CassaPage() {
         </div>
       )}
 
+      {/* MODAL SCONTO */}
       {showSconto && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#111318',border:'2px solid #00e5a0',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
             <div style={{fontSize:'1.1rem',fontWeight:700,color:'#00e5a0',marginBottom:8}}>✂️ Applica Sconto</div>
-            <div style={{fontSize:'0.75rem',color:'#5a5d6e',marginBottom:20}}>
+            <div style={{fontSize:'0.95rem',color:'#ffb830',marginBottom:20}}>
               Totale attuale: <strong style={{color:'#eef0f6'}}>€ {fmt(totale)}</strong>
             </div>
             <div style={{display:'flex',gap:8,marginBottom:16}}>
@@ -942,118 +1116,112 @@ export default function CassaPage() {
           </div>
         </div>
       )}
+      {/* MODAL NOTA */}
       {notaModal !== null && (
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:360,display:'flex',flexDirection:'column',gap:16}}>
-            <div style={{fontSize:'0.9rem',fontWeight:700,color:'#eef0f6'}}>
-              ✏️ Variante per: {righe.find(r => r.id === notaModal)?.nome}
-            </div>
-            <div style={{display:'flex',gap:8}}>
-              <button onClick={() => setNotaTipo('rimozione')}
-                style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
-                  background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
-                  color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
-                − Rimozione
-              </button>
-              <button onClick={() => setNotaTipo('aggiunta')}
-                style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
-                  background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
-                  color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
-                + Aggiunta
-              </button>
-            </div>
-            {notaTipo === 'aggiunta' && (
-              <>
-              
-                {/* AGGIUNTA MANUALE IN EURO
-                {aggiunte.length === 0 && (
-                  <div style={{fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px'}}>
-                    💰 Verrà aggiunto +€{((impostazioni.costoAggiunta ?? 50)/100).toFixed(2).replace('.',',')} al totale
-                  </div>
-                )}*/}
+  <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+    <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:420,maxHeight:'90vh',overflowY:'auto',display:'flex',flexDirection:'column',gap:14}}>
+      <div style={{fontSize:'0.99rem',fontWeight:700,color:'#ffb830'}}>
+        ✏️ Variante per: {righe.find(r => r.id === notaModal)?.nome}
+      </div>
 
+      {/* Tipo */}
+      <div style={{display:'flex',gap:8}}>
+      <button onClick={() => { setNotaTipo('rimozione'); setAggiunte([]) }}
+          style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
+            background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
+            color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
+          − Rimozione
+        </button>
+        <button onClick={() => setNotaTipo('aggiunta')}
+          style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
+            background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
+            color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
+          + Aggiunta
+        </button>
+      </div>
 
+      {/* Aggiunte rapide 
+{notaTipo === 'aggiunta' && (  QUESTO SE VUOI FARE LA MODIFICHE SU TUTTI I CLIENTI*/}
 
-                {impostazioni.aggiunteRapide?.length > 0 && (() => {
-                  const gruppiMap = {}
-                  for (const a of impostazioni.aggiunteRapide) {
-                    if (!gruppiMap[a.costo]) gruppiMap[a.costo] = []
-                    gruppiMap[a.costo].push(a.nome)
-                  }
-                  const tiers = Object.entries(gruppiMap)
-                    .map(([costo, items]) => ({ costo: parseInt(costo), items }))
-                    .sort((a, b) => a.costo - b.costo)
-                  return (
-                    <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                      <div style={{fontSize:'0.8rem',color:'#00ffb3',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
-                      {tiers.map(({ costo, items }) => (
-                        <div key={costo}>
-                          <div style={{fontSize:'0.82rem',color:'#ffb830',marginBottom:4}}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
-                          <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                            {items.map(item => {
-                              const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
-                              return (
-                                <button key={`${costo}-${item}`}
-                                  onClick={() => {
-                                    setAggiunte(prev => {
-                                      const esiste = prev.find(a => a.nome === item)
-                                      if (esiste) return prev.filter(a => a.nome !== item)
-                                      return [...prev, { nome: item, costo }]
-                                    })
-                                  }}
-                                  style={{
-                                    padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                                    border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
-                                    background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
-                                    color: selected ? '#00e5a0' : '#eef0f6',
-                                    fontWeight: selected ? 700 : 400,
-                                  }}>
-                                  {item}
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                      {aggiunte.length > 0 && (
-                        <div style={{fontSize:'0.75rem',color:'#00e5a0',background:'rgba(0,229,160,0.1)',borderRadius:8,padding:'6px 10px'}}>
-                          💰 Totale aggiunte: +€{(aggiunte.reduce((s,a) => s + a.costo, 0)/100).toFixed(2).replace('.',',')}
-                          {' — '}{aggiunte.map(a => a.nome).join(', ')}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
-              </>
-            )}
-            <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value)}
-              placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : aggiunte.length > 0 ? 'Nota aggiuntiva (opzionale)...' : 'es. con funghi, doppia porzione...'}
-              rows={3}
-              style={{background:'#1a1c24',border:'1px solid #252830',borderRadius:10,padding:12,color:'#eef0f6',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
-            />
-            <div style={{display:'flex',gap:10}}>
-              <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
-                style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid #252830',color:'#eef0f6',cursor:'pointer'}}>
-                Annulla
-              </button>
-              <button onClick={() => {
-                  if (notaTipo === 'aggiunta' && aggiunte.length > 0) {
-                    const nomiAggiunte = aggiunte.map(a => a.nome).join(', ')
-                    const testoFinale = notaTesto ? `${nomiAggiunte} — ${notaTesto}` : nomiAggiunte
-                    const costoTotale = aggiunte.reduce((s, a) => s + a.costo, 0)
-                    salvaNota(notaModal, testoFinale, notaTipo, costoTotale)
-                  } else {
-                    salvaNota(notaModal, notaTesto, notaTipo, impostazioni.costoAggiunta ?? 50)
-                  }
-                  setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([])
+ {/* QUESTO MODIFICA SOLO IL CLIENTE POESIA */}
+
+{notaTipo === 'aggiunta' && negozio?.slug === 'poesia' && (  
+
+  <div style={{display:'flex',flexDirection:'column',gap:8}}>
+    <div style={{fontSize:'0.8rem',color:'#00ffb3',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
+    {[
+      { gruppo: '€ 1,00', costo: 100, items: ['Olive','Ortaggi','Patatine','Wurstel','Funghi','Doppia mozzarella fiordilatte'] },
+      { gruppo: '€ 1,50', costo: 150, items: ['Prosciutto cotto','Salsiccia fresca','Mortadella','Salamino piccante','Nduja','Stracciatella','Grana','Tonno'] },
+      { gruppo: '€ 2,00', costo: 200, items: ['Bresaola','Prosciutto crudo','Speck','Granella di pistacchio','Mozzarella senza lattosio','Mozzarella di bufala','Impasti speciali'] },
+    ].map(({ gruppo, costo, items }) => (
+      <div key={gruppo}>
+        <div style={{fontSize:'0.82rem',color:'#ffb830',marginBottom:4}}>{gruppo}</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+          {items.map(item => {
+            const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
+            return (
+              <button key={item}
+                onClick={() => {
+                  setAggiunte(prev => {
+                    const esiste = prev.find(a => a.nome === item)
+                    if (esiste) return prev.filter(a => a.nome !== item)
+                    return [...prev, { nome: item, costo }]
+                  })
                 }}
-                style={{flex:1,padding:12,borderRadius:10,background:'#00e5a0',border:'none',color:'#08090c',fontWeight:700,cursor:'pointer'}}>
-                Salva
+                style={{
+                  padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
+                  border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
+                  background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
+                  color: selected ? '#00e5a0' : '#eef0f6',
+                  fontWeight: selected ? 700 : 400,
+                }}>
+                {item}
               </button>
-            </div>
-          </div>
+            )
+          })}
         </div>
-      )}
+      </div>
+    ))}
+    {aggiunte.length > 0 && (
+      <div style={{fontSize:'0.75rem',color:'#00e5a0',background:'rgba(0,229,160,0.1)',borderRadius:8,padding:'6px 10px'}}>
+        💰 Totale aggiunte: +€{(aggiunte.reduce((s,a) => s + a.costo, 0)/100).toFixed(2).replace('.',',')}
+        {' — '}{aggiunte.map(a => a.nome).join(', ')}
+      </div>
+    )}
+  </div>
+)}
+      {/* Campo manuale */}
+      <textarea value={notaTesto} onChange={e => { setNotaTesto(e.target.value) }}
+        placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'oppure scrivi una variante personalizzata...'}
+        rows={2}
+        style={{background:'#1a1c24',border:'1px solid #252830',borderRadius:10,padding:12,color:'#eef0f6',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
+      />
+
+      <div style={{display:'flex',gap:10}}>
+      <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
+          style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid #252830',color:'#eef0f6',cursor:'pointer'}}>
+          Annulla
+        </button>
+        <button onClick={() => {
+    const tutteLeAggiunte = [
+      ...aggiunte.map(a => a.nome),
+      ...(notaTesto.trim() ? [notaTesto.trim()] : [])
+    ]
+    const costoTotale = aggiunte.length > 0
+      ? aggiunte.reduce((s,a) => s + a.costo, 0)
+      : (impostazioni.costoAggiunta ?? 50)
+    const testoFinale = tutteLeAggiunte.join(', ')
+    if (testoFinale) salvaNota(notaModal, testoFinale, notaTipo, costoTotale)
+    setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([])
+  }}
+  style={{flex:1,padding:12,borderRadius:10,background:'#00e5a0',border:'none',color:'#08090c',fontWeight:700,cursor:'pointer'}}>
+  Salva
+</button>
+      </div>
+    </div>
+  </div>
+)}
+      {/* MODAL AVVISO SCORTE */}
       {avvisoMagazzino.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#111318',border:'2px solid #ffb830',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
@@ -1061,7 +1229,7 @@ export default function CassaPage() {
             {avvisoMagazzino.map((a,i) => (
               <div key={i} style={{padding:'8px 0',borderBottom:'1px solid #252830',fontSize:'0.85rem'}}>
                 <strong>{a.nome}</strong>
-                <div style={{fontSize:'0.78rem',color:'#5a5d6e',marginTop:4}}>
+                <div style={{fontSize:'0.78rem',color:'white',marginTop:4}}>
                   Rimasti: <strong style={{color:'#ffb830'}}>{a.giacenza}</strong> · Soglia minima: {a.minima}
                 </div>
               </div>
@@ -1079,6 +1247,7 @@ export default function CassaPage() {
           </div>
         </div>
       )}
+      {/* MODAL GIACENZA INSUFFICIENTE */}
       {giacenzaInsuff.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#111318',border:'2px solid #ff4d6a',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
@@ -1086,7 +1255,7 @@ export default function CassaPage() {
             {giacenzaInsuff.map((r,i) => (
               <div key={i} style={{padding:'8px 0',borderBottom:'1px solid #252830',fontSize:'0.85rem'}}>
                 <strong>{r.nome}</strong>
-                <div style={{fontSize:'0.78rem',color:'#5a5d6e',marginTop:4}}>
+                <div style={{fontSize:'0.78rem',color:'white',marginTop:4}}>
                   Disponibili: <strong style={{color:'#ff4d6a'}}>{r.giacenza}</strong> · Richiesti: <strong>{r.quantita}</strong>
                 </div>
               </div>
@@ -1097,13 +1266,16 @@ export default function CassaPage() {
           </div>
         </div>
       )}
-
-      <PannelloRT
-        rtConfig={rtConfig}
-        mappatura={rtMappatura}
-        scontrino={righe.length > 0 ? { righe, metodo: 'contanti', totale, resto: 0, contatto: null } : null}
-        onStampa={() => setShowChiusura(true)}
-      />
+<PannelloRT
+  rtConfig={rtConfig}
+  mappatura={rtMappatura}
+  scontrino={righe.length > 0 ? { righe, metodo: 'contanti', totale, resto: 0, contatto: null } : null}
+  onStampa={() => setShowChiusura(true)}
+  onChiusura={() => {
+    const c = resetScontrini()
+    setContatori(c)
+  }}
+/>
     </div>
   )
 }
@@ -1112,12 +1284,13 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
   const [metodo, setMetodo] = useState('carta')
   const [datoCliente, setDatoCliente] = useState('')
   const [contanti, setContanti] = useState('')
-  const [invio, setInvio] = useState('idle')
+  const [invio, setInvio] = useState('idle') // idle | sending | error
   const contantiCents = Math.round(parseFloat(contanti.replace(',', '.') || '0') * 100)
   const resto = metodo === 'contanti' ? Math.max(0, contantiCents - scontrino.totale) : 0
 
   async function handleInvia() {
     const negozio = (() => { try { return JSON.parse(localStorage.getItem('sd_negozio') || '{}') } catch { return {} } })()
+    // Invia email solo se il contatto è un'email valida
     if (datoCliente && datoCliente.includes('@')) {
       setInvio('sending')
       try {
@@ -1193,7 +1366,7 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
             </button>
             {cortesiaAbilitato && (
             <button className={`${styles.metodoBtn1} ${metodo==='cortesia' ? styles.metodoActive : ''}`} onClick={() => setMetodo('cortesia')}>
-              ️ Fiscale + Cortesia
+              ��️ Fiscale + Cortesia
             </button>
             )}
           </div>
@@ -1221,6 +1394,8 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
           </button>
         </div>
       </div>
+
     </div>
   )
 }
+
