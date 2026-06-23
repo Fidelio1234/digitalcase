@@ -57,7 +57,7 @@ function fmt(cents) {
 }
 
 export default function CassaPage() {
-  console.log('🔴 CASSA MONTATA - stack:', new Error().stack.split('\n')[2])
+  //console.log('🔴 CASSA MONTATA - stack:', new Error().stack.split('\n')[2])
   const NEGOZIO_ID = useNegozioId()
   const { negozio } = useNegozio() || {}
   const { user, logout, loading } = useAuth()
@@ -146,7 +146,7 @@ export default function CassaPage() {
     }
 
     const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
-    console.log('Check tavolo:', tavoloDaChiudere)
+    //console.log('Check tavolo:', tavoloDaChiudere)
     if (tavoloDaChiudere) {
       try {
         const { righe } = JSON.parse(tavoloDaChiudere)
@@ -180,7 +180,7 @@ export default function CassaPage() {
   // Carica config RT separatamente
   useEffect(() => {
     supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single().then(({ data }) => {
-      console.log('RT config caricata:', JSON.stringify(data?.rt_config))
+      //console.log('RT config caricata:', JSON.stringify(data?.rt_config))
       if (data?.rt_config?.config) setRtConfig(data.rt_config.config)
       if (data?.rt_config?.mappatura) setRtMappatura(data.rt_config.mappatura)
     })
@@ -1145,22 +1145,29 @@ export default function CassaPage() {
 
  {/* QUESTO MODIFICA SOLO IL CLIENTE POESIA */}
 
-{notaTipo === 'aggiunta' && negozio?.slug === 'poesia' && (  
+
+{notaTipo === 'aggiunta' && impostazioni.aggiunteRapide?.length > 0 && (() => {
+  const gruppiMap = {}
+  for (const a of impostazioni.aggiunteRapide) {
+    if (!gruppiMap[a.costo]) gruppiMap[a.costo] = []
+    gruppiMap[a.costo].push(a.nome)
+  }
+  const tiers = Object.entries(gruppiMap)
+    .map(([costo, items]) => ({ costo: parseInt(costo), items }))
+    .sort((a, b) => a.costo - b.costo)
+  return (
 
   <div style={{display:'flex',flexDirection:'column',gap:8}}>
     <div style={{fontSize:'0.8rem',color:'#00ffb3',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
-    {[
-      { gruppo: '€ 1,00', costo: 100, items: ['Olive','Ortaggi','Patatine','Wurstel','Funghi','Doppia mozzarella fiordilatte'] },
-      { gruppo: '€ 1,50', costo: 150, items: ['Prosciutto cotto','Salsiccia fresca','Mortadella','Salamino piccante','Nduja','Stracciatella','Grana','Tonno'] },
-      { gruppo: '€ 2,00', costo: 200, items: ['Bresaola','Prosciutto crudo','Speck','Granella di pistacchio','Mozzarella senza lattosio','Mozzarella di bufala','Impasti speciali'] },
-    ].map(({ gruppo, costo, items }) => (
-      <div key={gruppo}>
-        <div style={{fontSize:'0.82rem',color:'#ffb830',marginBottom:4}}>{gruppo}</div>
+    {tiers.map(({ costo, items }) => (
+
+<div key={costo}>
+<div style={{fontSize:'0.82rem',color:'#ffb830',marginBottom:4}}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
           {items.map(item => {
             const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
             return (
-              <button key={item}
+              <button key={`${costo}-${item}`}
                 onClick={() => {
                   setAggiunte(prev => {
                     const esiste = prev.find(a => a.nome === item)
@@ -1187,9 +1194,11 @@ export default function CassaPage() {
         💰 Totale aggiunte: +€{(aggiunte.reduce((s,a) => s + a.costo, 0)/100).toFixed(2).replace('.',',')}
         {' — '}{aggiunte.map(a => a.nome).join(', ')}
       </div>
-    )}
-  </div>
-)}
+   )}
+   </div>
+   )
+ })()}
+
       {/* Campo manuale */}
       <textarea value={notaTesto} onChange={e => { setNotaTesto(e.target.value) }}
         placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'oppure scrivi una variante personalizzata...'}
