@@ -53,6 +53,7 @@ export default function CassaPage() {
   const longPressTimer = useRef(null)
   const [impostazioni, setImpostazioni] = useState({ tavoliAbilitati: false, magazzinoAbilitato: false })
   const [contatori, setContatori] = useState({ scontrini: 0, chiusure: 0 })
+  const [tavoliOccupati, setTavoliOccupati] = useState(0)
 
   const {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
@@ -60,10 +61,6 @@ export default function CassaPage() {
     aggiungiRiga, caricaRigheEsterne, annullaUltima, annullaTutto, chiudiScontrino,
     ripristinaRighe, eliminaRiga, applicaSconto, scontrinoAperto, resetScontrinoAperto, apriScontrino, salvaNota
   } = useCassa()
-
-
-
-
 
   function cercaProdottoBarcode(barcode) {
     for (const reparto of reparti) {
@@ -86,7 +83,6 @@ export default function CassaPage() {
     loadReparti()
     getImpostazioniDb(NEGOZIO_ID).then(imp => setImpostazioni(imp))
     setContatori(getContatori())
-    // Mostra benvenuto solo se arriva dal login
     if (sessionStorage.getItem('appena_loggato')) {
       sessionStorage.removeItem('appena_loggato')
       setBenvenuto(true)
@@ -94,9 +90,7 @@ export default function CassaPage() {
     }
   }, [user, router])
 
-  // Carica righe da tavolo quando la pagina si monta
   useEffect(() => {
-    // Gestisci ritorno da asporto
     const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
     if (asportoDaChiudere) {
       try {
@@ -107,34 +101,43 @@ export default function CassaPage() {
         }, 300)
       } catch(e) { console.error(e) }
     }
-
     const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
-    console.log('Check tavolo:', tavoloDaChiudere)
     if (tavoloDaChiudere) {
       try {
         const { righe } = JSON.parse(tavoloDaChiudere)
-        console.log('Righe tavolo trovate:', righe?.length)
         setTimeout(() => caricaRigheEsterne(righe), 300)
       } catch(e) { console.error(e) }
     }
   }, [])
 
-  // Carica config RT separatamente
+  // ── Conteggio tavoli occupati per il badge sul bottone "Tavoli" ─────────
+  useEffect(() => {
+    if (!NEGOZIO_ID) return
+    async function contaTavoli() {
+      const { count } = await supabase
+        .from('tavoli')
+        .select('numero', { count: 'exact', head: true })
+        .eq('negozio_id', NEGOZIO_ID)
+        .eq('stato', 'occupato')
+      setTavoliOccupati(count || 0)
+    }
+    contaTavoli()
+    const interval = setInterval(contaTavoli, 5000)
+    return () => clearInterval(interval)
+  }, [NEGOZIO_ID])
+
   useEffect(() => {
     supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single().then(({ data }) => {
-      console.log('RT config caricata:', JSON.stringify(data?.rt_config))
       if (data?.rt_config?.config) setRtConfig(data.rt_config.config)
       if (data?.rt_config?.mappatura) setRtMappatura(data.rt_config.mappatura)
     })
   }, [])
 
-  // ── Avviso mezzanotte ──────────────────────────────────────────────────
   useEffect(() => {
     const check = () => {
       const now = new Date()
       if (now.getHours() === 23 && now.getMinutes() === 50 && now.getSeconds() === 0) {
         setShowAvvisoMezzanotte(true)
-        // suono beep
         try {
           const ctx = new (window.AudioContext || window.webkitAudioContext)()
           const osc = ctx.createOscillator()
@@ -155,7 +158,6 @@ export default function CassaPage() {
   useEffect(() => {
     const handler = (e) => {
       if (showChiusura || showConfirmAnnulla || showSuccesso || showAvvisoMezzanotte) return
-      // Ignora se si sta digitando in un input/select
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return
       if (e.key >= '0' && e.key <= '9') pressDigit(e.key)
       else if (e.key === 'Backspace') pressClear()
@@ -178,8 +180,6 @@ export default function CassaPage() {
 
   async function handleChiudi() {
     if (righe.length === 0) return
-
-    // Controlla giacenze insufficienti leggendo dal DB
     if (impostazioni.magazzinoAbilitato) {
       const prodottiConGiacenza = righe.filter(r => r.sottoRepartoId)
       if (prodottiConGiacenza.length > 0) {
@@ -188,18 +188,14 @@ export default function CassaPage() {
           .from('prodotti')
           .select('id, giacenza, giacenza_minima')
           .in('id', ids)
-
         const giacenzeMap = {}
         for (const p of prodottiDb || []) giacenzeMap[p.id] = p
-
-        // Aggrega quantità per prodotto
         const qtaPerProdotto = {}
         for (const r of righe) {
           if (r.sottoRepartoId) {
             qtaPerProdotto[r.sottoRepartoId] = (qtaPerProdotto[r.sottoRepartoId] || 0) + r.quantita
           }
         }
-
         const insufficienti = []
         for (const [id, qta] of Object.entries(qtaPerProdotto)) {
           const p = giacenzeMap[id]
@@ -208,14 +204,12 @@ export default function CassaPage() {
             insufficienti.push({ nome: riga?.nome || id, giacenza: p.giacenza, quantita: qta })
           }
         }
-
         if (insufficienti.length > 0) {
           setGiacenzaInsuff(insufficienti)
           return
         }
       }
     }
-
     setRigheBackup([...righe])
     const sc = chiudiScontrino()
     const c = incrementaScontrino()
@@ -232,7 +226,6 @@ export default function CassaPage() {
   }
 
   async function handleConfermAnnulla() {
-    // Chiudi asporto pendente se presente
     const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
     let righeAsporto = null
     let totaleAsporto = 0
@@ -246,8 +239,6 @@ export default function CassaPage() {
         sessionStorage.removeItem('asporto_da_chiudere')
       } catch(e) {}
     }
-
-    // Salva annullo se scontrino è aperto (anche se vuoto)
     if (scontrinoAperto) {
       const righeEffettive = righe.length > 0 ? righe : (righeAsporto || [])
       const totaleEffettivo = righe.length > 0 ? totale : totaleAsporto
@@ -263,12 +254,10 @@ export default function CassaPage() {
   }
 
   async function handleSuccesso(info) {
-    // Chiudi tavolo su Supabase se scontrino viene da un tavolo
     const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
     if (tavoloDaChiudere) {
       try {
         const { numero } = JSON.parse(tavoloDaChiudere)
-        // Salva storico tavolo
         await salvaStoricoTavolo(NEGOZIO_ID, {
           numero,
           righe: JSON.parse(tavoloDaChiudere).righe || [],
@@ -279,8 +268,6 @@ export default function CassaPage() {
         sessionStorage.removeItem('tavolo_da_chiudere')
       } catch(e) {}
     }
-
-    // Chiudi asporto se viene da asporto
     const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
     if (asportoDaChiudere) {
       try {
@@ -290,8 +277,6 @@ export default function CassaPage() {
         sessionStorage.removeItem('asporto_da_chiudere')
       } catch(e) {}
     }
-
-    // Salva nello storico su Supabase
     salvaScontrinoDb(NEGOZIO_ID, {
       timestamp: new Date().toISOString(),
       righe: scontrinoCorrente?.righe || [],
@@ -309,7 +294,6 @@ export default function CassaPage() {
     setRigheBackup([])
     resetScontrinoAperto()
 
-    // Scala giacenze magazzino
     if (impostazioni.magazzinoAbilitato) {
       const avvisi = []
       for (const riga of scontrinoCorrente?.righe || []) {
@@ -324,15 +308,12 @@ export default function CassaPage() {
       if (avvisi.length > 0) setAvvisoMagazzino(avvisi)
     }
 
-    // Stampa su RT se configurato
     if (rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0) {
       try {
         if (rtConfig.marca === '3i') {
-          // 3i Solution — TCP/IP XON/XOFF
           let cmd = ''
           const mappatura = rtMappatura || {}
           for (const riga of scontrinoCorrente.righe) {
-            // Salta righe sconto — le gestiamo separatamente
             if (riga.repartoId === null && riga.importo < 0) continue
             const reparto = mappatura[riga.repartoId]?.numeroRt || 1
             const importoCents = Math.round(riga.importo)
@@ -343,18 +324,15 @@ export default function CassaPage() {
               cmd += `"${descr}"${importoCents}H${reparto}R`
             }
           }
-          // Applica sconti sul subtotale
           const righeSconto = scontrinoCorrente.righe.filter(r => r.repartoId === null && r.importo < 0)
           if (righeSconto.length > 0) {
-            cmd += '='  // subtotale
+            cmd += '='
             for (const sconto of righeSconto) {
               const scontoCents = Math.abs(Math.round(sconto.importo))
               if (sconto.nome.includes('%')) {
-                // Sconto percentuale: formato 10.00*2M
                 const perc = sconto.nome.match(/(\d+(?:\.\d+)?)%/)?.[1] || '0'
                 cmd += `${perc}*2M`
               } else {
-                // Sconto in euro: formato 150H4M
                 cmd += `${scontoCents}H4M`
               }
             }
@@ -362,7 +340,6 @@ export default function CassaPage() {
           if (info.metodo === 'carta') {
             cmd += '3T'
           } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {
-            // Contanti o cortesia — stesso trattamento
             const contantiCents = info.totale + (info.resto || 0)
             if (contantiCents > info.totale) {
               cmd += `${contantiCents}H1T`
@@ -370,15 +347,11 @@ export default function CassaPage() {
               cmd += '1T'
             }
           }
-
           await fetch('/api/ditron', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
           })
-
-          // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
-          console.log('metodo:', info.metodo, 'cortesiaAbilitato:', impostazioni.cortesiaAbilitato)
           if (info.metodo === 'cortesia' || info.metodo === 'carta') {
             let cmdCortesia = 'j'
             for (const riga of scontrinoCorrente.righe) {
@@ -400,7 +373,6 @@ export default function CassaPage() {
             })
           }
         } else if (rtConfig.marca === 'rch') {
-          // RCH Print!F — HTTP XML
           const comandi = []
           for (const riga of scontrinoCorrente.righe) {
             if (riga.repartoId === null && riga.importo < 0) continue
@@ -413,7 +385,6 @@ export default function CassaPage() {
               comandi.push(`=R${ivaIndice}/$${importoCents}/(${descr})`)
             }
           }
-          // Sconti RCH
           const righeSconto = scontrinoCorrente.righe.filter(r => r.repartoId === null && r.importo < 0)
           if (righeSconto.length > 0) {
             comandi.push('=S')
@@ -427,7 +398,6 @@ export default function CassaPage() {
               }
             }
           }
-          // Pagamento
           if (info.metodo === 'carta') {
             comandi.push('=T4')
           } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {
@@ -438,14 +408,11 @@ export default function CassaPage() {
               comandi.push('=T1')
             }
           }
-
           await fetch('/api/rch', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
           })
-
-          // Stampa scontrino di cortesia RCH
           if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
             const comandiCortesia = ['=C0']
             for (const riga of scontrinoCorrente.righe) {
@@ -463,7 +430,6 @@ export default function CassaPage() {
             })
           }
         } else {
-          // Ditron — TCP
           const righeConRt = scontrinoCorrente.righe.map(riga => ({
             ...riga,
             numeroRepartoRt: rtMappatura[riga.repartoId]?.numeroRt || 1,
@@ -536,7 +502,6 @@ export default function CassaPage() {
         </div>
       </header>
 
-      {/* BENVENUTO */}
       {benvenuto && user && (
         <div style={{
           position:'fixed', inset:0, zIndex:500,
@@ -587,7 +552,6 @@ export default function CassaPage() {
 
       <div className={styles.main}>
 
-        {/* SINISTRA */}
         <div className={styles.colLeft}>
           <div className={styles.displayImporto}>
             <div className={styles.displayLabel}>TOTALE IMPORTO</div>
@@ -650,7 +614,6 @@ export default function CassaPage() {
             </div>
           )}
 
-
           <div style={{display:'flex', gap:8, marginBottom:8, flexWrap:'wrap'}}>
             {impostazioni.asportoAbilitato && (
               <button onClick={() => router.push('/asporto')}
@@ -674,7 +637,20 @@ export default function CassaPage() {
               <button onClick={() => router.push('/tavoli')}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
                   color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
-                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+                  position:'relative'}}>
+                {tavoliOccupati > 0 && (
+                  <span style={{
+                    position:'absolute', top:-6, right:-6,
+                    background:'#ff4d6a', color:'white', borderRadius:10,
+                    minWidth:20, height:20, padding:'0 5px',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:'0.68rem', fontWeight:700, lineHeight:1,
+                    boxShadow:'0 0 0 2px black',
+                  }}>
+                    {tavoliOccupati}
+                  </span>
+                )}
                 <span style={{fontSize:'1.4rem'}}>🍽️</span>
                 <span>Tavoli</span>
               </button>
@@ -693,9 +669,7 @@ export default function CassaPage() {
           </button>
         </div>
 
-        {/* CENTRO */}
         <div className={styles.colCenter}>
-          {/* SCONTRINO IN CORSO - metà superiore */}
           <div className={styles.colCenterTop}>
             <div className={styles.displayHeader}>
               <div style={{display:'flex', alignItems:'center', gap:8, flex:1}}>
@@ -767,7 +741,6 @@ export default function CassaPage() {
             </div>
           </div>
 
-          {/* PRODOTTI REPARTO - metà inferiore */}
           {repartoAttivo && (
             <div className={styles.colCenterBottom}>
               {(() => {
@@ -807,7 +780,6 @@ export default function CassaPage() {
           )}
         </div>
 
-        {/* DESTRA */}
         <div className={styles.colRight}>
           <div className={styles.repartiHeader}>REPARTI</div>
           <div className={styles.repartiList}>
@@ -833,7 +805,6 @@ export default function CassaPage() {
         </div>
       </div>
 
-      {/* MODAL CHIUSURA */}
       {showChiusura && scontrinoCorrente && (
         <ChiusuraModal
           scontrino={scontrinoCorrente}
@@ -843,7 +814,6 @@ export default function CassaPage() {
         />
       )}
 
-      {/* MODAL CONFERMA ANNULLA */}
       {showConfirmAnnulla && (
         <div className={styles.overlay} onClick={() => setShowConfirmAnnulla(false)}>
           <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
@@ -865,7 +835,6 @@ export default function CassaPage() {
         </div>
       )}
 
-      {/* MODAL SUCCESSO */}
       {showSuccesso && (
         <div className={styles.overlay} onClick={() => setShowSuccesso(null)}>
           <div className={styles.successModal} onClick={e => e.stopPropagation()}
@@ -890,12 +859,10 @@ export default function CassaPage() {
               {showSuccesso.metodo === 'contanti' && showSuccesso.resto > 0 &&
                 ` · Resto €${fmt(showSuccesso.resto)}`}
             </div>
-
           </div>
         </div>
       )}
 
-      {/* AVVISO MEZZANOTTE */}
       {showAvvisoMezzanotte && (
         <div className={styles.overlay}>
           <div className={styles.avvisoModal}>
@@ -916,7 +883,6 @@ export default function CassaPage() {
         </div>
       )}
 
-      {/* MODAL SCONTO */}
       {showSconto && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#111318',border:'2px solid #00e5a0',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
@@ -976,7 +942,6 @@ export default function CassaPage() {
           </div>
         </div>
       )}
-      {/* MODAL NOTA */}
       {notaModal !== null && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:360,display:'flex',flexDirection:'column',gap:16}}>
@@ -1005,7 +970,6 @@ export default function CassaPage() {
                   </div>
                 )}
                 {impostazioni.aggiunteRapide?.length > 0 && (() => {
-                  // Raggruppa dinamicamente per fascia di prezzo (la lista ora è flat: {nome, costo})
                   const gruppiMap = {}
                   for (const a of impostazioni.aggiunteRapide) {
                     if (!gruppiMap[a.costo]) gruppiMap[a.costo] = []
@@ -1014,7 +978,6 @@ export default function CassaPage() {
                   const tiers = Object.entries(gruppiMap)
                     .map(([costo, items]) => ({ costo: parseInt(costo), items }))
                     .sort((a, b) => a.costo - b.costo)
-
                   return (
                     <div style={{display:'flex',flexDirection:'column',gap:8}}>
                       <div style={{fontSize:'0.8rem',color:'#00ffb3',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
@@ -1070,7 +1033,6 @@ export default function CassaPage() {
               </button>
               <button onClick={() => {
                   if (notaTipo === 'aggiunta' && aggiunte.length > 0) {
-                    // Voci rapide selezionate: nome composto dalle voci + eventuale nota libera, costo = somma
                     const nomiAggiunte = aggiunte.map(a => a.nome).join(', ')
                     const testoFinale = notaTesto ? `${nomiAggiunte} — ${notaTesto}` : nomiAggiunte
                     const costoTotale = aggiunte.reduce((s, a) => s + a.costo, 0)
@@ -1087,7 +1049,6 @@ export default function CassaPage() {
           </div>
         </div>
       )}
-      {/* MODAL AVVISO SCORTE */}
       {avvisoMagazzino.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#111318',border:'2px solid #ffb830',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
@@ -1113,7 +1074,6 @@ export default function CassaPage() {
           </div>
         </div>
       )}
-      {/* MODAL GIACENZA INSUFFICIENTE */}
       {giacenzaInsuff.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <div style={{background:'#111318',border:'2px solid #ff4d6a',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
@@ -1147,13 +1107,12 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
   const [metodo, setMetodo] = useState('carta')
   const [datoCliente, setDatoCliente] = useState('')
   const [contanti, setContanti] = useState('')
-  const [invio, setInvio] = useState('idle') // idle | sending | error
+  const [invio, setInvio] = useState('idle')
   const contantiCents = Math.round(parseFloat(contanti.replace(',', '.') || '0') * 100)
   const resto = metodo === 'contanti' ? Math.max(0, contantiCents - scontrino.totale) : 0
 
   async function handleInvia() {
     const negozio = (() => { try { return JSON.parse(localStorage.getItem('sd_negozio') || '{}') } catch { return {} } })()
-    // Invia email solo se il contatto è un'email valida
     if (datoCliente && datoCliente.includes('@')) {
       setInvio('sending')
       try {
@@ -1229,7 +1188,7 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
             </button>
             {cortesiaAbilitato && (
             <button className={`${styles.metodoBtn1} ${metodo==='cortesia' ? styles.metodoActive : ''}`} onClick={() => setMetodo('cortesia')}>
-              ��️ Fiscale + Cortesia
+              ️ Fiscale + Cortesia
             </button>
             )}
           </div>
@@ -1257,7 +1216,6 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
           </button>
         </div>
       </div>
-
     </div>
   )
 }
