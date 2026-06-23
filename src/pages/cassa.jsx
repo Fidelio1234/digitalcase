@@ -964,11 +964,16 @@ export default function CassaPage() {
             </div>
             {notaTipo === 'aggiunta' && (
               <>
+              
+                {/* AGGIUNTA MANUALE IN EURO
                 {aggiunte.length === 0 && (
                   <div style={{fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px'}}>
                     💰 Verrà aggiunto +€{((impostazioni.costoAggiunta ?? 50)/100).toFixed(2).replace('.',',')} al totale
                   </div>
-                )}
+                )}*/}
+
+
+
                 {impostazioni.aggiunteRapide?.length > 0 && (() => {
                   const gruppiMap = {}
                   for (const a of impostazioni.aggiunteRapide) {
