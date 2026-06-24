@@ -3202,7 +3202,7 @@ export default function TavoliPage() {
                   </div>
                 )
               })()}
-              <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value)}
+              <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value.toUpperCase())}
                 placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi...'}
                 rows={3}
                 style={{ background:'#1a1c24', border:'1px solid #252830', borderRadius:10, padding:12, color:'#eef0f6', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}

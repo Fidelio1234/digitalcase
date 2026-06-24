@@ -135,7 +135,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
   }
 
   function chiusuraFiscale(tipo) {
-    const tipoLabel = tipo === 1 ? 'estesa' : tipo === 2 ? 'breve' : 'media'
+    const tipoLabel = tipo === 1 ? 'semplice' : tipo === 2 ? 'con report reparti+IVA' : 'media'
     setConferma({
       titolo: 'Chiusura Fiscale Z',
       messaggio: 'Eseguire la chiusura fiscale Z ' + tipoLabel + '? Questa operazione azzera i totalizzatori giornalieri.',
@@ -281,8 +281,8 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
             <div>
               <div style={{display:'flex', flexDirection:'column', gap:6}}>
                 <div style={{width:'100%', color:'#ffb830'}}>CHIUSURE FISCALI</div>
-                <button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(1)} disabled={loading}>Chiusura fiscale Z (estesa)</button>
-                <button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(2)} disabled={loading}>Chiusura fiscale Z (breve)</button>
+                <button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(1)} disabled={loading}>Chiusura fiscale Z (semplice)</button>
+<button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(2)} disabled={loading}>Chiusura fiscale Z (con report reparti+IVA)</button>
                 <br/>
                 <div style={{width:'100%', color:'#ffb830'}}>LETTURA PARZIALE</div>
                 <button style={btnStyle('#ffb830')} onClick={() => letturaX(2)} disabled={loading}>Lettura X (parziale)</button>

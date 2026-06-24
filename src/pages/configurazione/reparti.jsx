@@ -1148,7 +1148,7 @@ export default function RepartiPage() {
                     <input type="text"
                       placeholder="Es. Funghi"
                       value={form.nome || ''}
-                      onChange={e => setForm(f => ({ ...f, nome:e.target.value }))}
+                      onChange={e => setForm(f => ({ ...f, nome:e.target.value.toUpperCase() }))}
                       autoFocus
                     />
                   </div>

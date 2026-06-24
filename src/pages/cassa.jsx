@@ -389,6 +389,9 @@ export default function CassaPage() {
           // 3i Solution — TCP/IP XON/XOFF
           let cmd = ''
           const mappatura = rtMappatura || {}
+
+
+
           for (const riga of scontrinoCorrente.righe) {
             // Salta righe sconto — le gestiamo separatamente
             if (riga.repartoId === null && riga.importo < 0) continue
@@ -400,7 +403,20 @@ export default function CassaPage() {
             } else {
               cmd += `"${descr}"${importoCents}H${reparto}R`
             }
+            // Stampa la nota (aggiunte/rimozioni) come riga descrittiva aggiuntiva sullo scontrino fiscale
+            if (riga.nota) {
+              const prefisso = riga.nota.match(/^([+-])/)?.[1] || ''
+              const corpo = riga.nota.replace(/^([+-])\s*/, '')
+              for (const voce of corpo.split(', ')) {
+                const nota = `${prefisso} ${voce}`.replace(/"/g, '').substring(0, 38)
+                cmd += `"  >> ${nota}"@`
+              }
+            }
           }
+
+
+
+
           // Applica sconti sul subtotale
           const righeSconto = scontrinoCorrente.righe.filter(r => r.repartoId === null && r.importo < 0)
           if (righeSconto.length > 0) {
@@ -433,7 +449,11 @@ export default function CassaPage() {
             }
           }
 
-          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
+
+
+
+
+         await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
           console.log('metodo:', info.metodo, 'cortesiaAbilitato:', impostazioni.cortesiaAbilitato)
@@ -445,15 +465,33 @@ export default function CassaPage() {
               const qta = riga.quantita > 1 ? `${riga.quantita}x ` : ''
               cmdCortesia += `"${qta}${descr}"@`
               if (riga.nota) {
-                const nota = riga.nota.replace(/"/g, '').substring(0, 38)
-                cmdCortesia += `"  >> ${nota}"@`
+                const prefisso = riga.nota.match(/^([+-])/)?.[1] || ''
+                const corpo = riga.nota.replace(/^([+-])\s*/, '')
+                for (const voce of corpo.split(', ')) {
+                  const nota = `${prefisso} ${voce}`.replace(/"/g, '').substring(0, 38)
+                  cmdCortesia += `"  >> ${nota}"@`
+                }
+              }}
+            cmdCortesia += 'J'
+            let rispostaCortesia = null
+            for (let tentativo = 0; tentativo < 10; tentativo++) {
+              await new Promise(r => setTimeout(r, 1500))
+              try {
+                rispostaCortesia = await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
+                if (rispostaCortesia?.ok !== false) break
+              } catch (e) {
+                console.log(`🧾 Tentativo ${tentativo + 1} cortesia 3i fallito, riprovo...`, e.message)
               }
             }
-            cmdCortesia += 'J'
-            await new Promise(r => setTimeout(r, 500))
-            await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
+            console.log('🧾 Risposta cassa 3i per scontrino cortesia:', JSON.stringify(rispostaCortesia))
           }
         } else if (rtConfig.marca === 'rch') {
+
+
+
+
+
+
           // RCH Print!F — HTTP XML
           const comandi = []
           for (const riga of scontrinoCorrente.righe) {
@@ -467,6 +505,8 @@ export default function CassaPage() {
               comandi.push(`=R${ivaIndice}/$${importoCents}/(${descr})`)
             }
           }
+
+
           // Sconti RCH
           const righeSconto = scontrinoCorrente.righe.filter(r => r.repartoId === null && r.importo < 0)
           if (righeSconto.length > 0) {
@@ -514,7 +554,32 @@ export default function CassaPage() {
             ...riga,
             numeroRepartoRt: rtMappatura[riga.repartoId]?.numeroRt || 1,
           }))
+
+
+
+
+
+
           await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta, azione: 'scontrino', dati: { righe: righeConRt, metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo, totale: info.totale, resto: info.resto || 0, contatto: info.contatto || null } })
+
+          // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
+          if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
+            let cmdCortesia = 'j'
+            for (const riga of scontrinoCorrente.righe) {
+              if (riga.importo < 0) continue
+              const descr = (riga.nome || '').replace(/"/g, '').substring(0, 38)
+              const qta = riga.quantita > 1 ? `${riga.quantita}x ` : ''
+              cmdCortesia += `"${qta}${descr}"@`
+              if (riga.nota) {
+                const nota = riga.nota.replace(/"/g, '').replace(/^([+-])/, '$1 ').substring(0, 38)
+                cmdCortesia += `"  >> ${nota}"@`
+              }
+            }
+            cmdCortesia += 'J'
+            await new Promise(r => setTimeout(r, 9000))
+            const rispostaCortesia = await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
+            console.log('🧾 Risposta cassa per scontrino cortesia:', JSON.stringify(rispostaCortesia))
+          }
         }
       } catch(e) {
         console.error('Errore stampa RT:', e)
@@ -522,6 +587,13 @@ export default function CassaPage() {
     }
   }
   
+
+
+
+
+
+
+
   return (
     <div className={styles.page}>
 
@@ -834,11 +906,13 @@ export default function CassaPage() {
     >+</button>
   </div>
 
-  <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
-    title="Aggiungi nota"
-    style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
-    ✏️
-  </button>
+  {impostazioni.cortesiaAbilitato && (
+                    <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
+                      title="Aggiungi nota"
+                      style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
+                      ✏️
+                    </button>
+                    )}
   <button className={styles.rigaDelete} onClick={() => eliminaRiga(r.id)} title="Elimina voce">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <line x1="18" y1="6" x2="6" y2="18"/>
@@ -1200,7 +1274,7 @@ export default function CassaPage() {
  })()}
 
       {/* Campo manuale */}
-      <textarea value={notaTesto} onChange={e => { setNotaTesto(e.target.value) }}
+      <textarea value={notaTesto} onChange={e => { setNotaTesto(e.target.value.toUpperCase()) }}
         placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'oppure scrivi una variante personalizzata...'}
         rows={2}
         style={{background:'#1a1c24',border:'1px solid #252830',borderRadius:10,padding:12,color:'#eef0f6',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
