@@ -331,15 +331,24 @@ router.replace(redirect)
 
       <div className={styles.bottomBar}>DigitalCase v0.1 · © 2026</div>
       <button
-  onClick={async () => {
-    if (shutdownPending) return
-    setShutdownPending(true)
-    try {
-      await fetch('http://localhost:3002/shutdown', { method: 'POST' })
-    } catch(e) {
+onClick={async () => {
+  if (shutdownPending) return
+  setShutdownPending(true)
+  try {
+    const res = await fetch('http://localhost:3002/shutdown', {
+      method: 'POST',
+      headers: { 'x-shutdown-token': process.env.NEXT_PUBLIC_SHUTDOWN_TOKEN || '' }
+    })
+    const data = await res.json()
+    if (!data.ok) {
+      alert(`Spegnimento non riuscito: ${data.error || 'errore sconosciuto'}`)
       setShutdownPending(false)
     }
-  }}
+  } catch(e) {
+    alert('Impossibile contattare il service locale')
+    setShutdownPending(false)
+  }
+}}
   title="Spegni il PC"
   style={{
     position: 'fixed', top: 12, right: 12,
