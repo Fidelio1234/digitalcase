@@ -1131,12 +1131,31 @@ server.listen(PORT, () => {
  */
 const http = require('http')
 const net = require('net')
- 
-// Keep-alive dinamico — usa IP della prima cassa 3i che si connette
+const fs = require('fs')
+
+// ─── CONFIGURAZIONE (.env.local) ──────────────────────────────────────────────
+let env = {}
+try {
+  fs.readFileSync('.env.local', 'utf8').split('\n').forEach(line => {
+    const [k, ...rest] = line.split('=')
+    const v = rest.join('=')
+    if (k && v) env[k.trim()] = v.trim()
+  })
+} catch (e) {}
+
+const SHUTDOWN_TOKEN = env.SHUTDOWN_TOKEN || null
+
+const ORIGIN_REGEX = /^https?:\/\/([a-z0-9-]+\.)?digitalcase\.it$|^https?:\/\/localhost(:\d+)?$/i
+
+function originConsentito(origin) {
+  if (!origin) return true
+  return ORIGIN_REGEX.test(origin)
+}
+
 let keepAliveInterval = null
- 
+
 function avviaKeepAlive(ip, porta) {
-  if (keepAliveInterval) return // già avviato
+  if (keepAliveInterval) return
   keepAliveInterval = setInterval(async () => {
     try {
       await inviaTCPRT(ip, porta, 'K', '3i')
@@ -1147,10 +1166,9 @@ function avviaKeepAlive(ip, porta) {
   }, 60000)
   console.log(`Keep-alive avviato per ${ip}:${porta}`)
 }
- 
+
 const PORT = 3002
- 
-// ─── ESC/POS ──────────────────────────────────────────────────────────────────
+
 const ESC = '\x1B'
 const GS = '\x1D'
 const RESET = ESC + '@'
@@ -1163,12 +1181,11 @@ const BIG = GS + '\x21\x11'
 const NORMAL = GS + '\x21\x00'
 const CUT = GS + '\x56\x00'
 const FEED = '\n'
- 
+
 function buildComanda(tavolo, righe, tipo, uscita, totaleUscite) {
   let doc = ''
   doc += RESET
   doc += CENTER + BOLD_ON + BIG
- 
   if (tipo === 'comanda') {
     doc += `TAVOLO ${tavolo}\n`
     doc += BOLD_OFF
@@ -1209,13 +1226,10 @@ function buildComanda(tavolo, righe, tipo, uscita, totaleUscite) {
     doc += BOLD_ON + '*** RITIRARE LO SCONTRINO ***\n'
     doc += '***      ALLA CASSA          ***\n' + BOLD_OFF
   }
- 
   doc += FEED + FEED + FEED + CUT
   return doc
 }
- 
-// ─── TCP generico (Ditron / 3i) ───────────────────────────────────────────────
- 
+
 async function inviaTCP(ip, porta, dati) {
   return new Promise((resolve, reject) => {
     const client = new net.Socket()
@@ -1228,7 +1242,7 @@ async function inviaTCP(ip, porta, dati) {
     client.on('timeout', () => { client.destroy(); reject(new Error('Timeout')) })
   })
 }
- 
+
 async function inviaTCPRT(ip, porta, comando, marca) {
   return new Promise((resolve, reject) => {
     const client = new net.Socket()
@@ -1250,7 +1264,7 @@ async function inviaTCPRT(ip, porta, comando, marca) {
     setTimeout(() => { if (risposta) { client.destroy(); resolve(risposta) } }, 2000)
   })
 }
- 
+
 async function inviaTCP3i(ip, porta, comandi) {
   let rispostaFinale = ''
   for (const cmd of comandi) {
@@ -1274,9 +1288,7 @@ async function inviaTCP3i(ip, porta, comandi) {
   }
   return rispostaFinale
 }
- 
-// ─── HTTP per RCH ─────────────────────────────────────────────────────────────
- 
+
 async function inviaRCH(ip, porta, comandi) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<Service>\n${comandi.map(c => `  <cmd>${c}</cmd>`).join('\n')}\n</Service>`
   const res = await fetch(`http://${ip}:${porta}/service.cgi`, {
@@ -1293,18 +1305,39 @@ async function inviaRCH(ip, porta, comandi) {
   if (errorCode !== '0') throw new Error(`Errore cassa E${errorCode}`)
   return { ok: true, lastCmd: parseInt(lastCmd) }
 }
- 
-// ─── SERVER ───────────────────────────────────────────────────────────────────
- 
+
 const server = http.createServer(async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*')
+  const origin = req.headers['origin']
+
+  if (!originConsentito(origin)) {
+    console.warn(`⚠️  Richiesta bloccata da Origin non autorizzata: ${origin}`)
+    res.writeHead(403, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: false, error: 'Origin non autorizzata' }))
+    return
+  }
+
+  if (origin) res.setHeader('Access-Control-Allow-Origin', origin)
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
- 
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-shutdown-token')
+
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return }
   if (req.method !== 'POST') { res.writeHead(405); res.end(); return }
- 
+
   if (req.url === '/shutdown') {
+    if (!SHUTDOWN_TOKEN) {
+      console.warn('⚠️  /shutdown richiamato ma SHUTDOWN_TOKEN non configurato: rifiutato.')
+      res.writeHead(503, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: false, error: 'Shutdown non configurato' }))
+      return
+    }
+    const tokenRicevuto = req.headers['x-shutdown-token']
+    if (tokenRicevuto !== SHUTDOWN_TOKEN) {
+      console.warn('⚠️  Tentativo di shutdown con token errato o assente.')
+      res.writeHead(401, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: false, error: 'Non autorizzato' }))
+      return
+    }
+
     const { exec } = require('child_process')
     const os = require('os')
     res.writeHead(200, { 'Content-Type': 'application/json' })
@@ -1321,28 +1354,22 @@ const server = http.createServer(async (req, res) => {
       }
       exec(cmd, (err) => { if (err) console.error('Shutdown error:', err.message) })
     }, 500)
-    return  // ← blocca tutto il resto
+    return
   }
- 
- 
-  
+
   let body = ''
   req.on('data', chunk => body += chunk)
   req.on('end', async () => {
     try {
       const payload = JSON.parse(body)
- 
- 
- 
-      // ── Registratore Telematico ──────────────────────────────────────────
+
       if (payload.tipo === 'rt') {
         const { marca, ip, porta, azione, dati, comandi } = payload
- 
         if (!ip) throw new Error('IP mancante')
         if (marca === '3i') avviaKeepAlive(ip, porta || 1723)
- 
+
         let risultato
- 
+
         if (marca === 'rch') {
           risultato = await inviaRCH(ip, porta || 80, comandi || [])
         } else if (marca === '3i' && (azione === 'chiusura_fiscale' || azione === 'lettura_x')) {
@@ -1357,7 +1384,6 @@ const server = http.createServer(async (req, res) => {
               case 'lettura_x': comando = marca === '3i' ? '1F' : 'report num=2'; break
               case 'annullo': {
                 if (marca === '3i') {
-                  
                   const nazz = String(dati.numeroAzzeramento).padStart(4, '0')
                   const ndoc = String(dati.numeroDocumento).padStart(4, '0')
                   const ref = `"${nazz}-${ndoc}"`
@@ -1415,23 +1441,21 @@ const server = http.createServer(async (req, res) => {
           }
           if (!comando) throw new Error('Comando RT mancante')
           const risposta = await inviaTCPRT(ip, porta || 1471, comando, marca)
-        
           risultato = { ok: true, risposta }
         }
- 
+
         res.writeHead(200, { 'Content-Type': 'application/json' })
         res.end(JSON.stringify(risultato))
         return
       }
- 
-      // ── Stampante Comande ────────────────────────────────────────────────
+
       const { ip, porta, tavolo, righe, tipo, uscita, totaleUscite } = payload
       const doc = buildComanda(tavolo, righe, tipo || 'comanda', uscita, totaleUscite)
       await inviaTCP(ip, porta || 9100, doc)
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ ok: true }))
       console.log(`✓ Stampato: Tavolo ${tavolo} - ${righe.length} righe - tipo: ${tipo}`)
- 
+
     } catch (err) {
       console.error('Errore service:', err.message)
       res.writeHead(200, { 'Content-Type': 'application/json' })
@@ -1439,9 +1463,10 @@ const server = http.createServer(async (req, res) => {
     }
   })
 })
- 
+
 server.listen(PORT, () => {
   console.log(`DigitalCase Service attivo su http://localhost:${PORT}`)
   console.log(`  → Stampante comande: POST { ip, porta, tavolo, righe, tipo }`)
   console.log(`  → Registratore RT:  POST { tipo: 'rt', marca, ip, porta, azione, dati }`)
+  console.log(SHUTDOWN_TOKEN ? '  → Shutdown remoto: ABILITATO (token configurato)' : '  → Shutdown remoto: DISABILITATO (nessun SHUTDOWN_TOKEN in .env.local)')
 })
