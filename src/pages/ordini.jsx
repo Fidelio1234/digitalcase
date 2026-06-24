@@ -719,7 +719,7 @@ const [erroreMsg, setErroreMsg] = useState('')
     })
 
     if (righeComanda.length > 0) {
-      await stampaComanda(tavoloAttivo, righeComanda, 'comanda', reparti)
+      await stampaComanda(tavoloAttivo, righeComanda, 'comanda', reparti, NEGOZIO_ID)
     }
 
     setInvioOk(true)

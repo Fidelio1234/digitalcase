@@ -2982,7 +2982,7 @@ export default function TavoliPage() {
     await salvaTavoloDb(NEGOZIO_ID, aggiornato)
 
     if (righeNuove.length > 0) {
-      await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti)
+      await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti, NEGOZIO_ID)
     }
 
     await carica()
@@ -2991,7 +2991,7 @@ export default function TavoliPage() {
   }
 
   async function stampaPreconto() {
-    await stampaComanda(tavoloAttivo, righeComanda, 'preconto', reparti)
+    await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti, NEGOZIO_ID)
   }
 
   async function chiudiTavolo() {
