@@ -349,7 +349,7 @@ export default function CassaPage() {
       } catch(e) {}
     }
 
-    // Salva nello storico su Supabase
+    
   // Salva nello storico su Supabase
   try {
     const idSalvato = await salvaScontrinoDb(NEGOZIO_ID, {
@@ -371,7 +371,7 @@ export default function CassaPage() {
   } catch (e) {
     console.error('⚠️ ATTENZIONE: errore critico nel salvataggio dello scontrino:', e)
   }
-  
+
     setContatori(getContatori())
     setShowChiusura(false)
     setShowSuccesso(info)

@@ -172,32 +172,20 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
 
 
 
-
-
-
-
-    const { error: erroreChiusura } = await supabase.from('chiusure').insert({
+    await supabase.from('chiusure').insert({
       negozio_id: NEGOZIO_ID, numero_chiusura: numChiusura, stato,
       timestamp_chiusura: ora, numero_scontrini: numeroScontrini,
       totale_giornaliero: totaleGiornaliero, totale_carte: totaleCarte,
       totale_contanti: totaleContanti, totale_iva: {},
     })
-    if (erroreChiusura) console.error('⚠️ Errore salvataggio chiusura:', erroreChiusura)
-
-    const { error: erroreContatori } = await supabase.from('contatori').upsert({
+    await supabase.from('contatori').upsert({
       negozio_id: NEGOZIO_ID, data: oggi,
       chiusure: numChiusura, scontrini: cont?.scontrini || 0,
     })
-    if (erroreContatori) console.error('⚠️ Errore salvataggio contatori:', erroreContatori)
+  }
 
+  
 
-
-
-
-
-
-
-    
   async function letturaX(tipo) {
     await chiamaRT('lettura_x', { tipo })
   }
@@ -414,4 +402,4 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
       )}
     </div>
   )
-}}
+}
