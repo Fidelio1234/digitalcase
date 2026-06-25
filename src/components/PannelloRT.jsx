@@ -1,7 +1,5 @@
-
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { NEGOZIO_ID } from '@/lib/config'
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
 async function callRT(marca, body) {
@@ -17,7 +15,7 @@ async function callRT(marca, body) {
   }
 }
 
-export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, onStampa }) {
+export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, onChiusura, negozioId }) {
   const [loading, setLoading] = useState(false)
   const [conferma, setConferma] = useState(null)
   const [risultato, setRisultato] = useState(null)

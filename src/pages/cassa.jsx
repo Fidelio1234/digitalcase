@@ -1369,6 +1369,7 @@ export default function CassaPage() {
     const c = resetScontrini()
     setContatori(c)
   }}
+  negozioId={NEGOZIO_ID}
 />
     </div>
   )
