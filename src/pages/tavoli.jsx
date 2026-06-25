@@ -2991,7 +2991,7 @@ export default function TavoliPage() {
   }
 
   async function stampaPreconto() {
-    await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti, NEGOZIO_ID)
+    await stampaComanda(tavoloAttivo, righeComanda, 'preconto', reparti, NEGOZIO_ID)
   }
 
   async function chiudiTavolo() {

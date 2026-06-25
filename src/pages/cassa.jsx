@@ -350,7 +350,9 @@ export default function CassaPage() {
     }
 
     // Salva nello storico su Supabase
-    salvaScontrinoDb(NEGOZIO_ID, {
+  // Salva nello storico su Supabase
+  try {
+    const idSalvato = await salvaScontrinoDb(NEGOZIO_ID, {
       timestamp: new Date().toISOString(),
       righe: scontrinoCorrente?.righe || [],
       totale: info.totale,
@@ -361,6 +363,15 @@ export default function CassaPage() {
       operatoreId: user?.id || null,
       operatoreNome: user?.name || null,
     })
+    if (!idSalvato) {
+      console.error('⚠️ ATTENZIONE: scontrino NON salvato su Supabase (salvaScontrinoDb ha restituito null)')
+    } else {
+      console.log('✓ Scontrino salvato su Supabase, id:', idSalvato)
+    }
+  } catch (e) {
+    console.error('⚠️ ATTENZIONE: errore critico nel salvataggio dello scontrino:', e)
+  }
+  
     setContatori(getContatori())
     setShowChiusura(false)
     setShowSuccesso(info)
