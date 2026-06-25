@@ -184,8 +184,8 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onClose, on
       negozio_id: NEGOZIO_ID, data: oggi,
       chiusure: numChiusura, scontrini: cont?.scontrini || 0,
     })
-    if (erroreContatori) console.error('⚠️ Errore salvataggio contatori:', erroreContatori)}
-  
+    if (erroreContatori) console.error('⚠️ Errore salvataggio contatori:', erroreContatori)
+  }
 
   async function letturaX(tipo) {
     await chiamaRT('lettura_x', { tipo })
