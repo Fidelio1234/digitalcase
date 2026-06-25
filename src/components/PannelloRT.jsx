@@ -145,18 +145,26 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
     })
   }
 
+
+
+
+
+
+
+
+
   async function salvaChiusura(stato) {
     const ora = new Date().toISOString()
     const oggi = ora.split('T')[0]
     const { data: ultimaChiusura } = await supabase
       .from('chiusure').select('timestamp_chiusura')
-      .eq('negozio_id', NEGOZIO_ID)
+      .eq('negozio_id', negozioId)
       .order('timestamp_chiusura', { ascending: false })
       .limit(1).maybeSingle()
     const dataFrom = ultimaChiusura?.timestamp_chiusura || (oggi + 'T00:00:00')
     const { data: scontrini } = await supabase
       .from('scontrini').select('totale, metodo')
-      .eq('negozio_id', NEGOZIO_ID)
+      .eq('negozio_id', negozioId)
       .gt('timestamp_emissione', dataFrom)
       .lte('timestamp_emissione', ora)
     const totaleGiornaliero = scontrini?.reduce((a, s) => a + s.totale, 0) || 0
@@ -165,13 +173,13 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
     const numeroScontrini = scontrini?.length || 0
     const { data: cont } = await supabase
       .from('contatori').select('chiusure')
-      .eq('negozio_id', NEGOZIO_ID).eq('data', oggi).single()
+      .eq('negozio_id', negozioId).eq('data', oggi).single()
     const numChiusura = (cont?.chiusure || 0) + 1
 
 
 
     const { error: erroreChiusura } = await supabase.from('chiusure').insert({
-      negozio_id: NEGOZIO_ID, numero_chiusura: numChiusura, stato,
+      negozio_id: negozioId, numero_chiusura: numChiusura, stato,
       timestamp_chiusura: ora, numero_scontrini: numeroScontrini,
       totale_giornaliero: totaleGiornaliero, totale_carte: totaleCarte,
       totale_contanti: totaleContanti, totale_iva: {},
@@ -179,11 +187,18 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
     if (erroreChiusura) console.error('⚠️ Errore salvataggio chiusura:', erroreChiusura)
 
     const { error: erroreContatori } = await supabase.from('contatori').upsert({
-      negozio_id: NEGOZIO_ID, data: oggi,
+      negozio_id: negozioId, data: oggi,
       chiusure: numChiusura, scontrini: cont?.scontrini || 0,
-    })
+    }, { onConflict: 'negozio_id,data' })
     if (erroreContatori) console.error('⚠️ Errore salvataggio contatori:', erroreContatori)
   }
+
+
+
+
+
+
+
 
   async function letturaX(tipo) {
     await chiamaRT('lettura_x', { tipo })
