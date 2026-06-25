@@ -317,6 +317,8 @@ export default function StoricoPage() {
                 <div>Nessuna chiusura fiscale ancora</div>
               </div>
             )}
+
+            
             {chiusure.map(c => (
               <div key={c.id} className={styles.chiusuraRow}>
                 <div className={styles.chiusuraLeft}>
