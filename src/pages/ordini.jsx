@@ -755,7 +755,7 @@ const [erroreMsg, setErroreMsg] = useState('')
     const riga = righeComanda.find(r => r.id === notaModal)
     return (
       <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
-        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, display:'flex', flexDirection:'column', gap:16 }}>
+        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
           <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#eef0f6' }}>✏️ Variante per: {riga?.nome}</div>
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={() => setNotaTipo('rimozione')}
