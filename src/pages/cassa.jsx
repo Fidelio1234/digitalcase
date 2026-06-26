@@ -22,10 +22,20 @@ async function callRT(marca, body, serviceIp) {
     const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marca, ...body }) })
     return res.json()
   } else {
-    // Se configurato un IP del PC cassa (per usare il sito da altri dispositivi
-    // sulla stessa rete), usalo; altrimenti default su localhost (stesso PC).
-    const host = serviceIp || 'localhost'
-    const res = await fetch(`http://${host}:3002`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
+    const payload = JSON.stringify({ tipo: 'rt', marca, ...body })
+    // Prova prima l'IP configurato (serve per tablet/altri dispositivi).
+    // Se fallisce (es. il PC stesso non riesce a contattare il proprio IP
+    // di rete — comune su Windows), ricade su 'localhost', che funziona
+    // sempre quando chi chiama è lo stesso PC dove gira service.js.
+    if (serviceIp) {
+      try {
+        const res = await fetch(`http://${serviceIp}:3002`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload })
+        return await res.json()
+      } catch (e) {
+        console.log('callRT: serviceIp non raggiungibile, ricado su localhost:', e.message)
+      }
+    }
+    const res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload })
     return res.json()
   }
 }
