@@ -14,19 +14,21 @@ import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini }
 
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
-async function callRT(marca, body) {
+async function callRT(marca, body, serviceIp) {
   const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   console.log('callRT:', marca, 'isLocalhost:', isLocalhost, 'porta:', body.porta)
   if (isLocalhost) {
     const endpoint = marca === 'rch' ? '/api/rch' : '/api/ditron'
-    const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marca, ...body }) })
     return res.json()
   } else {
-    const res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
+    // Se configurato un IP del PC cassa (per usare il sito da altri dispositivi
+    // sulla stessa rete), usalo; altrimenti default su localhost (stesso PC).
+    const host = serviceIp || 'localhost'
+    const res = await fetch(`http://${host}:3002`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca, ...body }) })
     return res.json()
   }
 }
-
 
 const ICONE = {
   // Bevande
@@ -464,7 +466,7 @@ export default function CassaPage() {
 
 
 
-         await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } })
+          await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } }, rtConfig.serviceIp)
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
           console.log('metodo:', info.metodo, 'cortesiaAbilitato:', impostazioni.cortesiaAbilitato)
@@ -488,7 +490,7 @@ export default function CassaPage() {
             for (let tentativo = 0; tentativo < 10; tentativo++) {
               await new Promise(r => setTimeout(r, 1500))
               try {
-                rispostaCortesia = await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
+                rispostaCortesia = await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } }, rtConfig.serviceIp)
                 if (rispostaCortesia?.ok !== false) break
               } catch (e) {
                 console.log(`🧾 Tentativo ${tentativo + 1} cortesia 3i fallito, riprovo...`, e.message)
@@ -544,7 +546,7 @@ export default function CassaPage() {
             }
           }
 
-          await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi })
+          await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi }, rtConfig.serviceIp)
 
           // Stampa scontrino di cortesia RCH
           if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
@@ -557,7 +559,7 @@ export default function CassaPage() {
             }
             comandiCortesia.push('=C1')
             await new Promise(r => setTimeout(r, 1000))
-            await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia })
+            await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi: comandiCortesia }, rtConfig.serviceIp)
           }
         } else {
           // Ditron — TCP
@@ -571,7 +573,7 @@ export default function CassaPage() {
 
 
 
-          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta, azione: 'scontrino', dati: { righe: righeConRt, metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo, totale: info.totale, resto: info.resto || 0, contatto: info.contatto || null } })
+          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta, azione: 'scontrino', dati: { righe: righeConRt, metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo, totale: info.totale, resto: info.resto || 0, contatto: info.contatto || null } }, rtConfig.serviceIp)
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
           if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
@@ -588,12 +590,13 @@ export default function CassaPage() {
             }
             cmdCortesia += 'J'
             await new Promise(r => setTimeout(r, 9000))
-            const rispostaCortesia = await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } })
+            const rispostaCortesia = await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: cmdCortesia } }, rtConfig.serviceIp)
             console.log('🧾 Risposta cassa per scontrino cortesia:', JSON.stringify(rispostaCortesia))
           }
         }
       } catch(e) {
         console.error('Errore stampa RT:', e)
+     
       }
     }
   }

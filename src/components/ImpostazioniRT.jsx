@@ -168,6 +168,8 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
           </div>
         </div>
 
+
+
         <div>
           <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>IP CASSA</label>
           <input
@@ -178,6 +180,33 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
             style={{width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
           />
         </div>
+
+        <div>
+          <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>PORTA</label>
+          <input
+            type="text"
+            value={config.porta}
+            onChange={e => setConfig(c => ({...c, porta: e.target.value}))}
+            placeholder="es. 7081"
+            style={{width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
+          />
+        </div>
+
+        <div style={{gridColumn:'1/-1'}}>
+          <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>
+            IP DEL PC CASSA (per usare il sito da altri dispositivi sulla stessa rete)
+          </label>
+          <input
+            type="text"
+            value={config.serviceIp || ''}
+            onChange={e => setConfig(c => ({...c, serviceIp: e.target.value}))}
+            placeholder="es. 192.168.1.50 — lascia vuoto se usi solo questo PC"
+            style={{width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
+          />
+        </div>
+
+
+
 
         <div>
           <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>PORTA</label>
