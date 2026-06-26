@@ -52,6 +52,7 @@ const CENTER = ESC + '\x61\x01'
 const LEFT = ESC + '\x61\x00'
 const RIGHT = ESC + '\x61\x02'
 const BIG = GS + '\x21\x11'
+const TALL = GS + '\x21\x01'
 const NORMAL = GS + '\x21\x00'
 const CUT = GS + '\x56\x00'
 const FEED = '\n'
@@ -59,6 +60,7 @@ const FEED = '\n'
 function buildComanda(tavolo, righe, tipo, uscita, totaleUscite) {
   let doc = ''
   doc += RESET
+
   doc += CENTER + BOLD_ON + BIG
   if (tipo === 'comanda') {
     doc += `TAVOLO ${tavolo}\n`
@@ -69,36 +71,47 @@ function buildComanda(tavolo, righe, tipo, uscita, totaleUscite) {
     const now = new Date()
     const dataOra = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'})
     doc += `${dataOra}\n`
+
+
+
     doc += LEFT + '-----------------------\n'
-    doc += BOLD_ON + BIG
+    doc += TALL + BOLD_ON
     for (const r of righe) {
       if (r.id === 'coperto') {
         doc += `  COPERTO x${r.quantita}\n`
       } else {
         doc += `${r.quantita > 1 ? r.quantita + 'x ' : '   '}${r.nome}\n`
       }
-      if (r.nota) doc += NORMAL + `   >> ${r.nota}\n` + BIG
+      if (r.nota) {
+        const prefisso = r.nota.match(/^([+-])/)?.[1] || ''
+        const corpo = r.nota.replace(/^([+-])\s*/, '')
+        doc += NORMAL + BOLD_OFF
+        for (const voce of corpo.split(', ')) {
+          doc += `   >> ${prefisso} ${voce}\n`
+        }
+        doc += TALL + BOLD_ON
+      }
     }
-    doc += NORMAL + BOLD_OFF
+
     doc += '--------------------------------\n'
   } else if (tipo === 'preconto') {
     doc += `PRECONTO\n`
     doc += NORMAL + BOLD_OFF
     doc += `Tavolo ${tavolo}\n`
-    doc += LEFT + '--------------------------------\n'
+    doc += LEFT + '-----------------------------------------------\n'
     for (const r of righe) {
       const prezzo = ((r.totaleRiga || 0) / 100).toFixed(2)
       const nome = `${r.quantita > 1 ? r.quantita + 'x ' : '   '}${r.nome}`
-      const spazi = Math.max(1, 32 - nome.length - prezzo.length)
+      const spazi = Math.max(1, 45 - nome.length - prezzo.length)
       doc += nome + ' '.repeat(spazi) + prezzo + '\n'
     }
-    doc += '--------------------------------\n'
+    doc += '-----------------------------------------------\n'
     const totale = (righe.reduce((s, r) => s + (r.totaleRiga || 0), 0) / 100).toFixed(2)
     doc += BOLD_ON + RIGHT + `TOTALE: EUR ${totale}\n` + BOLD_OFF
-    doc += LEFT + '--------------------------------\n'
+    doc += LEFT + '-----------------------------------------------\n'
     doc += CENTER + '\n'
     doc += BOLD_ON + '*** RITIRARE LO SCONTRINO ALLA CASSA ***\n\n'
-    doc += + BOLD_OFF
+    doc += BOLD_OFF
   }
   doc += FEED + FEED + FEED + CUT
   return doc
