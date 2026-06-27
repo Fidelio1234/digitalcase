@@ -393,7 +393,7 @@ export async function chiudiTavoloDb(negozioId, numero) {
   return !error
 }
 
-export async function getImpostazioniDb(negozioId) {
+/*export async function getImpostazioniDb(negozioId) {
   const { data } = await supabase
     .from('impostazioni_negozio')
     .select('*')
@@ -413,6 +413,38 @@ export async function getImpostazioniDb(negozioId) {
     aggiunteRapide: data?.aggiunte_rapide || [],
   }
 }
+*/
+
+
+
+
+
+
+
+
+export async function getImpostazioniDb(negozioId) {
+  const { data } = await supabase
+    .from('impostazioni_negozio')
+    .select('*')
+    .eq('negozio_id', negozioId)
+    .single()
+  return {
+    copertoAbilitato: data?.coperto_abilitato || false,
+    copertoImporto: data?.coperto_importo || 200,
+    numeroTavoli: data?.numero_tavoli || 10,
+    tavoliAbilitati: data?.tavoli_abilitati !== false,
+    magazzinoAbilitato: data?.magazzino_abilitato || false,
+    cortesiaAbilitato: data?.cortesia_abilitato || false,
+    asportoAbilitato: data?.asporto_abilitato || false,
+    costoAggiunta: data?.costo_aggiunta ?? 50,
+    fidelityAbilitato: data?.fidelity_abilitato || false,
+    fidelityCentesimiPerPunto: data?.fidelity_centesimi_per_punto ?? 100,
+    fidelitySogliaPunti: data?.fidelity_soglia_punti ?? 100,
+    fidelityValoreOmaggio: data?.fidelity_valore_omaggio ?? 500,
+  }
+}
+
+
 
 // Lettura/scrittura DEDICATA per le aggiunte rapide, isolata dal resto delle
 // impostazioni. NON usare salvaImpostazioniDb per salvare solo le aggiunte:
@@ -435,7 +467,7 @@ export async function salvaAggiunteRapideDb(negozioId, lista) {
   return !error
 }
 
-export async function salvaImpostazioniDb(negozioId, imp) {
+/*export async function salvaImpostazioniDb(negozioId, imp) {
   const { error } = await supabase
     .from('impostazioni_negozio')
     .upsert({
@@ -451,6 +483,31 @@ export async function salvaImpostazioniDb(negozioId, imp) {
       // Incluso solo se passato esplicitamente (altrimenti la chiave è 'undefined'
       // e viene omessa dal JSON, lasciando intatto il valore già salvato).
       aggiunte_rapide: imp.aggiunteRapide,
+    }, { onConflict: 'negozio_id' })
+  return !error
+}
+*/
+
+
+
+
+export async function salvaImpostazioniDb(negozioId, imp) {
+  const { error } = await supabase
+    .from('impostazioni_negozio')
+    .upsert({
+      negozio_id: negozioId,
+      coperto_abilitato: imp.copertoAbilitato,
+      coperto_importo: imp.copertoImporto,
+      numero_tavoli: imp.numeroTavoli,
+      tavoli_abilitati: imp.tavoliAbilitati !== false,
+      magazzino_abilitato: imp.magazzinoAbilitato || false,
+      cortesia_abilitato: imp.cortesiaAbilitato || false,
+      asporto_abilitato: imp.asportoAbilitato || false,
+      costo_aggiunta: imp.costoAggiunta ?? 50,
+      fidelity_abilitato: imp.fidelityAbilitato || false,
+      fidelity_centesimi_per_punto: imp.fidelityCentesimiPerPunto ?? 100,
+      fidelity_soglia_punti: imp.fidelitySogliaPunti ?? 100,
+      fidelity_valore_omaggio: imp.fidelityValoreOmaggio ?? 500,
     }, { onConflict: 'negozio_id' })
   return !error
 }

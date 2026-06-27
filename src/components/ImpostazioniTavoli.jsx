@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getImpostazioniDb, salvaImpostazioniDb } from '@/lib/supabase-db'
 
 export default function ImpostazioniTavoli({ negozioId, showToast }) {
-  const [imp, setImp] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10, tavoliAbilitati: true, magazzinoAbilitato: false, cortesiaAbilitato: false, asportoAbilitato: false, costoAggiunta: 50 })
+  const [imp, setImp] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10, tavoliAbilitati: true, magazzinoAbilitato: false, cortesiaAbilitato: false, asportoAbilitato: false, costoAggiunta: 50, fidelityAbilitato: false, fidelityCentesimiPerPunto: 100, fidelitySogliaPunti: 100, fidelityValoreOmaggio: 500 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -151,6 +151,69 @@ export default function ImpostazioniTavoli({ negozioId, showToast }) {
           />
           <div style={{fontSize:'0.7rem', color:'#5a5d6e', marginTop:4}}>
             € {(imp.copertoImporto / 100).toFixed(2)} per persona
+          </div>
+        </div>
+      )}
+
+     {/* Toggle modulo fidelity */}
+     <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #252830'}}>
+        <div>
+          <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6'}}>Modulo Fidelity</div>
+          <div style={{fontSize:'0.72rem', color:'#00e5a0', marginTop:2}}>Abilita la tessera fedeltà con punti e QR code</div>
+        </div>
+        <div onClick={() => setImp(i => ({...i, fidelityAbilitato: !i.fidelityAbilitato}))}
+          style={{width:44, height:24, borderRadius:12, cursor:'pointer',
+            background: imp.fidelityAbilitato ? '#00e5a0' : '#252830',
+            position:'relative', transition:'background 0.2s', flexShrink:0}}>
+          <div style={{position:'absolute', top:2, left: imp.fidelityAbilitato ? 22 : 2,
+            width:20, height:20, borderRadius:'50%', background:'white', transition:'left 0.2s'}} />
+        </div>
+      </div>
+
+      {/* Configurazione punti fidelity */}
+      {imp.fidelityAbilitato && (
+        <div style={{display:'flex', flexDirection:'column', gap:14, padding:'12px 16px', background:'#111318', borderRadius:12, border:'1px solid #252830'}}>
+          <div>
+            <label style={{fontSize:'0.72rem', color:'#00e5a0', letterSpacing:1, display:'block', marginBottom:4}}>1 PUNTO OGNI QUANTI EURO SPESI</label>
+            <input type="text"
+              defaultValue={(imp.fidelityCentesimiPerPunto / 100).toFixed(2)}
+              onBlur={e => {
+                const val = e.target.value.replace(',', '.')
+                const cents = Math.round(parseFloat(val || 0) * 100)
+                setImp(i => ({...i, fidelityCentesimiPerPunto: isNaN(cents) || cents <= 0 ? 100 : cents}))
+              }}
+              style={inputStyle}
+              placeholder="es. 0.50 = 1 punto ogni 50 centesimi"
+            />
+            <div style={{fontSize:'0.7rem', color:'#5a5d6e', marginTop:4}}>
+              Esempio: con € {(imp.fidelityCentesimiPerPunto / 100).toFixed(2)}, una spesa di 10€ accredita {Math.floor(1000 / imp.fidelityCentesimiPerPunto)} punti
+            </div>
+          </div>
+
+          <div>
+            <label style={{fontSize:'0.72rem', color:'#00e5a0', letterSpacing:1, display:'block', marginBottom:4}}>SOGLIA PUNTI PER OMAGGIO</label>
+            <input type="number" min="1"
+              value={imp.fidelitySogliaPunti}
+              onChange={e => setImp(i => ({...i, fidelitySogliaPunti: parseInt(e.target.value) || 1}))}
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={{fontSize:'0.72rem', color:'#00e5a0', letterSpacing:1, display:'block', marginBottom:4}}>VALORE OMAGGIO (€)</label>
+            <input type="text"
+              defaultValue={(imp.fidelityValoreOmaggio / 100).toFixed(2)}
+              onBlur={e => {
+                const val = e.target.value.replace(',', '.')
+                const cents = Math.round(parseFloat(val || 0) * 100)
+                setImp(i => ({...i, fidelityValoreOmaggio: isNaN(cents) ? 0 : cents}))
+              }}
+              style={inputStyle}
+              placeholder="es. 5.00"
+            />
+            <div style={{fontSize:'0.7rem', color:'#5a5d6e', marginTop:4}}>
+              Al raggiungimento di {imp.fidelitySogliaPunti} punti: € {(imp.fidelityValoreOmaggio / 100).toFixed(2)} di omaggio, poi i punti tornano a zero
+            </div>
           </div>
         </div>
       )}

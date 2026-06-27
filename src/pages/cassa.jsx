@@ -166,8 +166,16 @@ export default function CassaPage() {
         setTimeout(() => caricaRigheEsterne(righe), 300)
       } catch(e) { console.error(e) }
     }
-  }, [])
 
+    const fidelityRitorno = sessionStorage.getItem('fidelity_ritorno_scontrino')
+    if (fidelityRitorno) {
+      try {
+        const { righe } = JSON.parse(fidelityRitorno)
+        setTimeout(() => caricaRigheEsterne(righe), 300)
+        sessionStorage.removeItem('fidelity_ritorno_scontrino')
+      } catch(e) { console.error(e) }
+    }
+  }, [])
 
 
 
@@ -808,29 +816,29 @@ export default function CassaPage() {
 
 
 
-            {impostazioni.tavoliAbilitati !== false && (
-  <button onClick={() => router.push('/tavoli')}
-    style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-      color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
-      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
-      position:'relative'}}>
-    {tavoliOccupati > 0 && (
-      <div style={{
-        position:'absolute', top:-6, right:-6,
-        background:'#ff4d6a', color:'white',
-        borderRadius:'50%', width:20, height:20,
-        display:'flex', alignItems:'center', justifyContent:'center',
-        fontSize:'0.68rem', fontWeight:700,
-        fontFamily:"'DM Mono',monospace",
-        boxShadow:'0 0 8px rgba(255,77,106,0.6)',
-      }}>
-        {tavoliOccupati}
-      </div>
-    )}
-    <span style={{fontSize:'1.4rem'}}>🍽️</span>
-    <span>Tavoli</span>
-  </button>
-)}
+{impostazioni.tavoliAbilitati !== false && (
+              <button onClick={() => router.push('/tavoli')}
+                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                  color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                <span style={{fontSize:'1.4rem'}}>🍽️</span>
+                <span>Tavoli</span>
+              </button>
+            )}
+           {impostazioni.fidelityAbilitato && (
+              <button onClick={() => {
+                  if (righe.length > 0) {
+                    sessionStorage.setItem('fidelity_ritorno_scontrino', JSON.stringify({ righe, totale }))
+                  }
+                  router.push('/fidelity')
+                }}
+                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                  color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                <span style={{fontSize:'1.4rem'}}>💳</span>
+                <span>Fidelity</span>
+              </button>
+            )}
 
 
 
@@ -1394,7 +1402,7 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
   const [contanti, setContanti] = useState('')
   const [invio, setInvio] = useState('idle') // idle | sending | error
   const contantiCents = Math.round(parseFloat(contanti.replace(',', '.') || '0') * 100)
-  const resto = metodo === 'contanti' ? Math.max(0, contantiCents - scontrino.totale) : 0
+  const resto = (metodo === 'contanti' || metodo === 'cortesia') ? Math.max(0, contantiCents - scontrino.totale) : 0
 
   async function handleInvia() {
     const negozio = (() => { try { return JSON.parse(localStorage.getItem('sd_negozio') || '{}') } catch { return {} } })()
@@ -1478,7 +1486,7 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
             </button>
             )}
           </div>
-          {metodo === 'contanti' && (
+          {(metodo === 'contanti' || metodo === 'cortesia') && (
             <div className={styles.contantiWrap}>
               <input type="text" inputMode="decimal" placeholder="Importo ricevuto €"
                 value={contanti} onChange={e => setContanti(e.target.value)}
