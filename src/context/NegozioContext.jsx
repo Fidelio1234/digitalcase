@@ -23,10 +23,18 @@ export function NegozioProvider({ children }) {
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
           // Sviluppo locale — usa slug da env o default
           slug = process.env.NEXT_PUBLIC_NEGOZIO_SLUG || 'dmi'
+        } else if (hostname.endsWith('.fidelity.digitalcase.it')) {
+          // Sottodominio fidelity cliente — gestisce da sé la risoluzione del negozio,
+          // niente da fare qui: nessuna query, nessun blocco app
+          setNegozio(null)
+          setLoading(false)
+          return
         } else if (hostname.endsWith('.digitalcase.it')) {
           // Produzione — estrai slug dal sottodominio
           slug = hostname.replace('.digitalcase.it', '')
         } else if (hostname === 'digitalcase.it' || hostname === 'www.digitalcase.it') {
+
+
           // Root domain — pagina marketing
           slug = null
         } else {
