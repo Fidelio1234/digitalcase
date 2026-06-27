@@ -437,6 +437,7 @@ export async function getImpostazioniDb(negozioId) {
     cortesiaAbilitato: data?.cortesia_abilitato || false,
     asportoAbilitato: data?.asporto_abilitato || false,
     costoAggiunta: data?.costo_aggiunta ?? 50,
+    aggiunteRapide: data?.aggiunte_rapide || [],
     fidelityAbilitato: data?.fidelity_abilitato || false,
     fidelityCentesimiPerPunto: data?.fidelity_centesimi_per_punto ?? 100,
     fidelitySogliaPunti: data?.fidelity_soglia_punti ?? 100,

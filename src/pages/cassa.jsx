@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase'
 import { useCassa } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini } from '@/lib/storage'
+import Head from 'next/head'
 
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
@@ -627,7 +628,9 @@ export default function CassaPage() {
 
 
   return (
-    <div className={styles.page}>
+    <>
+    <Head><link rel="manifest" href="/manifest-cassa.json" /></Head>
+  <div className={styles.page}>
 
       {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
         <div style={{
@@ -1393,9 +1396,9 @@ export default function CassaPage() {
   negozioId={NEGOZIO_ID}
 />
     </div>
+    </>
   )
 }
-
 function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) {
   const [metodo, setMetodo] = useState('carta')
   const [datoCliente, setDatoCliente] = useState('')

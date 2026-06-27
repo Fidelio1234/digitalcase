@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Head from 'next/head'
 import { supabase } from '@/lib/supabase'
 import { useFidelitySlug } from '@/lib/useFidelitySlug'
 
@@ -69,7 +70,12 @@ export default function CardClienteFidelity() {
     textAlign: 'center', letterSpacing: 1
   }
 
-  if (loadingNegozio) return <div style={pageStyle}>⏳ Caricamento...</div>
+  if (loadingNegozio) return (
+    <>
+      <Head><link rel="manifest" href="/manifest-card.json" /></Head>
+      <div style={pageStyle}>⏳ Caricamento...</div>
+    </>
+  )
 
   if (!negozioId) return (
     <div style={pageStyle}>
