@@ -193,31 +193,58 @@ export function useCassa() {
     return acc
   }, {})
 
+
+
+
+
+
   function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
-    setRighe(prev => prev.map(r => {
-      if (r.id !== id) return r
-      // Rimuovi eventuale costo aggiunta precedente
+    setRighe(prev => {
+      const idx = prev.findIndex(r => r.id === id)
+      if (idx === -1) return prev
+      const r = prev[idx]
       const importoBase = r.importoBase ?? r.importo
-      const totaleBase = importoBase * r.quantita
-      if (tipo === 'aggiunta' && nota) {
-        return {
-          ...r,
-          nota: `+${nota}`,
-          importoBase,
-          importo: importoBase + costoAggiunta,
-          totaleRiga: totaleBase + (costoAggiunta * r.quantita),
+
+      function applicaNota(riga) {
+        if (tipo === 'aggiunta' && nota) {
+          return {
+            ...riga,
+            nota: `+${nota}`,
+            importoBase,
+            importo: importoBase + costoAggiunta,
+            totaleRiga: (importoBase + costoAggiunta) * riga.quantita,
+          }
         }
-      } else {
         return {
-          ...r,
+          ...riga,
           nota: nota ? `-${nota}` : '',
           importoBase,
           importo: importoBase,
-          totaleRiga: totaleBase,
+          totaleRiga: importoBase * riga.quantita,
         }
       }
-    }))
+
+      // Se la riga rappresenta più di un'unità, la nota riguarda solo UNA unità:
+      // stacchiamo quella unità in una riga separata con la nota, e lasciamo
+      // le restanti unità nella riga originale, invariate (senza nota).
+      if ((r.quantita || 1) > 1) {
+        const nuove = [...prev]
+        nuove[idx] = { ...r, quantita: r.quantita - 1, totaleRiga: importoBase * (r.quantita - 1) }
+        const rigaStaccata = applicaNota({ ...r, id: Date.now() + Math.random(), quantita: 1 })
+        nuove.splice(idx + 1, 0, rigaStaccata)
+        return nuove
+      }
+
+      const nuove = [...prev]
+      nuove[idx] = applicaNota(r)
+      return nuove
+    })
   }
+
+
+
+
+
 
   function applicaSconto(tipo, valore) {
     if (tipo === 'euro') {
