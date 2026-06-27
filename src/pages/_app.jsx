@@ -11,7 +11,7 @@ function AuthProviderWrapper({ children }) {
   const router = useRouter()
 
   // Pagine pubbliche — bypassano completamente il controllo negozio
-  const paginePubbliche = ['/quiz', '/dashboard']
+  const paginePubbliche = ['/quiz', '/dashboard', '/card']
   if (paginePubbliche.includes(router.pathname)) {
     return children
   }
