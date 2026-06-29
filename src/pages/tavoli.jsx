@@ -40,6 +40,7 @@ export default function TavoliPage() {
   const [timer, setTimer] = useState(0)
   const [modalCoperti, setModalCoperti] = useState(null)
   const [numCoperti, setNumCoperti] = useState(2)
+  const [invioOk, setInvioOk] = useState(false)
   const [modalElimina, setModalElimina] = useState(null)
   const [pinElimina, setPinElimina] = useState('')
   const [pinErrore, setPinErrore] = useState(false)
@@ -325,11 +326,14 @@ export default function TavoliPage() {
       await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti, NEGOZIO_ID)
     }
 
-    await carica()
-    setVista('griglia')
-    setTavoloAttivo(null)
+    setInvioOk(true)
+    setTimeout(async () => {
+      setInvioOk(false)
+      await carica()
+      setVista('griglia')
+      setTavoloAttivo(null)
+    }, 2000)
   }
-
   async function stampaPreconto() {
     await stampaComanda(tavoloAttivo, righeComanda, 'preconto', reparti, NEGOZIO_ID)
   }
@@ -544,7 +548,34 @@ export default function TavoliPage() {
             )
           })}
         </div>
-
+{/* MODAL SUCCESSO */}
+{invioOk && (
+          <div style={{
+            position:'fixed', inset:0, zIndex:9999,
+            background:'rgba(8,9,12,0.85)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
+            <div style={{
+              background:'#111318', border:'2px solid #00e5a0',
+              borderRadius:24, padding:'40px 56px',
+              display:'flex', flexDirection:'column', alignItems:'center', gap:16,
+              boxShadow:'0 0 64px rgba(0,229,160,0.3)',
+              animation:'popIn 0.3s ease',
+            }}>
+              <div style={{
+                width:64, height:64, borderRadius:'50%',
+                background:'rgba(0,229,160,0.15)', border:'2px solid #00e5a0',
+                display:'flex', alignItems:'center', justifyContent:'center',
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#00e5a0' }}>Comanda inviata!</div>
+            </div>
+            <style>{`@keyframes popIn { from { transform:scale(0.7); opacity:0 } to { transform:scale(1); opacity:1 } }`}</style>
+          </div>
+        )}
 
 
         {/* MODAL NOTA - inline nella vista comanda */}
@@ -842,7 +873,7 @@ export default function TavoliPage() {
                 {occupato ? (
                   <>
                     <div style={{ fontSize:'0.98rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totTavolo)}</div>
-                    <div style={{ fontSize:'0.88rem', color:'#00ffb3' }}>{t.righe?.length || 0} prodotti</div>
+                    <div style={{ fontSize:'0.88rem', color:'#00ffb3' }}>{t.righe?.filter(r => r.id !== 'coperto').length || 0} prodotti</div>
                     {tempo && <div style={{ fontSize:'0.95rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>}
                     {impostazioni.copertoAbilitato && t.coperti > 0 && (
                       <div style={{ fontSize:'0.95rem', color:'#00ffb3' }}>👤 {t.coperti} coperti</div>
