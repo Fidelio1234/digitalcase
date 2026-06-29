@@ -80,20 +80,60 @@ export default function StoricoPage() {
     return acc
   }, {})
 
-  async function eseguiChiusura() {
+
+
+
+
+async function eseguiChiusura() {
+    // Ricarica gli scontrini freschi da Supabase PRIMA di calcolare i totali,
+    // per evitare di usare uno stato locale non aggiornato (es. un annullo
+    // appena fatto da un'altra pagina, non ancora rispecchiato qui).
+    const storicoFresco = await getStoricoDb(NEGOZIO_ID)
+
+    const scontriniDaChiudere = storicoFresco.filter(s => {
+      const dataOk = filtroData ? s.timestamp?.startsWith(filtroData) : true
+      const metodoOk = filtroMetodo === 'annullati' ? s.annullato : (!s.annullato && (filtroMetodo === 'tutti' || s.metodo === filtroMetodo))
+      const testOk = ricerca
+        ? s.id?.toLowerCase().includes(ricerca.toLowerCase()) ||
+          s.righe?.some(r => r.nome?.toLowerCase().includes(ricerca.toLowerCase())) ||
+          s.contatto?.toLowerCase().includes(ricerca.toLowerCase())
+        : true
+      return dataOk && metodoOk && testOk
+    })
+
+    const totaleGiornalieroFresco = scontriniDaChiudere.filter(x => !x.annullato).reduce((s, x) => s + (x.totale || 0), 0)
+    const totaleCarteFresco = scontriniDaChiudere.filter(x => !x.annullato && x.metodo === 'carta').reduce((s, x) => s + (x.totale || 0), 0)
+    const totaleContantiFresco = scontriniDaChiudere.filter(x => !x.annullato && x.metodo === 'contanti').reduce((s, x) => s + (x.totale || 0), 0)
+    const totaleIvaFresco = scontriniDaChiudere.filter(x => !x.annullato).reduce((acc, s) => {
+      s.righe?.forEach(r => {
+        const k = String(r.iva)
+        acc[k] = (acc[k] || 0) + r.totaleRiga
+      })
+      return acc
+    }, {})
+
     const chiusura = {
       id: 'CF' + Date.now(),
       timestamp: new Date().toISOString(),
       numeroChiusura: (chiusure.length + 1),
-      numeroScontrini: scontriniFiltrati.filter(s => !s.annullato).length,
-      totaleGiornaliero, totaleCarte, totaleContanti, totaleIva, negozio,
-      scontrini: scontriniFiltrati.map(s => s.id),
+      numeroScontrini: scontriniDaChiudere.filter(s => !s.annullato).length,
+      totaleGiornaliero: totaleGiornalieroFresco,
+      totaleCarte: totaleCarteFresco,
+      totaleContanti: totaleContantiFresco,
+      totaleIva: totaleIvaFresco,
+      negozio,
+      scontrini: scontriniDaChiudere.map(s => s.id),
     }
     await salvaChiusuraDb(NEGOZIO_ID, chiusura)
+    getStoricoDb(NEGOZIO_ID).then(s => setStorico(s)) // aggiorna anche lo stato locale, per coerenza con la UI
     getChiusureDb(NEGOZIO_ID).then(c => setChiusure(c))
     showToast('✓ Chiusura fiscale eseguita')
     setTab('chiusure')
   }
+
+
+
+
 
   async function inviaChiusuraEmail(chiusura) {
     const neg = getNegozio()
