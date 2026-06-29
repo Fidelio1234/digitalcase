@@ -77,18 +77,23 @@ export default function CardClienteFidelity() {
     </>
   )
 
-  if (!negozioId) return (
-    <div style={pageStyle}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '2rem', marginBottom: 10 }}>⚠️</div>
-        <div>Negozio non trovato</div>
+if (!negozioId) return (
+    <>
+      <Head><link rel="manifest" href="/manifest-card.json" /></Head>
+      <div style={pageStyle}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', marginBottom: 10 }}>⚠️</div>
+          <div>Negozio non trovato</div>
+        </div>
       </div>
-    </div>
+    </>
   )
 
   // ── SCHERMATA: DASHBOARD CLIENTE (loggato) ──
   if (cliente) {
     return (
+      <>
+      <Head><link rel="manifest" href="/manifest-card.json" /></Head>
       <div style={pageStyle}>
         <div style={{ width: '100%', maxWidth: 380, textAlign: 'center' }}>
           <div style={{ fontSize: '0.95rem', color: '#00e5a0', marginBottom: 4 }}>{negozioNome}</div>
@@ -114,7 +119,7 @@ export default function CardClienteFidelity() {
             Mostra questo QR alla cassa ad ogni acquisto per accumulare punti.
           </div>
 
-          <button onClick={logout} style={{
+  <button onClick={logout} style={{
             marginTop: 24, padding: '10px 20px', borderRadius: 10, border: '1px solid #252830',
             background: 'transparent', color: 'red', cursor: 'pointer', fontSize: '0.8rem'
           }}>
@@ -122,11 +127,14 @@ export default function CardClienteFidelity() {
           </button>
         </div>
       </div>
+      </>
     )
   }
 
   // ── SCHERMATA: LOGIN ──
   return (
+    <>
+    <Head><link rel="manifest" href="/manifest-card.json" /></Head>
     <div style={pageStyle}>
       <div style={{ width: '100%', maxWidth: 340 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
@@ -167,5 +175,6 @@ export default function CardClienteFidelity() {
         </div>
       </div>
     </div>
+    </>
   )
 }
