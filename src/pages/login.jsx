@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
+import Head from 'next/head'
 import { useAuth } from '@/context/AuthContext'
 import styles from '@/styles/Login.module.css'
 
@@ -213,9 +214,13 @@ router.replace(redirect)
 
   return (
     
+    <>
+    <Head><link rel="manifest" href="/manifest-cassa.json" /></Head>
     <div className={styles.screen}>
       
       <div className={styles.bgGrid} />
+
+
       <div className={styles.bgGlow} />
       {success && <div className={styles.flashOverlay} />}
 
@@ -361,8 +366,9 @@ onClick={async () => {
     transition: 'all 0.2s',
   }}
 >
-  {shutdownPending ? '⏻ Spegnimento...' : '⏻ Esci'}
+{shutdownPending ? '⏻ Spegnimento...' : '⏻ Esci'}
 </button>
     </div>
+    </>
   )
 }
