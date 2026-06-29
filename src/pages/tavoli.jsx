@@ -460,9 +460,12 @@ export default function TavoliPage() {
           <div style={{ flex:'0 0 50%', overflow:'auto', padding:16 }}>
             {repAttivo && (
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(110px,1fr))', gap:8 }}>
-                {repAttivo.sottoreparti?.filter(s => s.abilitato).map(sr => {
+
+
+
+                   {repAttivo.sottoreparti?.filter(s => s.abilitato).map(sr => {
                   const qtaInComanda = righeComanda
-                    .filter(r => r.nome === sr.nome && r.importo === sr.prezzoFisso)
+                    .filter(r => r.nome === sr.nome)
                     .reduce((s, r) => s + r.quantita, 0)
                   return (
                     <button key={sr.id}

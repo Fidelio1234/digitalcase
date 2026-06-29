@@ -504,7 +504,7 @@ if (notaModal !== null) {
           <div style={{ padding:'12px 16px', display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(100px,1fr))', gap:8 }}>
             {repAttivo.sottoreparti?.filter(s => s.abilitato).map(sr => {
               const qtaInComanda = righeComanda
-                .filter(r => r.nome === sr.nome && r.importo === sr.prezzoFisso)
+                .filter(r => r.nome === sr.nome)
                 .reduce((s, r) => s + r.quantita, 0)
               return (
                 <button key={sr.id} onClick={() => aggiungiProdotto(repAttivo, sr)}
