@@ -162,15 +162,20 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
       .order('timestamp_chiusura', { ascending: false })
       .limit(1).maybeSingle()
     const dataFrom = ultimaChiusura?.timestamp_chiusura || (oggi + 'T00:00:00')
-    const { data: scontrini } = await supabase
-      .from('scontrini').select('totale, metodo')
+
+    const { data: scontriniGrezzi } = await supabase
+      .from('scontrini').select('totale, metodo, annullato')
       .eq('negozio_id', negozioId)
       .gt('timestamp_emissione', dataFrom)
       .lte('timestamp_emissione', ora)
-    const totaleGiornaliero = scontrini?.reduce((a, s) => a + s.totale, 0) || 0
-    const totaleCarte = scontrini?.filter(s => s.metodo === 'carta').reduce((a, s) => a + s.totale, 0) || 0
-    const totaleContanti = scontrini?.filter(s => s.metodo === 'contanti').reduce((a, s) => a + s.totale, 0) || 0
-    const numeroScontrini = scontrini?.length || 0
+    const scontrini = scontriniGrezzi?.filter(s => !s.annullato) || []
+    const totaleGiornaliero = scontrini.reduce((a, s) => a + s.totale, 0)
+    const totaleCarte = scontrini.filter(s => s.metodo === 'carta').reduce((a, s) => a + s.totale, 0)
+    const totaleContanti = scontrini.filter(s => s.metodo === 'contanti').reduce((a, s) => a + s.totale, 0)
+    const numeroScontrini = scontrini.length
+
+
+
     const { data: cont } = await supabase
       .from('contatori').select('chiusure')
       .eq('negozio_id', negozioId).eq('data', oggi).single()
