@@ -279,6 +279,19 @@ export default function TavoliPage() {
     setRigheComanda(prev => prev.filter(r => r.id !== id))
   }
 
+  function aggiornaQuantita(id, delta) {
+    setRigheComanda(prev => prev
+      .map(r => r.id === id
+        ? { ...r,
+            quantita: Math.max(0, r.quantita + delta),
+            totaleRiga: r.importo * Math.max(0, r.quantita + delta)
+          }
+        : r
+      )
+      .filter(r => r.quantita > 0)
+    )
+  }
+
   const totale = righeComanda.reduce((s, r) => s + r.totaleRiga, 0)
 
   async function inviaComanda() {
@@ -400,11 +413,15 @@ export default function TavoliPage() {
               </div>
             ) : (
               <>
+
+
+
+
                 {righeComanda.map(r => (
                   <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid #1a1c2440' }}>
                     <div style={{ width:32, height:32, borderRadius:8, background:r.colore+'22', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>{ICONE[r.icona]||'📦'}</div>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontSize:'1rem' }}>{r.nome}{r.quantita > 1 ? <span style={{ color:'red', marginLeft:6 }}>×{r.quantita}</span> : ''}</div>
+                      <div style={{ fontSize:'0.85rem' }}>{r.nome}{r.quantita > 1 ? <span style={{ color:'#ffffff', marginLeft:6 }}>×{r.quantita}</span> : ''}</div>
                       <div style={{ fontSize:'0.7rem', color:'#ffffff' }}>€ {fmt(r.importo)} cad.</div>
                     </div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:600 }}>€ {fmt(r.totaleRiga)}</div>
@@ -413,15 +430,25 @@ export default function TavoliPage() {
                         📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                       </div>
                     )}
-                    {r.id !== 'coperto' && (
-                      <>
+                  {r.id !== 'coperto' && (
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <button onClick={() => aggiornaQuantita(r.id, -1)}
+                          style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
+                        <button onClick={() => aggiornaQuantita(r.id, 1)}
+                          style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
                         <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/,'') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
-                          style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px' }}>✏️</button>
+                          style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px', marginLeft:28 }}>✏️</button>
                         <button onClick={() => eliminaRiga(r.id)} style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>✕</button>
-                      </>
+                      </div>
                     )}
+
+
                   </div>
                 ))}
+
+
+
+
                 <div style={{ display:'flex', justifyContent:'space-between', padding:'12px 0', fontWeight:700, fontSize:'0.9rem' }}>
                   <span style={{ color:'#ffffff' }}>TOTALE</span>
                   <span style={{ color:'#00e5a0', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totale)}</span>
