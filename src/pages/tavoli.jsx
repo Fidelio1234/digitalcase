@@ -233,16 +233,46 @@ export default function TavoliPage() {
   }
 
   function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
-    setRigheComanda(prev => prev.map(r => {
-      if (r.id !== id) return r
+    setRigheComanda(prev => {
+      const idx = prev.findIndex(r => r.id === id)
+      if (idx === -1) return prev
+      const r = prev[idx]
       const importoBase = r.importoBase ?? r.importo
-      const totaleBase = importoBase * r.quantita
-      if (tipo === 'aggiunta' && nota) {
-        return { ...r, nota: `+${nota}`, importoBase, importo: importoBase + costoAggiunta, totaleRiga: totaleBase + (costoAggiunta * r.quantita) }
-      } else {
-        return { ...r, nota: nota ? `-${nota}` : '', importoBase, importo: importoBase, totaleRiga: totaleBase }
+
+      function applicaNota(riga) {
+        if (tipo === 'aggiunta' && nota) {
+          return {
+            ...riga,
+            nota: `+${nota}`,
+            importoBase,
+            importo: importoBase + costoAggiunta,
+            totaleRiga: (importoBase + costoAggiunta) * riga.quantita,
+          }
+        }
+        return {
+          ...riga,
+          nota: nota ? `-${nota}` : '',
+          importoBase,
+          importo: importoBase,
+          totaleRiga: importoBase * riga.quantita,
+        }
       }
-    }))
+
+      // Se la riga rappresenta più di un'unità, la nota riguarda solo UNA unità:
+      // stacchiamo quella unità in una riga separata con la nota, le restanti
+      // restano nella riga originale, invariate.
+      if ((r.quantita || 1) > 1) {
+        const nuove = [...prev]
+        nuove[idx] = { ...r, quantita: r.quantita - 1, totaleRiga: importoBase * (r.quantita - 1) }
+        const rigaStaccata = applicaNota({ ...r, id: Date.now() + Math.random(), quantita: 1 })
+        nuove.splice(idx + 1, 0, rigaStaccata)
+        return nuove
+      }
+
+      const nuove = [...prev]
+      nuove[idx] = applicaNota(r)
+      return nuove
+    })
   }
 
   function eliminaRiga(id) {
@@ -374,7 +404,7 @@ export default function TavoliPage() {
                   <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid #1a1c2440' }}>
                     <div style={{ width:32, height:32, borderRadius:8, background:r.colore+'22', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>{ICONE[r.icona]||'📦'}</div>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontSize:'0.85rem' }}>{r.nome}{r.quantita > 1 ? <span style={{ color:'#ffffff', marginLeft:6 }}>×{r.quantita}</span> : ''}</div>
+                      <div style={{ fontSize:'1rem' }}>{r.nome}{r.quantita > 1 ? <span style={{ color:'red', marginLeft:6 }}>×{r.quantita}</span> : ''}</div>
                       <div style={{ fontSize:'0.7rem', color:'#ffffff' }}>€ {fmt(r.importo)} cad.</div>
                     </div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:600 }}>€ {fmt(r.totaleRiga)}</div>
@@ -403,37 +433,89 @@ export default function TavoliPage() {
           <div style={{ flex:'0 0 50%', overflow:'auto', padding:16 }}>
             {repAttivo && (
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(110px,1fr))', gap:8 }}>
-                {repAttivo.sottoreparti?.filter(s => s.abilitato).map(sr => (
-                  <button key={sr.id}
-                    onClick={() => aggiungiProdotto(repAttivo, sr)}
-                    style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                    <div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500 }}>{sr.nome}</div>
-                    <div style={{ fontSize:'0.85rem', fontWeight:700, color:repAttivo.colore, fontFamily:"'DM Mono',monospace" }}>€ {fmt(sr.prezzoFisso)}</div>
-                  </button>
-                ))}
+                {repAttivo.sottoreparti?.filter(s => s.abilitato).map(sr => {
+                  const qtaInComanda = righeComanda
+                    .filter(r => r.nome === sr.nome && r.importo === sr.prezzoFisso)
+                    .reduce((s, r) => s + r.quantita, 0)
+                  return (
+                    <button key={sr.id}
+                      onClick={() => aggiungiProdotto(repAttivo, sr)}
+                      style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, position:'relative' }}>
+                      {qtaInComanda > 0 && (
+                        <div style={{
+                          position:'absolute', top:-8, right:-8,
+                          background: repAttivo.colore,
+                          color:'#08090c',
+                          borderRadius:'50%',
+                          width:22, height:22,
+                          display:'flex', alignItems:'center', justifyContent:'center',
+                          fontSize:'0.72rem', fontWeight:700,
+                          fontFamily:"'DM Mono',monospace",
+                          boxShadow:`0 0 8px ${repAttivo.colore}88`,
+                          zIndex:1,
+                        }}>
+                          {qtaInComanda}
+                        </div>
+                      )}
+                      <div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500 }}>{sr.nome}</div>
+                      <div style={{ fontSize:'0.85rem', fontWeight:700, color:repAttivo.colore, fontFamily:"'DM Mono',monospace" }}>€ {fmt(sr.prezzoFisso)}</div>
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>
+
+
+
+
         </div>
+
+
+
+
+
 
         {/* DESTRA — reparti */}
         <div style={{ width:180, background:'#111318', borderLeft:'1px solid #1a1c24', overflow:'auto', padding:12, flexShrink:0 }}>
           <div style={{ fontSize:'0.9rem', color:'#00e5a0', letterSpacing:2, marginBottom:12 }}>REPARTI</div>
-          {reparti.map(r => (
-            <button key={r.id}
-              onClick={() => { setRepartoAttivo(r.id); if (inputCents > 0) aggiungiReparto(r) }}
-              style={{
-                width:'100%', textAlign:'left', padding:'10px 12px', marginBottom:6,
-                background: repartoAttivo === r.id ? r.colore + '22' : 'transparent',
-                border: '1px solid ' + (repartoAttivo === r.id ? r.colore : 'transparent'),
-                borderRadius:10, cursor:'pointer', color:'#eef0f6', fontSize:'0.82rem',
-                display:'flex', alignItems:'center', gap:8,
-              }}>
-              <span>{ICONE[r.icona]||'📦'}</span>
-              <span>{r.nome}</span>
-            </button>
-          ))}
+          {reparti.map(r => {
+            const qtaReparto = righeComanda
+              .filter(riga => riga.repartoId === r.id)
+              .reduce((s, riga) => s + riga.quantita, 0)
+            return (
+              <button key={r.id}
+                onClick={() => { setRepartoAttivo(r.id); if (inputCents > 0) aggiungiReparto(r) }}
+                style={{
+                  width:'100%', textAlign:'left', padding:'10px 12px', marginBottom:6,
+                  background: repartoAttivo === r.id ? r.colore + '22' : 'transparent',
+                  border: '1px solid ' + (repartoAttivo === r.id ? r.colore : 'transparent'),
+                  borderRadius:10, cursor:'pointer', color:'#eef0f6', fontSize:'0.82rem',
+                  display:'flex', alignItems:'center', gap:8,
+                }}>
+                <span>{ICONE[r.icona]||'📦'}</span>
+                <span>{r.nome}</span>
+                {qtaReparto > 0 && (
+                  <span style={{
+                    marginLeft:'auto',
+                    background: r.colore,
+                    color:'#08090c',
+                    borderRadius:'50%',
+                    width:20, height:20,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:'0.68rem', fontWeight:700,
+                    fontFamily:"'DM Mono',monospace",
+                    flexShrink:0,
+                  }}>
+                    {qtaReparto}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
+
+
 
         {/* MODAL NOTA - inline nella vista comanda */}
         {notaModal !== null && (

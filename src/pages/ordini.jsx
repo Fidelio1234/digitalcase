@@ -165,22 +165,66 @@ const [erroreMsg, setErroreMsg] = useState('')
     )
   }
 
-  function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
-    setRigheComanda(prev => prev.map(r => {
-      if (r.id !== id) return r
+
+
+
+
+
+
+
+
+function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
+    setRigheComanda(prev => {
+      const idx = prev.findIndex(r => r.id === id)
+      if (idx === -1) return prev
+      const r = prev[idx]
       const importoBase = r.importoBase ?? r.importo
-      const totaleBase = importoBase * r.quantita
-      if (tipo === 'aggiunta' && nota) {
-        return { ...r, nota: `+${nota}`, importoBase, importo: importoBase + costoAggiunta, totaleRiga: totaleBase + (costoAggiunta * r.quantita) }
-      } else {
-        return { ...r, nota: nota ? `-${nota}` : '', importoBase, importo: importoBase, totaleRiga: totaleBase }
+
+      function applicaNota(riga) {
+        if (tipo === 'aggiunta' && nota) {
+          return {
+            ...riga,
+            nota: `+${nota}`,
+            importoBase,
+            importo: importoBase + costoAggiunta,
+            totaleRiga: (importoBase + costoAggiunta) * riga.quantita,
+          }
+        }
+        return {
+          ...riga,
+          nota: nota ? `-${nota}` : '',
+          importoBase,
+          importo: importoBase,
+          totaleRiga: importoBase * riga.quantita,
+        }
       }
-    }))
+
+      // Se la riga rappresenta più di un'unità, la nota riguarda solo UNA unità:
+      // stacchiamo quella unità in una riga separata con la nota, le restanti
+      // restano nella riga originale, invariate.
+      if ((r.quantita || 1) > 1) {
+        const nuove = [...prev]
+        nuove[idx] = { ...r, quantita: r.quantita - 1, totaleRiga: importoBase * (r.quantita - 1) }
+        const rigaStaccata = applicaNota({ ...r, id: Date.now() + Math.random(), quantita: 1 })
+        nuove.splice(idx + 1, 0, rigaStaccata)
+        return nuove
+      }
+
+      const nuove = [...prev]
+      nuove[idx] = applicaNota(r)
+      return nuove
+    })
     setNotaModal(null)
     setNotaTesto('')
     setNotaTipo('rimozione')
     setAggiunte([])
   }
+
+
+
+
+
+
 
   const totale = righeComanda.reduce((s, r) => s + r.totaleRiga, 0)
   const repAttivo = reparti.find(r => r.id === repartoAttivo)
@@ -424,24 +468,75 @@ if (notaModal !== null) {
         </div>
 
         <div style={{ display:'flex', gap:8, padding:'10px 16px', overflowX:'auto', background:'#111318', borderBottom:'1px solid #1a1c24' }}>
-          {reparti.map(r => (
-            <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
-              style={{ flexShrink:0, padding:'6px 14px', borderRadius:20, border:'1px solid ' + (repartoAttivo === r.id ? r.colore : '#252830'), background: repartoAttivo === r.id ? r.colore + '22' : 'transparent', color: repartoAttivo === r.id ? r.colore : '#ffb830', fontSize:'0.78rem', cursor:'pointer', whiteSpace:'nowrap' }}>
-              {ICONE[r.icona]||'📦'} {r.nome}
-            </button>
-          ))}
+          {reparti.map(r => {
+            const qtaReparto = righeComanda
+              .filter(riga => riga.repartoId === r.id)
+              .reduce((s, riga) => s + riga.quantita, 0)
+            return (
+              <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
+                style={{ flexShrink:0, padding:'6px 14px', borderRadius:20, border:'1px solid ' + (repartoAttivo === r.id ? r.colore : '#252830'), background: repartoAttivo === r.id ? r.colore + '22' : 'transparent', color: repartoAttivo === r.id ? r.colore : '#ffb830', fontSize:'0.78rem', cursor:'pointer', whiteSpace:'nowrap', position:'relative' }}>
+                {qtaReparto > 0 && (
+                  <div style={{
+                    position:'absolute', top:-6, right:-6,
+                    background: r.colore,
+                    color:'#08090c',
+                    borderRadius:'50%',
+                    width:18, height:18,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:'0.62rem', fontWeight:700,
+                    fontFamily:"'DM Mono',monospace",
+                    boxShadow:`0 0 6px ${r.colore}88`,
+                    zIndex:1,
+                  }}>
+                    {qtaReparto}
+                  </div>
+                )}
+                {ICONE[r.icona]||'📦'} {r.nome}
+              </button>
+            )
+          })}
         </div>
+
+
+
 
         {repAttivo && (
           <div style={{ padding:'12px 16px', display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(100px,1fr))', gap:8 }}>
-            {repAttivo.sottoreparti?.filter(s => s.abilitato).map(sr => (
-              <button key={sr.id} onClick={() => aggiungiProdotto(repAttivo, sr)}
-                style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                <div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500, textAlign:'center', lineHeight:1.2 }}>{sr.nome}</div>
-              </button>
-            ))}
+            {repAttivo.sottoreparti?.filter(s => s.abilitato).map(sr => {
+              const qtaInComanda = righeComanda
+                .filter(r => r.nome === sr.nome && r.importo === sr.prezzoFisso)
+                .reduce((s, r) => s + r.quantita, 0)
+              return (
+                <button key={sr.id} onClick={() => aggiungiProdotto(repAttivo, sr)}
+                  style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, position:'relative' }}>
+                  {qtaInComanda > 0 && (
+                    <div style={{
+                      position:'absolute', top:-8, right:-8,
+                      background: repAttivo.colore,
+                      color:'#08090c',
+                      borderRadius:'50%',
+                      width:22, height:22,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize:'0.72rem', fontWeight:700,
+                      fontFamily:"'DM Mono',monospace",
+                      boxShadow:`0 0 8px ${repAttivo.colore}88`,
+                      zIndex:1,
+                    }}>
+                      {qtaInComanda}
+                    </div>
+                  )}
+                  <div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500, textAlign:'center', lineHeight:1.2 }}>{sr.nome}</div>
+                </button>
+              )
+            })}
           </div>
         )}
+
+
+
+
+
+
 
         {righeComanda.length > 0 && (
           <div style={{ marginTop:'auto', background:'#111318', borderTop:'1px solid #1a1c24', padding:'12px 16px', maxHeight:'40vh', overflowY:'auto' }}>
@@ -452,11 +547,14 @@ if (notaModal !== null) {
                   <div style={{ fontSize:'0.85rem', display:'flex', alignItems:'center', gap:6 }}>
                     {r.nome}
                     {r.quantita > 1 && <span style={{ color:'#ffffff', fontSize:'0.85rem', fontWeight:600 }}>×{r.quantita}</span>}
-                    <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/, '') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
-                      style={{ background:'transparent', border:'none', cursor:'pointer', fontSize:'0.8rem', color: r.nota ? '#ffb830' : '#5a5d6e', padding:'0 4px' }}
-                      title="Aggiungi nota">
-                      ✏️
-                    </button>
+                    {r.id !== 'coperto' && (
+                      <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/, '') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
+                        style={{ background:'transparent', border:'none', cursor:'pointer', fontSize:'0.8rem', color: r.nota ? '#ffb830' : '#5a5d6e', padding:'0 4px' }}
+                        title="Aggiungi nota">
+                        ✏️
+                      </button>
+                    )}
+
                   </div>
                   {r.nota && <div style={{ fontSize:'0.7rem', color:'#ffb830', marginTop:2 }}>📝 {r.nota}</div>}
                 </div>
