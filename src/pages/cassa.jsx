@@ -1009,8 +1009,8 @@ export default function CassaPage() {
                       <div className={styles.prodottiGrid}>
                        {prodotti.map(sr => {
   const qtaInScontrino = righe
-    .filter(r => r.nome === sr.nome && r.importo === sr.prezzoFisso)
-    .reduce((s, r) => s + r.quantita, 0)
+  .filter(r => r.nome === sr.nome)
+  .reduce((s, r) => s + r.quantita, 0)
 
   return (
     <button key={sr.id}

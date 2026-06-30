@@ -17,6 +17,15 @@ function generaStringa(charset, lunghezza) {
   return s
 }
 
+function getSlug() {
+  if (typeof window === 'undefined') return 'dmi'
+  const hn = window.location.hostname
+  if (hn === 'localhost' || hn === '127.0.0.1') return process.env.NEXT_PUBLIC_NEGOZIO_SLUG || 'dmi'
+  return hn.replace('.digitalcase.it', '')
+}
+
+
+
 export default function FidelityPage() {
   const NEGOZIO_ID = useNegozioId()
   const { user } = useAuth()
@@ -30,6 +39,7 @@ export default function FidelityPage() {
   const [toast, setToast] = useState('')
   const [ricerca, setRicerca] = useState('')
   const [confirmElimina, setConfirmElimina] = useState(null)
+  const [showQrNegozio, setShowQrNegozio] = useState(false)
 
   // ── Stato scanner / accredito punti ──
   const [impostazioniFidelity, setImpostazioniFidelity] = useState(null)
@@ -190,7 +200,17 @@ export default function FidelityPage() {
           <div style={{ fontSize: '1.3rem', fontWeight: 700 }}>💳 Fidelity</div>
           <div style={{ fontSize: '0.8rem', color: '#5a5d6e', marginTop: 2 }}>{clienti.length} clienti registrati</div>
         </div>
+
+
+
+
         <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => setShowQrNegozio(true)} style={{
+            padding: '10px 20px', borderRadius: 12, border: '1px solid #ffb830', cursor: 'pointer',
+            background: 'transparent', color: '#ffb830', fontSize: '0.85rem', fontWeight: 700
+          }}>
+            📲 QR Registrazione
+          </button>
           <button onClick={() => setShowScanner(true)} style={{
             padding: '10px 20px', borderRadius: 12, border: '1px solid #00e5a0', cursor: 'pointer',
             background: 'transparent', color: '#00e5a0', fontSize: '0.85rem', fontWeight: 700
@@ -204,6 +224,9 @@ export default function FidelityPage() {
             + Nuovo cliente
           </button>
         </div>
+
+
+
       </div>
 
       <input
@@ -318,6 +341,58 @@ export default function FidelityPage() {
           </div>
         </div>
       )}
+
+
+
+
+  {/* MODAL: QR registrazione negozio */}
+  {showQrNegozio && (
+        <div onClick={() => setShowQrNegozio(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#111318', borderRadius: 16, padding: 28, width: '100%', maxWidth: 380, border: '1px solid #ffb830', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 4 }}>📲 Registrazione clienti</div>
+            <div style={{ fontSize: '0.78rem', color: '#5a5d6e', marginBottom: 20 }}>
+              Mostra questo QR ai clienti per farli accedere direttamente alla pagina fidelity
+            </div>
+            <div style={{ background: 'white', borderRadius: 12, padding: 16, display: 'inline-block' }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(`https://${getSlug()}.fidelity.digitalcase.it/card`)}`}
+                alt="QR registrazione fidelity"
+                style={{ width: 220, height: 220, display: 'block' }}
+              />
+            </div>
+            
+            <div style={{ fontSize: '0.75rem', color: '#5a5d6e', marginTop: 16, fontFamily: "'DM Mono',monospace" }}>
+              {getSlug()}.fidelity.digitalcase.it/card
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, width: '100%', boxSizing: 'border-box' }}>
+              <button onClick={async () => {
+                  const url = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(`https://${getSlug()}.fidelity.digitalcase.it/card`)}`
+                  const res = await fetch(url)
+                  const blob = await res.blob()
+                  const blobUrl = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = blobUrl
+                  a.download = `qr-fidelity-${getSlug()}.png`
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  URL.revokeObjectURL(blobUrl)
+                }}
+                style={{ flex: 1, padding: '10px 24px', borderRadius: 10, border: '1px solid #ffb830', background: 'transparent', color: '#ffb830', fontWeight: 700, cursor: 'pointer', boxSizing: 'border-box' }}>
+                ⬇ Scarica
+              </button>
+              <button onClick={() => setShowQrNegozio(false)} style={{ flex: 1, padding: '10px 24px', borderRadius: 10, border: 'none', background: '#ffb830', color: '#08090c', fontWeight: 700, cursor: 'pointer', boxSizing: 'border-box' }}>Chiudi</button>
+            </div>
+         </div>
+        </div>
+      )}
+
+
+
+
+
+
+
 
       {/* MODAL: confirm elimina */}
       {confirmElimina && (
