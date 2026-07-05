@@ -28,6 +28,8 @@ export default function UtentiPage() {
   const [showPin, setShowPin] = useState(false)
   const [toast, setToast] = useState('')
   const [confirmElimina, setConfirmElimina] = useState(null)
+  const [testando, setTestando] = useState(false)
+  const [statoConnessione, setStatoConnessione] = useState(null)
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
@@ -98,7 +100,7 @@ export default function UtentiPage() {
     if (!form.nome?.trim()) { setErrore('Inserisci il nome'); return }
     const pin = pinInput.join('')
     const confirm = pinConfirm.join('')
-    if (pin.length < 4) { setErrore('Il PIN deve essere di almeno 4 cifre'); return }
+    if (pin.length < 8) { setErrore('Il PIN deve essere di almeno 8 cifre'); return }
     if (pin !== confirm) { setErrore('I PIN non coincidono'); return }
 
     const duplicato = utenti.find(u => u.pin === pin && u.id !== form.id)
@@ -178,7 +180,7 @@ export default function UtentiPage() {
       if (val) {
         setFlash(f => ({ ...f, [i]: true }))
         setTimeout(() => setFlash(f => ({ ...f, [i]: false })), 700)
-        if (i < 3) setTimeout(() => {
+        if (i < 7) setTimeout(() => {
           document.getElementById(`${which}-${i+1}`)?.focus()
         }, 10)
       }
@@ -225,6 +227,32 @@ export default function UtentiPage() {
     )
   }
 
+
+  async function testConnessione() {
+    setTestando(true)
+    setStatoConnessione(null)
+    try {
+      const { data: negozio } = await supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single()
+      const cfg = negozio?.rt_config?.config
+      if (!cfg?.ip) { setStatoConnessione('errore'); setTestando(false); return }
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      let res
+      if (isLocalhost) {
+        res = await fetch('/api/ditron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {}, marca: cfg.marca }) })
+      } else {
+        res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca: cfg.marca, ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {} }) })
+      }
+      const data = await res.json()
+      setStatoConnessione(data.ok ? 'ok' : 'errore')
+    } catch (e) {
+      setStatoConnessione('errore')
+    }
+    setTestando(false)
+  }
+
+
+
+
   return (
     <div className={styles.page}>
 
@@ -239,13 +267,37 @@ export default function UtentiPage() {
           <span>Utenti e PIN</span>
           <span className={styles.headerSub}>{utenti.length} utenti configurati</span>
         </div>
-        <button className={styles.addBtn} onClick={openAdd}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Nuovo utente
-        </button>
+
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={testConnessione}
+            disabled={testando}
+            style={{
+              padding: '8px 14px', borderRadius: 10, border: '1px solid #252830',
+              background: '#1a1c24', color: testando ? '#5a5d6e' : '#eef0f6',
+              cursor: testando ? 'not-allowed' : 'pointer',
+              fontSize: '0.82rem', fontFamily: "'DM Mono',monospace",
+              display: 'flex', alignItems: 'center', gap: 6
+            }}
+          >
+            {testando ? '⏳' : ''}
+            {testando ? 'Test...' : 'Test RT'}
+            {statoConnessione === 'ok' && <span style={{ color: '#00e5a0', fontSize: '2.1rem' }}>✓</span>}
+            {statoConnessione === 'errore' && <span style={{ color: '#ff4d6a',fontSize: '2.1rem' }}>✗</span>}
+          </button>
+          <button className={styles.addBtn} onClick={openAdd}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nuovo utente
+          </button>
+        </div>
       </header>
+
+
+
+
 
       <div className={styles.content}>
         {utenti.map(u => {
@@ -261,7 +313,7 @@ export default function UtentiPage() {
                   <div className={styles.userMeta}>
                     <span style={{ color: ruolo?.colore }}>{ruolo?.label}</span>
                     <span className={styles.dot}>·</span>
-                    <span>PIN: {'●'.repeat(u.pin?.length || 4)}</span>
+                    <span>PIN: {'●'.repeat(u.pin?.length || 8)}</span>
                   </div>
                 </div>
               </div>
@@ -335,7 +387,7 @@ export default function UtentiPage() {
 
               <div className={styles.field}>
                 <label style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                <span>PIN (4-8 cifre)</span>
+                <span>PIN (8 cifre)</span>
                   <div style={{display:'flex',gap:8}}>
                     <button
                       type="button"
