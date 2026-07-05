@@ -259,21 +259,44 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
 
   return (
     <div style={{ position:'fixed', top:8, left:220, zIndex:400 }}>
-      <div onClick={() => setPannelloAperto(!pannelloAperto)} style={{
-        padding:'8px 14px', cursor:'pointer',
-        display:'flex', alignItems:'center', gap:8,
-        background:'#1a1c24', borderRadius:10, border:'1px solid #252830',
-      }}>
-        <div style={{
-          width:8, height:8, borderRadius:'50%',
-          background: rtConfig.attivo ? '#00e5a0' : '#5a5d6e',
-          boxShadow: rtConfig.attivo ? '0 0 8px #00e5a0' : 'none'
-        }} />
-        <span style={{fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", color:'yellow'}}>
-          MENU RT {rtConfig.marca?.toUpperCase()}
-        </span>
-        <span style={{color:'#5a5d6e', fontSize:'0.75rem'}}>{pannelloAperto ? '▼' : '▲'}</span>
+
+
+
+
+      
+<div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <div onClick={() => setPannelloAperto(!pannelloAperto)} style={{
+          padding:'8px 14px', cursor:'pointer',
+          display:'flex', alignItems:'center', gap:8,
+          background:'#1a1c24', borderRadius:10, border:'1px solid #252830',
+        }}>
+          <div style={{
+            width:8, height:8, borderRadius:'50%',
+            background: rtConfig.attivo ? '#00e5a0' : '#5a5d6e',
+            boxShadow: rtConfig.attivo ? '0 0 8px #00e5a0' : 'none'
+          }} />
+          <span style={{fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", color:'yellow'}}>
+            MENU RT {rtConfig.marca?.toUpperCase()}
+          </span>
+          <span style={{color:'#5a5d6e', fontSize:'0.75rem'}}>{pannelloAperto ? '▼' : '▲'}</span>
+        </div>
+        {rtConfig.attivo && rtConfig.ip && (
+          <button
+            onClick={() => chiamaRT('raw', { cmd: 'a' })}
+            title="Apri cassetto"
+            style={{
+              padding:'8px 12px', cursor:'pointer',
+              background:'#1a1c24', borderRadius:10, border:'1px solid #ffb830',
+              color:'#ffb830', fontSize:'0.78rem', fontWeight:700, marginLeft:50,
+              fontFamily:"'DM Mono',monospace",
+            }}>
+            🗃️ Apri Cassetto 
+          </button>
+        )}
       </div>
+
+
+
 
       {pannelloAperto && (
         <div style={{
@@ -308,9 +331,20 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
                 <button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(1)} disabled={loading}>Chiusura fiscale Z (semplice)</button>
 <button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(2)} disabled={loading}>Chiusura fiscale Z (con report reparti+IVA)</button>
                 <br/>
+
+
                 <div style={{width:'100%', color:'#ffb830'}}>LETTURA PARZIALE</div>
                 <button style={btnStyle('#ffb830')} onClick={() => letturaX(2)} disabled={loading}>Lettura X (parziale)</button>
+                <br/>
+                <div style={{width:'100%', color:'#ffb830'}}>RISTAMPA SCONTRINI (dal DGFE)</div>
+                <button style={btnStyle('#00e5a0')} onClick={() => chiamaRT('raw', { cmd: '91F' })} disabled={loading}>Ristampa ultimo scontrino</button>
+                <button style={btnStyle('#00e5a0')} onClick={() => chiamaRT('raw', { cmd: '92F' })} disabled={loading}>Ristampa penultimo</button>
+                <button style={btnStyle('#00e5a0')} onClick={() => chiamaRT('raw', { cmd: '93F' })} disabled={loading}>Ristampa terzultimo</button>
+
+
+
               </div>
+
             </div>
             <br/>
 
