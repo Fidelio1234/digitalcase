@@ -12,6 +12,8 @@ export default function CardClienteFidelity() {
   const [form, setForm] = useState({ codice: '', password: '' })
   const [errore, setErrore] = useState('')
   const [loadingLogin, setLoadingLogin] = useState(false)
+ 
+  const [puntiMancanti, setPuntiMancanti] = useState(0)
 
   // 1. Risolvi il negozio dallo slug del sottodominio
   useEffect(() => {
@@ -24,6 +26,11 @@ export default function CardClienteFidelity() {
       })
   }, [pronto, slug])
 
+
+
+
+
+
   // 2. Se c'è una sessione salvata, ricarica il cliente (per avere i punti aggiornati)
   useEffect(() => {
     if (!negozioId) return
@@ -32,6 +39,37 @@ export default function CardClienteFidelity() {
     supabase.from('fidelity_clienti').select('*').eq('id', salvato).eq('negozio_id', negozioId).single()
       .then(({ data }) => { if (data) setCliente(data) })
   }, [negozioId])
+
+  // 3. Controlla avviso soglia dopo che cliente e negozio sono caricati
+  useEffect(() => {
+    if (!cliente || !negozioId) return
+    supabase.from('impostazioni_negozio')
+      .select('fidelity_soglia_punti, fidelity_avviso_punti')
+      .eq('negozio_id', negozioId)
+      .single()
+      .then(({ data }) => {
+        if (!data) return
+        const soglia = data.fidelity_soglia_punti || 100
+        const avviso = data.fidelity_avviso_punti || 0
+        if (avviso <= 0) return
+        const mancanti = soglia - cliente.punti
+        if (mancanti > 0 && mancanti <= avviso) setPuntiMancanti(mancanti)
+        else setPuntiMancanti(0)
+      })
+  }, [cliente, negozioId])
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   async function login() {
     setErrore('')
@@ -119,12 +157,30 @@ if (!negozioId) return (
             Mostra questo QR alla cassa ad ogni acquisto per accumulare punti.
           </div>
 
-  <button onClick={logout} style={{
+
+
+
+
+          {puntiMancanti > 0 && (
+            <div style={{ marginTop: 20, background: '#ffb83022', border: '2px solid #ffb830', borderRadius: 14, padding: '18px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>🎯</div>
+              <div style={{ fontWeight: 700, color: '#ffb830', fontSize: '0.95rem', marginBottom: 6 }}>Ci sei quasi!</div>
+              <div style={{ fontSize: '0.82rem', color: '#eef0f6', lineHeight: 1.6 }}>
+                Ti mancano solo <strong style={{ color: '#ffb830' }}>{puntiMancanti} {puntiMancanti === 1 ? 'punto' : 'punti'}</strong><br/>per ottenere il tuo omaggio 🎁
+              </div>
+            </div>
+          )}
+
+          <button onClick={logout} style={{
             marginTop: 24, padding: '10px 20px', borderRadius: 10, border: '1px solid #252830',
             background: 'transparent', color: 'red', cursor: 'pointer', fontSize: '0.8rem'
           }}>
             Esci
           </button>
+
+
+
+
         </div>
       </div>
       </>
