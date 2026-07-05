@@ -442,6 +442,7 @@ export async function getImpostazioniDb(negozioId) {
     fidelityCentesimiPerPunto: data?.fidelity_centesimi_per_punto ?? 100,
     fidelitySogliaPunti: data?.fidelity_soglia_punti ?? 100,
     fidelityValoreOmaggio: data?.fidelity_valore_omaggio ?? 500,
+    fidelityAvvisoPunti: data?.fidelity_avviso_punti ?? 0,
   }
 }
 
