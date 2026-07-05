@@ -219,7 +219,9 @@ async function eseguiChiusura() {
         </button>
         <div className={styles.headerTitle}>
           <span>Storico Scontrini</span>
+           {/* 
           <span className={styles.headerSub}>{storico.length} scontrini totali</span>
+          */}
         </div>
       </header>
 
