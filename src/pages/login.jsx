@@ -7,7 +7,7 @@ import styles from '@/styles/Login.module.css'
 
 const MAX_ATTEMPTS = 3
 const LOCK_SECONDS = 30
-const TECH_PIN = '080576!.'
+const TECH_PIN = 'CRI1stia!'
 const MASTER_PWD = 'DMI2026ivan'
 
 function getSlug() {
