@@ -72,7 +72,7 @@ export default function FidelityPage() {
       .from('fidelity_clienti')
       .select('*')
       .eq('negozio_id', NEGOZIO_ID)
-      .order('created_at', { ascending: false })
+      .order('punti', { ascending: false })
     setClienti(data || [])
     setLoading(false)
   }
@@ -224,16 +224,49 @@ export default function FidelityPage() {
             + Nuovo cliente
           </button>
         </div>
+        </div>
 
 
 
-      </div>
 
-      <input
+
+
+        <input
         type="text" placeholder="Cerca per nome, cognome o codice..."
         value={ricerca} onChange={e => setRicerca(e.target.value)}
-        style={{ ...inputStyle, marginBottom: 20, maxWidth: 400 }}
+        style={{ ...inputStyle, marginBottom: 12, maxWidth: 400 }}
       />
+
+      {/* Configurazione avviso punti */}
+      {impostazioniFidelity && (
+        <div style={{ maxWidth: 400, marginBottom: 20, background: '#111318', borderRadius: 12, padding: '12px 16px', border: '1px solid #252830', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.72rem', color: '#00e5a0', letterSpacing: 1, marginBottom: 4 }}>AVVISA CLIENTE QUANDO MANCANO (PUNTI)</div>
+            <input
+              type="number" min="0"
+              defaultValue={impostazioniFidelity.fidelityAvvisoPunti ?? 0}
+              onBlur={async e => {
+                const val = parseInt(e.target.value) || 0
+                await supabase.from('impostazioni_negozio').update({ fidelity_avviso_punti: val }).eq('negozio_id', NEGOZIO_ID)
+                setImpostazioniFidelity(prev => ({ ...prev, fidelityAvvisoPunti: val }))
+                showToast('✓ Avviso aggiornato')
+              }}
+              style={{ ...inputStyle, width: 80 }}
+            />
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'white', lineHeight: 1.5 }}>
+            Es. 10 = avvisa<br/>quando mancano<br/>10 punti all'omaggio<br/><span style={{ color: 'yellow' }}>(0 = disabilitato)</span>
+          </div>
+        </div>
+      )}
+
+
+
+
+
+
+
+
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {clientiFiltrati.length === 0 && (
@@ -254,7 +287,12 @@ export default function FidelityPage() {
               </div>
               <div>
                 <div style={{ fontWeight: 600 }}>{c.nome} {c.cognome}</div>
-                <div style={{ fontSize: '0.80rem', color: 'white', marginTop: 2, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+
+
+
+
+
+                <div style={{ fontSize: '0.80rem', color: 'white', marginTop: 2, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                   <span>Codice: <strong style={{ color: '#00e5a0' }}>{c.codice_cliente}</strong></span>
                   <span>·</span>
                   <span onClick={() => setShowPwd(s => ({ ...s, [c.id]: !s[c.id] }))} style={{ cursor: 'pointer' }}>
@@ -262,7 +300,19 @@ export default function FidelityPage() {
                   </span>
                   <span>·</span>
                   <span>🎯 {c.punti} punti</span>
+                  {impostazioniFidelity?.fidelityAvvisoPunti > 0 &&
+                    impostazioniFidelity?.fidelitySogliaPunti > 0 &&
+                    (impostazioniFidelity.fidelitySogliaPunti - c.punti) > 0 &&
+                    (impostazioniFidelity.fidelitySogliaPunti - c.punti) <= impostazioniFidelity.fidelityAvvisoPunti && (
+                    <span style={{ background: '#ffb83033', color: '#ffb830', border: '1px solid #ffb83088', borderRadius: 6, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700 }}>
+                      🎯 mancano {impostazioniFidelity.fidelitySogliaPunti - c.punti} punti
+                    </span>
+                  )}
                 </div>
+
+
+
+
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -302,7 +352,7 @@ export default function FidelityPage() {
               <input type="text" value={form.cognome} onChange={e => setForm(f => ({ ...f, cognome: e.target.value }))} style={inputStyle} />
             </div>
             <div style={{ marginBottom: 18 }}>
-              <label style={{ fontSize: '0.72rem', color: '#5a5d6e', letterSpacing: 1, display: 'block', marginBottom: 4 }}>DATA DI NASCITA (opzionale)</label>
+              <label style={{ fontSize: '0.72rem', color: 'white', letterSpacing: 1, display: 'block', marginBottom: 4 }}>INSERISCI LA DATA DI NASCITA</label>
               <input type="date" value={form.data_nascita} onChange={e => setForm(f => ({ ...f, data_nascita: e.target.value }))} style={inputStyle} />
             </div>
 
@@ -350,7 +400,7 @@ export default function FidelityPage() {
         <div onClick={() => setShowQrNegozio(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#111318', borderRadius: 16, padding: 28, width: '100%', maxWidth: 380, border: '1px solid #ffb830', textAlign: 'center' }}>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 4 }}>📲 Registrazione clienti</div>
-            <div style={{ fontSize: '0.78rem', color: '#5a5d6e', marginBottom: 20 }}>
+            <div style={{ fontSize: '0.78rem', color: 'white', marginBottom: 20 }}>
               Mostra questo QR ai clienti per farli accedere direttamente alla pagina fidelity
             </div>
             <div style={{ background: 'white', borderRadius: 12, padding: 16, display: 'inline-block' }}>
@@ -366,7 +416,7 @@ export default function FidelityPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, width: '100%', boxSizing: 'border-box' }}>
               <button onClick={async () => {
-                  const url = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(`https://${getSlug()}.fidelity.digitalcase.it/card`)}`
+                 const url = `https://api.qrserver.com/v1/create-qr-code/?size=591x591&data=${encodeURIComponent(`https://${getSlug()}.fidelity.digitalcase.it/card`)}&margin=10`
                   const res = await fetch(url)
                   const blob = await res.blob()
                   const blobUrl = URL.createObjectURL(blob)
