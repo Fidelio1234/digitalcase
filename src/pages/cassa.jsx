@@ -103,6 +103,7 @@ export default function CassaPage() {
   const [aggiunte, setAggiunte] = useState([]) // [{nome, costo}]
 
   const [tavoliOccupati, setTavoliOccupati] = useState(0)
+  const [clientiFidelityInScadenza, setClientiFidelityInScadenza] = useState(0)
 
   const {
     inputCents, righe, ultimaChiusa, errore, totale, subtotalePerIva,
@@ -194,6 +195,25 @@ export default function CassaPage() {
     const interval = setInterval(contaTavoli, 5000)
     return () => clearInterval(interval)
   }, [NEGOZIO_ID])
+
+  useEffect(() => {
+    if (!NEGOZIO_ID || !impostazioni.fidelityAbilitato) return
+    const soglia = impostazioni.fidelitySogliaPunti || 0
+    const avviso = impostazioni.fidelityAvvisoPunti || 0
+    if (soglia <= 0 || avviso <= 0) return
+    supabase
+      .from('fidelity_clienti')
+      .select('punti')
+      .eq('negozio_id', NEGOZIO_ID)
+      .eq('attivo', true)
+      .then(({ data }) => {
+        const count = (data || []).filter(c => {
+          const mancanti = soglia - c.punti
+          return mancanti > 0 && mancanti <= avviso
+        }).length
+        setClientiFidelityInScadenza(count)
+      })
+  }, [NEGOZIO_ID, impostazioni])
 
 
 
@@ -737,7 +757,7 @@ export default function CassaPage() {
             </div>
             {ultimaChiusa && righe.length === 0 && (
               <div className={styles.ultimaChiusa}>
-                Ultimo: {ultimaChiusa.nome} €{fmt(ultimaChiusa.importo)}
+                Ultimo scontrino: {ultimaChiusa.nome} €{fmt(ultimaChiusa.importo)}
               </div>
             )}
           </div>
@@ -845,7 +865,7 @@ export default function CassaPage() {
 
 
 
-           {impostazioni.fidelityAbilitato && (
+{impostazioni.fidelityAbilitato && (
               <button onClick={() => {
                   if (righe.length > 0) {
                     sessionStorage.setItem('fidelity_ritorno_scontrino', JSON.stringify({ righe, totale }))
@@ -854,7 +874,21 @@ export default function CassaPage() {
                 }}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
                   color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
-                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+                  position:'relative'}}>
+                {clientiFidelityInScadenza > 0 && (
+                  <div style={{
+                    position:'absolute', top:-6, right:-6,
+                    background:'#ffb830', color:'#08090c',
+                    borderRadius:'50%', width:20, height:20,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:'0.68rem', fontWeight:700,
+                    fontFamily:"'DM Mono',monospace",
+                    boxShadow:'0 0 6px #ffb83088',
+                  }}>
+                    {clientiFidelityInScadenza}
+                  </div>
+                )}
                 <span style={{fontSize:'1.4rem'}}>💳</span>
                 <span>Fidelity</span>
               </button>
