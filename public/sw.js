@@ -9,9 +9,10 @@ self.addEventListener('install', (event) => {
   // 🔥 questo è il punto chiave
   self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
-    // Non intercettare: metodi non-GET e richieste cross-origin (es. il service su localhost:3002)
     if (event.request.method !== 'GET' || url.origin !== self.location.origin) {
-      return; // il browser gestisce la richiesta direttamente
+      return;
     }
-    event.respondWith(fetch(event.request));
+    event.respondWith(
+      fetch(event.request).catch(() => Response.error())
+    );
   });
