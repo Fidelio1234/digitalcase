@@ -43,6 +43,22 @@ function avviaKeepAlive(ip, porta) {
 
 const PORT = 3002
 
+// Contatore comande giornaliero — si resetta a mezzanotte
+let numeroComanda = 0
+let dataCorrente = new Date().toDateString()
+
+function getNumeroComanda() {
+  const oggi = new Date().toDateString()
+  if (oggi !== dataCorrente) {
+    numeroComanda = 0
+    dataCorrente = oggi
+  }
+  return ++numeroComanda
+}
+
+
+
+
 const ESC = '\x1B'
 const GS = '\x1D'
 const RESET = ESC + '@'
@@ -63,8 +79,11 @@ function buildComanda(tavolo, righe, tipo, uscita, totaleUscite) {
 
   doc += CENTER + BOLD_ON + BIG
   if (tipo === 'comanda') {
+    const numCmd = getNumeroComanda()
+    doc += `COMANDA N. ${numCmd}\n`
+    doc += BIG + BOLD_ON
     doc += `TAVOLO ${tavolo}\n`
-    doc += BOLD_OFF
+    doc += NORMAL + BOLD_OFF
     if (uscita && totaleUscite > 1) {
       doc += BOLD_ON + `*** USCITA ${uscita} di ${totaleUscite} ***\n` + BOLD_OFF
     }

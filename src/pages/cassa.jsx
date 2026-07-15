@@ -992,7 +992,7 @@ export default function CassaPage() {
     >+</button>
   </div>
 
-  {impostazioni.cortesiaAbilitato && (
+  {(impostazioni.cortesiaAbilitato || impostazioni.tavoliAbilitati) && (
                     <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
                       title="Aggiungi nota"
                       style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
