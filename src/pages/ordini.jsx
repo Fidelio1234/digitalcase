@@ -228,6 +228,9 @@ function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
 
   const totale = righeComanda.reduce((s, r) => s + r.totaleRiga, 0)
   const repAttivo = reparti.find(r => r.id === repartoAttivo)
+
+  const [riepilogoTavolo, setRiepilogoTavolo] = useState(null)
+  const longPressTimer = useRef(null)
   const tavoloCorrente = tavoli.find(t => t.numero === tavoloAttivo)
 
 
@@ -645,12 +648,6 @@ if (notaModal !== null) {
       <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif" }}>
   
         <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderBottom:'1px solid #1a1c24', position:'sticky', top:0, zIndex:100 }}>
-
-
-
-
-
-
         <div style={{ fontWeight:700, fontSize:'1rem' }}>🍽️ Tavoli</div>
         <div style={{ fontSize:'0.75rem', color:'#ffb830' }}>{user?.name}</div>
         <button onClick={carica}
@@ -664,7 +661,13 @@ if (notaModal !== null) {
           const occupato = t.stato === 'occupato'
           const tempo = t.ultimoOrdine ? tempoTrascorso(t.ultimoOrdine) : null
           return (
-            <button key={t.numero} onClick={() => apriTavolo(t)}
+            <button key={t.numero}
+              onClick={() => apriTavolo(t)}
+              onMouseDown={() => { if (occupato) longPressTimer.current = setTimeout(() => setRiepilogoTavolo(t), 1000) }}
+              onMouseUp={() => clearTimeout(longPressTimer.current)}
+              onMouseLeave={() => clearTimeout(longPressTimer.current)}
+              onTouchStart={() => { if (occupato) longPressTimer.current = setTimeout(() => setRiepilogoTavolo(t), 1000) }}
+              onTouchEnd={() => clearTimeout(longPressTimer.current)}
               style={{
                 padding:16, borderRadius:16, cursor:'pointer', textAlign:'left',
                 background: occupato ? 'rgba(255,77,106,0.1)' : 'rgba(0,229,160,0.05)',
@@ -684,8 +687,36 @@ if (notaModal !== null) {
             </button>
           )
         })}
+      </div>
+    </div>
+
+    {/* MODAL RIEPILOGO TAVOLO — long press */}
+    {riepilogoTavolo && (
+      <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.9)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+        onClick={() => setRiepilogoTavolo(null)}>
+        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'80vh', overflowY:'auto' }}
+          onClick={e => e.stopPropagation()}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+            <div style={{ fontSize:'1rem', fontWeight:700, color:'#eef0f6' }}>🍽️ Tavolo {riepilogoTavolo.numero}</div>
+            <button onClick={() => setRiepilogoTavolo(null)}
+              style={{ background:'transparent', border:'none', color:'#5a5d6e', fontSize:'1.3rem', cursor:'pointer' }}>✕</button>
+          </div>
+          {(riepilogoTavolo.righe || []).filter(r => r.id !== 'coperto').length === 0 ? (
+            <div style={{ color:'#5a5d6e', textAlign:'center', padding:'20px 0' }}>Nessun prodotto ordinato</div>
+          ) : (
+            (riepilogoTavolo.righe || []).filter(r => r.id !== 'coperto').map((r, i) => (
+              <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid #1a1c24' }}>
+                <div>
+                  <div style={{ fontSize:'0.9rem', color:'#eef0f6' }}>{r.nome}</div>
+                  {r.nota && <div style={{ fontSize:'0.75rem', color:'#ffb830' }}>📝 {r.nota}</div>}
+                </div>
+                <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#00e5a0', minWidth:30, textAlign:'right' }}>×{r.quantita}</div>
+              </div>
+            ))
+          )}
         </div>
       </div>
+    )}
       </>
     )
   }
