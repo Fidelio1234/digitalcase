@@ -701,10 +701,10 @@ if (notaModal !== null) {
             <button onClick={() => setRiepilogoTavolo(null)}
               style={{ background:'transparent', border:'none', color:'red', fontSize:'1.3rem', cursor:'pointer' }}>✕</button>
           </div>
-          {(riepilogoTavolo.righe || []).filter(r => r.id !== 'coperto').length === 0 ? (
+          {(riepilogoTavolo.righe || []).length === 0 ? (
             <div style={{ color:'#5a5d6e', textAlign:'center', padding:'20px 0' }}>Nessun prodotto ordinato</div>
           ) : (
-            (riepilogoTavolo.righe || []).filter(r => r.id !== 'coperto').map((r, i) => (
+            (riepilogoTavolo.righe || []).map((r, i) => (
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid #1a1c24' }}>
                 <div>
                   <div style={{ fontSize:'1rem', color:'yellow' }}>{r.nome}</div>
