@@ -694,12 +694,12 @@ if (notaModal !== null) {
     {riepilogoTavolo && (
       <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.9)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
         onClick={() => setRiepilogoTavolo(null)}>
-        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'80vh', overflowY:'auto' }}
+        <div style={{ background:'#111318', border:'6px solid white', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'80vh', overflowY:'auto' }}
           onClick={e => e.stopPropagation()}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
             <div style={{ fontSize:'1rem', fontWeight:700, color:'#eef0f6' }}>🍽️ Tavolo {riepilogoTavolo.numero}</div>
             <button onClick={() => setRiepilogoTavolo(null)}
-              style={{ background:'transparent', border:'none', color:'#5a5d6e', fontSize:'1.3rem', cursor:'pointer' }}>✕</button>
+              style={{ background:'transparent', border:'none', color:'red', fontSize:'1.3rem', cursor:'pointer' }}>✕</button>
           </div>
           {(riepilogoTavolo.righe || []).filter(r => r.id !== 'coperto').length === 0 ? (
             <div style={{ color:'#5a5d6e', textAlign:'center', padding:'20px 0' }}>Nessun prodotto ordinato</div>
@@ -707,10 +707,10 @@ if (notaModal !== null) {
             (riepilogoTavolo.righe || []).filter(r => r.id !== 'coperto').map((r, i) => (
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid #1a1c24' }}>
                 <div>
-                  <div style={{ fontSize:'0.9rem', color:'#eef0f6' }}>{r.nome}</div>
+                  <div style={{ fontSize:'1rem', color:'yellow' }}>{r.nome}</div>
                   {r.nota && <div style={{ fontSize:'0.75rem', color:'#ffb830' }}>📝 {r.nota}</div>}
                 </div>
-                <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#00e5a0', minWidth:30, textAlign:'right' }}>×{r.quantita}</div>
+                <div style={{ fontSize:'1rem', fontWeight:700, color:'#00e5a0', minWidth:30, textAlign:'right' }}>×{r.quantita}</div>
               </div>
             ))
           )}
