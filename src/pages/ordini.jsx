@@ -95,13 +95,16 @@ const [erroreMsg, setErroreMsg] = useState('')
     return () => supabase.removeChannel(channel)
   }, [NEGOZIO_ID, carica])
 
-  function apriTavolo(tavolo) {
+function apriTavolo(tavolo) {
     if (impostazioni.copertoAbilitato && tavolo.stato === 'libero') {
       setModalCoperti(tavolo.numero)
       return
     }
+    // Non resettare le righe se il tavolo è già quello attivo
+    if (tavoloAttivo !== tavolo.numero) {
+      setRigheComanda([])
+    }
     setTavoloAttivo(tavolo.numero)
-    setRigheComanda([])
     setVista('comanda')
   }
 
