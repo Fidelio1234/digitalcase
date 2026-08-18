@@ -41,14 +41,11 @@ export default function TavoliPage() {
   const [modalCoperti, setModalCoperti] = useState(null)
   const [numCoperti, setNumCoperti] = useState(2)
   const [invioOk, setInvioOk] = useState(false)
-  const [modalElimina, setModalElimina] = useState(null)
-  const [pinElimina, setPinElimina] = useState('')
-  const [pinErrore, setPinErrore] = useState(false)
   const [notaModal, setNotaModal] = useState(null)
   const [notaTesto, setNotaTesto] = useState('')
   const [notaTipo, setNotaTipo] = useState('rimozione')
   const [aggiunte, setAggiunte] = useState([]) // voci selezionate dalla lista "aggiunte rapide" (per negozio)
-  const longPressTimer = useRef(null)
+  const [modalAnnulla, setModalAnnulla] = useState(false)
 
   // ── carica definita con useCallback per stabilità nelle dipendenze ──────
   const carica = useCallback(async () => {
@@ -91,7 +88,7 @@ export default function TavoliPage() {
   // ── funzioni ─────────────────────────────────────────────────────────────
 
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (!NEGOZIO_ID) return
     if (vista !== 'griglia') return
     const interval = setInterval(() => {
@@ -103,11 +100,12 @@ export default function TavoliPage() {
       })
     }, 5000)
     return () => clearInterval(interval)
-  }, [vista, NEGOZIO_ID])
+  }, [vista, NEGOZIO_ID])   */
+  
 
 
 
-  function startLongPress(tavolo) {
+  /*function startLongPress(tavolo) {
     if (tavolo.stato !== 'occupato') return
     longPressTimer.current = setTimeout(() => {
       setModalElimina(tavolo.numero)
@@ -138,11 +136,22 @@ export default function TavoliPage() {
       return
     }
 
+
+
+
+
+
+
     await chiudiTavoloDb(NEGOZIO_ID, modalElimina)
     setModalElimina(null)
     setPinElimina('')
     await carica()
   }
+
+
+*/
+
+
 
   function apriTavolo(tavolo) {
     if (impostazioni.copertoAbilitato && tavolo.stato === 'libero') {
@@ -297,6 +306,7 @@ export default function TavoliPage() {
 
   async function inviaComanda() {
     const tavolo = tavoli.find(t => t.numero === tavoloAttivo)
+    if (!tavolo) return
     const ora = new Date().toISOString()
 
     const righeVecchie = tavolo.righe || []
@@ -326,14 +336,39 @@ export default function TavoliPage() {
       await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti, NEGOZIO_ID)
     }
 
+
+
+
+
+// ── LOG DEBUG comanda (temporaneo, per bug pizza fantasma) ──────────────
+    try {
+      const tavoliDopo = await getTavoliDb(NEGOZIO_ID)
+      const tavoloDopo = tavoliDopo.find(t => t.numero === tavoloAttivo)
+      await supabase.from('debug_comande').insert({
+        negozio_id: NEGOZIO_ID,
+        numero_tavolo: tavoloAttivo,
+        righe_vecchie: righeVecchie,
+        righe_comanda: righeComanda,
+        righe_nuove: righeNuove,
+        righe_dopo_carica: tavoloDopo ? tavoloDopo.righe : null,
+      })
+    } catch (e) { /* il log non deve mai bloccare la comanda */ }
+
     setInvioOk(true)
-    setTimeout(async () => {
+    setTimeout(() => {
       setInvioOk(false)
-      await carica()
       setVista('griglia')
       setTavoloAttivo(null)
-    }, 2000)
+      setRigheComanda([])
+      setInputCents(0)
+    }, 1200)
+    carica()
   }
+
+
+
+
+
   async function stampaPreconto() {
     await stampaComanda(tavoloAttivo, righeComanda, 'preconto', reparti, NEGOZIO_ID)
   }
@@ -349,6 +384,26 @@ export default function TavoliPage() {
     router.push('/cassa')
   }
 
+
+
+  function annullaComanda() {
+    if (!tavoloAttivo) return
+    setModalAnnulla(true)
+  }
+
+  async function confermaAnnullaComanda() {
+    setModalAnnulla(false)
+    await chiudiTavoloDb(NEGOZIO_ID, tavoloAttivo)
+    setRigheComanda([])
+    setInputCents(0)
+    setTavoloAttivo(null)
+    await carica()
+    setVista('griglia')
+  }
+
+
+
+
   const repAttivo = reparti.find(r => r.id === repartoAttivo)
   const tavoloCorrente = tavoli.find(t => t.numero === tavoloAttivo)
 
@@ -359,7 +414,7 @@ export default function TavoliPage() {
 
         {/* SINISTRA — tastiera */}
         <div style={{ width:240, background:'#111318', borderRight:'1px solid #1a1c24', display:'flex', flexDirection:'column', padding:16, gap:8, flexShrink:0 }}>
-          <button onClick={() => setVista('griglia')} style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#00e5a0', padding:'8px', cursor:'pointer', fontSize:'1.2rem', marginBottom:8 }}>
+        <button onClick={() => { setVista('griglia'); setTavoloAttivo(null); setRigheComanda([]); setInputCents(0) }} style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#00e5a0', padding:'8px', cursor:'pointer', fontSize:'1.2rem', marginBottom:8 }}>
             ← Tavoli
           </button>
           <div style={{ textAlign:'center', padding:'12px', background:'#1a1c24', borderRadius:12, marginBottom:8 }}>
@@ -401,6 +456,10 @@ export default function TavoliPage() {
             )}
             <button onClick={inviaComanda} disabled={righeComanda.length === 0} style={{ padding:'12px', background: righeComanda.length === 0 ? '#1a1c24' : '#00e5a0', border:'none', borderRadius:12, color: righeComanda.length === 0 ? '#5a5d6e' : '#08090c', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.85rem' }}>
               ✓ Invia comanda
+            </button>
+
+            <button onClick={annullaComanda} style={{ padding:'12px', background:'transparent', border:'1px solid #ff4d6a', borderRadius:12, color:'#ff4d6a', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
+              ✕ Annulla comanda
             </button>
           </div>
         </div>
@@ -576,6 +635,32 @@ export default function TavoliPage() {
             <style>{`@keyframes popIn { from { transform:scale(0.7); opacity:0 } to { transform:scale(1); opacity:1 } }`}</style>
           </div>
         )}
+
+
+
+{modalAnnulla && (
+          <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700 }}>
+            <div style={{ background:'#111318', border:'1px solid #ff4d6a44', borderRadius:20, padding:28, width:340, display:'flex', flexDirection:'column', gap:18, alignItems:'center' }}>
+              <div style={{ fontSize:'1rem', fontWeight:700, color:'#ff4d6a' }}>🗑️ Annulla comanda</div>
+              <div style={{ fontSize:'0.85rem', color:'#ffffff', textAlign:'center' }}>
+                Annullare la comanda del tavolo {tavoloAttivo}?<br/>Il tavolo verrà liberato.
+              </div>
+              <div style={{ display:'flex', gap:12, width:'100%' }}>
+                <button onClick={() => setModalAnnulla(false)}
+                  style={{ flex:1, padding:12, borderRadius:12, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>
+                  No, torna indietro
+                </button>
+                <button onClick={confermaAnnullaComanda}
+                  style={{ flex:1, padding:12, borderRadius:12, background:'#ff4d6a', border:'none', color:'white', fontWeight:700, cursor:'pointer' }}>
+                  Sì, annulla
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+
 
 
         {/* MODAL NOTA - inline nella vista comanda */}
@@ -791,42 +876,8 @@ export default function TavoliPage() {
     )
   }
 
-  // ── MODAL ELIMINA ────────────────────────────────────────────────────────
-  if (modalElimina !== null) {
-    return (
-      <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600 }}>
-        <div style={{ background:'#111318', border:'1px solid #ff4d6a44', borderRadius:20, padding:28, width:320, display:'flex', flexDirection:'column', gap:16, alignItems:'center' }}>
-          <div style={{ fontSize:'1rem', fontWeight:700, color:'#ff4d6a' }}>🗑️ Elimina Tavolo {modalElimina}</div>
-          <div style={{ fontSize:'0.82rem', color:'#ffffff', textAlign:'center' }}>Inserisci il PIN del titolare per eliminare la comanda</div>
-          <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
-            {[0,1,2,3,4,5,6,7].map(i => (
-              <div key={i} style={{
-                width:12, height:12, borderRadius:'50%',
-                background: i < pinElimina.length ? (pinErrore ? '#ff4d6a' : '#00e5a0') : '#252830',
-                transition:'background 0.2s'
-              }} />
-            ))}
-          </div>
-          {pinErrore && <div style={{ fontSize:'0.78rem', color:'#ff4d6a' }}>PIN errato</div>}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, width:'100%' }}>
-            {[1,2,3,4,5,6,7,8,9].map(n => (
-              <button key={n}
-                onClick={() => { if(pinElimina.length < 8) { const nuovo = pinElimina + n; setPinElimina(nuovo); if(nuovo.length === 8) setTimeout(() => verificaPinEdElimina(nuovo), 100) }}}
-                style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>
-                {n}
-              </button>
-            ))}
-            <button onClick={() => setModalElimina(null)}
-              style={{ padding:'14px', background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#ffffff', fontSize:'0.8rem', cursor:'pointer' }}>✕</button>
-            <button onClick={() => { if(pinElimina.length < 8) { const nuovo = pinElimina + '0'; setPinElimina(nuovo); if(nuovo.length === 8) setTimeout(() => verificaPinEdElimina(nuovo), 100) }}}
-              style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>0</button>
-            <button onClick={() => setPinElimina(p => p.slice(0,-1))}
-              style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'0.9rem', cursor:'pointer' }}>⌫</button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  
+  
 
   // ── VISTA GRIGLIA TAVOLI ─────────────────────────────────────────────────
   return (
@@ -852,12 +903,7 @@ export default function TavoliPage() {
             const totTavolo = t.righe?.reduce((s, r) => s + r.totaleRiga, 0) || 0
             return (
               <button key={t.numero}
-                onClick={() => { cancelLongPress(); apriTavolo(t) }}
-                onMouseDown={() => startLongPress(t)}
-                onMouseUp={cancelLongPress}
-                onMouseLeave={cancelLongPress}
-                onTouchStart={() => startLongPress(t)}
-                onTouchEnd={() => { cancelLongPress(); apriTavolo(t) }}
+                onClick={() => apriTavolo(t)}
                 style={{
                   padding:16, borderRadius:16, cursor:'pointer', textAlign:'left',
                   background: occupato ? 'rgba(255,77,106,0.1)' : 'rgba(0,229,160,0.05)',

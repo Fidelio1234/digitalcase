@@ -78,7 +78,7 @@ export default function CassaPage() {
   const [reparti, setReparti] = useState([])
   const [benvenuto, setBenvenuto] = useState(false)
   const [rtConfig, setRtConfig] = useState(null)
-  const tavoloCaricato = useRef(false)
+  const tavoloDaChiudereRef = useRef(null)
 
   const [rtMappatura, setRtMappatura] = useState({})
   const [repartoAttivo, setRepartoAttivo] = useState(null)
@@ -160,12 +160,13 @@ export default function CassaPage() {
     }
 
     const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
-    //console.log('Check tavolo:', tavoloDaChiudere)
     if (tavoloDaChiudere) {
       try {
-        const { righe } = JSON.parse(tavoloDaChiudere)
-        console.log('Righe tavolo trovate:', righe?.length)
-        setTimeout(() => caricaRigheEsterne(righe), 300)
+        const parsed = JSON.parse(tavoloDaChiudere)
+        tavoloDaChiudereRef.current = parsed
+        console.log('Righe tavolo trovate:', parsed.righe?.length)
+        setTimeout(() => caricaRigheEsterne(parsed.righe), 300)
+        sessionStorage.removeItem('tavolo_da_chiudere')
       } catch(e) { console.error(e) }
     }
 
@@ -357,27 +358,33 @@ export default function CassaPage() {
         righe: righeEffettive,
       })
     }
+    tavoloDaChiudereRef.current = null
     annullaTutto()
     setShowConfirmAnnulla(false)
   }
 
   async function handleSuccesso(info) {
     // Chiudi tavolo su Supabase se scontrino viene da un tavolo
-    const tavoloDaChiudere = sessionStorage.getItem('tavolo_da_chiudere')
-    if (tavoloDaChiudere) {
+
+
+
+
+   const tavoloInfo = tavoloDaChiudereRef.current
+    if (tavoloInfo) {
       try {
-        const { numero } = JSON.parse(tavoloDaChiudere)
-        // Salva storico tavolo
         await salvaStoricoTavolo(NEGOZIO_ID, {
-          numero,
-          righe: JSON.parse(tavoloDaChiudere).righe || [],
-          coperti: JSON.parse(tavoloDaChiudere).coperti || 0,
-          apertoAlle: JSON.parse(tavoloDaChiudere).apertoAlle || null,
+          numero: tavoloInfo.numero,
+          righe: tavoloInfo.righe || [],
+          coperti: tavoloInfo.coperti || 0,
+          apertoAlle: tavoloInfo.apertoAlle || null,
         })
-        await chiudiTavoloDb(NEGOZIO_ID, numero)
-        sessionStorage.removeItem('tavolo_da_chiudere')
+        await chiudiTavoloDb(NEGOZIO_ID, tavoloInfo.numero)
+        tavoloDaChiudereRef.current = null
       } catch(e) {}
     }
+
+
+
 
     // Chiudi asporto se viene da asporto
     const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
