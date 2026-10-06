@@ -198,8 +198,22 @@ export default function AsportoPage() {
 
   if (loading || !user) return null
 
+
+
+  // Conta, per ogni reparto, quanti ordini asporto aperti contengono almeno
+  // un prodotto di quel reparto (badge generico, vale per tutti i reparti).
+  function contaOrdiniPerReparto(repartoId) {
+    return asporti.filter(a => (a.righe || []).some(r => r.repartoId === repartoId)).length
+  }
+
+  // Stesso conteggio ma per singolo prodotto (badge sui pulsanti prodotto).
+  function contaOrdiniPerProdotto(nomeProdotto) {
+    return asporti.filter(a => (a.righe || []).some(r => r.nome === nomeProdotto)).length
+  }
+
+
   return (
-    <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column' }}>
+    <div style={{ height:'100vh', overflow:'hidden', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column' }}>
 
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', borderBottom:'1px solid #1a1c24' }}>
@@ -217,10 +231,10 @@ export default function AsportoPage() {
         </button>
       </div>
 
-      <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
+      <div style={{ display:'flex', flex:1, overflow:'hidden', minHeight:0 }}>
 
         {/* Lista asporti sx */}
-        <div style={{ width:220, borderRight:'1px solid #1a1c24', overflowY:'auto', padding:8 }}>
+        <div style={{ width:220, borderRight:'1px solid #1a1c24', overflowY:'auto', padding:8, minHeight:0 }}>
           {asporti.length === 0 && (
             <div style={{ textAlign:'center', color:'#ffb830', padding:20, fontSize:'0.8rem' }}>
               <div style={{ fontSize:'2rem' }}>🛵</div>
@@ -253,7 +267,7 @@ export default function AsportoPage() {
         </div>
 
         {/* Centro - comanda */}
-        <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minHeight:0 }}>
 
           {/* Header asporto attivo */}
           {asportoCorrente ? (
@@ -284,7 +298,7 @@ export default function AsportoPage() {
           )}
 
           {/* Lista righe */}
-          <div style={{ flex:1, overflowY:'auto', padding:12 }}>
+          <div style={{ flex:1, overflowY:'auto', padding:12, minHeight:0 }}>
             {righeComanda.length === 0 && asportoCorrente && (
               <div style={{ textAlign:'center', color:'#ffb830', padding:40, fontSize:'0.85rem' }}>
                 <div style={{ fontSize:'2rem' }}>🛵</div>
@@ -342,13 +356,30 @@ export default function AsportoPage() {
                 const prodotti = rep?.sottoreparti?.filter(s => s.abilitato) || []
                 return (
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(120px, 1fr))', gap:8 }}>
-                    {prodotti.map(sr => (
-                      <button key={sr.id} onClick={() => aggiungiProdotto(rep, sr)}
-                        style={{ padding:'10px 8px', borderRadius:10, border:`1px solid ${rep.colore}66`, background:'#111318', cursor:'pointer', textAlign:'center' }}>
-                        <div style={{ fontSize:'0.82rem', fontWeight:600, color:'#eef0f6' }}>{sr.nome}</div>
-                        <div style={{ fontSize:'0.75rem', color:rep.colore, marginTop:4 }}>€ {fmt(sr.prezzoFisso)}</div>
-                      </button>
-                    ))}
+                    {prodotti.map(sr => {
+                      const conteggio = contaOrdiniPerProdotto(sr.nome)
+                      return (
+                        <button key={sr.id} onClick={() => aggiungiProdotto(rep, sr)}
+                          style={{ padding:'10px 8px', borderRadius:10, border:`1px solid ${rep.colore}66`, background:'#111318', cursor:'pointer', textAlign:'center', position:'relative' }}>
+                          {conteggio > 0 && (
+                            <div style={{
+                              position:'absolute', top:-8, right:-8,
+                              background: rep.colore, color:'#08090c',
+                              borderRadius:'50%', width:22, height:22,
+                              display:'flex', alignItems:'center', justifyContent:'center',
+                              fontSize:'0.72rem', fontWeight:700,
+                              fontFamily:"'DM Mono',monospace",
+                              boxShadow:`0 0 8px ${rep.colore}88`,
+                              zIndex:1,
+                            }}>
+                              {conteggio}
+                            </div>
+                          )}
+                          <div style={{ fontSize:'0.82rem', fontWeight:600, color:'#eef0f6' }}>{sr.nome}</div>
+                          <div style={{ fontSize:'0.75rem', color:rep.colore, marginTop:4 }}>€ {fmt(sr.prezzoFisso)}</div>
+                        </button>
+                      )
+                    })}
                   </div>
                 )
               })()}
@@ -357,21 +388,45 @@ export default function AsportoPage() {
         </div>
 
         {/* Reparti dx */}
-        <div style={{ width:160, borderLeft:'1px solid #1a1c24', overflowY:'auto', padding:8 }}>
+        <div style={{ width:160, borderLeft:'1px solid #1a1c24', overflowY:'auto', padding:8, minHeight:0 }}>
           <div style={{ fontSize:'1.25rem', color:'#ffb830', letterSpacing:2, padding:'4px 8px', marginBottom:4 }}>REPARTI</div>
-          {reparti.map(r => (
-            <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
-              style={{
-                width:'100%', padding:'10px 8px', marginBottom:4, borderRadius:8, cursor:'pointer', textAlign:'left',
-                border:`1px solid ${repartoAttivo === r.id ? r.colore : 'transparent'}`,
-                background: repartoAttivo === r.id ? r.colore+'15' : 'transparent',
-                color:'#eef0f6', fontSize:'0.82rem', display:'flex', alignItems:'center', gap:6
-              }}>
-              <span>{ICONE[r.icona]||'📦'}</span>
-              <span>{r.nome}</span>
-            </button>
-          ))}
+          {reparti.map(r => {
+            const conteggio = contaOrdiniPerReparto(r.id)
+            return (
+              <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
+                style={{
+                  width:'100%', padding:'10px 8px', marginBottom:4, borderRadius:8, cursor:'pointer', textAlign:'left',
+                  border:`1px solid ${repartoAttivo === r.id ? r.colore : 'transparent'}`,
+                  background: repartoAttivo === r.id ? r.colore+'15' : 'transparent',
+                  color:'#eef0f6', fontSize:'0.82rem', display:'flex', alignItems:'center', gap:6,
+                  position:'relative',
+                }}>
+                {conteggio > 0 && (
+                  <div style={{
+                    position:'absolute', top:-6, right:-6,
+                    background: r.colore, color:'#08090c',
+                    borderRadius:'50%', width:20, height:20,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:'0.68rem', fontWeight:700,
+                    fontFamily:"'DM Mono',monospace",
+                    boxShadow:`0 0 8px ${r.colore}88`,
+                  }}>
+                    {conteggio}
+                  </div>
+                )}
+                <span>{ICONE[r.icona]||'📦'}</span>
+                <span>{r.nome}</span>
+              </button>
+            )
+          })}
         </div>
+
+
+
+
+
+
+
       </div>
 
       {/* MODAL NUOVO ASPORTO */}
@@ -461,11 +516,13 @@ export default function AsportoPage() {
         </div>
       )}
 
-      {toast && (
-        <div style={{ position:'fixed', bottom:20, left:'50%', transform:'translateX(-50%)', background:'#1a1c24', border:'1px solid #00e5a0', borderRadius:10, padding:'10px 20px', color:'#00e5a0', fontSize:'0.85rem', zIndex:9999 }}>
+{toast && (
+        <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%, -50%)', background:'#1a1c24', border:'1px solid #00e5a0', borderRadius:10, padding:'50px 60px', color:'#00e5a0', fontSize:'1.5rem', zIndex:9999 }}>
           {toast}
         </div>
       )}
+
+
     </div>
   )
 }
