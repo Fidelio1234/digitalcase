@@ -524,9 +524,16 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
         </div>
 
         {/* ── TAVOLI ── */}
-        <div className={styles.section}>
+              
+              <div className={styles.section}>
           <div className={styles.sectionTitle}>🍽️ Impostazioni Tavoli</div>
           <ImpostazioniTavoli negozioId={NEGOZIO_ID} showToast={showToast} />
+        </div>
+
+        {/* ── PAGAMENTO NON RISCOSSO ── */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>🛵 Pagamento Non Riscosso</div>
+          <SezioneNonRiscosso negozioId={NEGOZIO_ID} showToast={showToast} />
         </div>
 
         {/* ── REGISTRATORE TELEMATICO ── */}
@@ -567,6 +574,46 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
       </div>
 
       {toast && <div className={styles.toast}>{toast}</div>}
+    </div>
+  )
+}
+
+function SezioneNonRiscosso({ negozioId, showToast }) {
+  const [attivo, setAttivo] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!negozioId) return
+    supabase.from('impostazioni_negozio')
+      .select('non_riscosso_abilitato')
+      .eq('negozio_id', negozioId)
+      .single()
+      .then(({ data }) => { setAttivo(!!data?.non_riscosso_abilitato); setLoaded(true) })
+  }, [negozioId])
+
+  async function toggle() {
+    const nuovo = !attivo
+    const { error } = await supabase.from('impostazioni_negozio')
+      .update({ non_riscosso_abilitato: nuovo })
+      .eq('negozio_id', negozioId)
+    if (error) { showToast('⚠ Errore: ' + error.message); return }
+    setAttivo(nuovo)
+    showToast(nuovo ? '✓ Non riscosso attivato' : '✓ Non riscosso disattivato')
+  }
+
+  return (
+    <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12}}>
+      <div style={{fontSize:'0.82rem', color:'white'}}>
+        Mostra il pulsante <strong style={{color:'#00e5a0'}}>🛵 Non riscosso (Glovo)</strong> in cassa alla chiusura.<br/>
+        Funziona solo con registratore 3i.
+      </div>
+      <button onClick={toggle} disabled={!loaded}
+        style={{padding:'6px 14px', borderRadius:8, border:'none', cursor:'pointer',
+          fontSize:'0.7rem', fontWeight:700, letterSpacing:1,
+          background: attivo ? 'rgba(0,229,160,0.15)' : '#252830',
+          color: attivo ? '#00e5a0' : '#5a5d6e'}}>
+        {attivo ? 'ON' : 'OFF'}
+      </button>
     </div>
   )
 }

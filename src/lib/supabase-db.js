@@ -436,6 +436,8 @@ export async function getImpostazioniDb(negozioId) {
     magazzinoAbilitato: data?.magazzino_abilitato || false,
     cortesiaAbilitato: data?.cortesia_abilitato || false,
     asportoAbilitato: data?.asporto_abilitato || false,
+    nonRiscossoAbilitato: data?.non_riscosso_abilitato || false,
+    agendaAbilitato: data?.agenda_abilitato || false,
     costoAggiunta: data?.costo_aggiunta ?? 50,
     aggiunteRapide: data?.aggiunte_rapide || [],
     fidelityAbilitato: data?.fidelity_abilitato || false,
@@ -505,6 +507,7 @@ export async function salvaImpostazioniDb(negozioId, imp) {
       magazzino_abilitato: imp.magazzinoAbilitato || false,
       cortesia_abilitato: imp.cortesiaAbilitato || false,
       asporto_abilitato: imp.asportoAbilitato || false,
+      agenda_abilitato: imp.agendaAbilitato || false,
       costo_aggiunta: imp.costoAggiunta ?? 50,
       fidelity_abilitato: imp.fidelityAbilitato || false,
       fidelity_centesimi_per_punto: imp.fidelityCentesimiPerPunto ?? 100,
@@ -663,4 +666,67 @@ export async function resetContatoraAsportoDb(negozioId) {
     .from('impostazioni_negozio')
     .update({ asporto_contatore: 0 })
     .eq('negozio_id', negozioId)
+}
+
+
+
+// ─── AGENDA ──────────────────────────────────────────────────────────────────
+
+export async function getClientiAgendaDb(negozioId, ricerca = '') {
+  let query = supabase.from('clienti_agenda').select('*').eq('negozio_id', negozioId).order('nome')
+  if (ricerca) {
+    const q = ricerca.replace(/[,()]/g, '').trim()
+    if (q) query = query.or(`nome.ilike.%${q}%,telefono.ilike.%${q}%`)
+  }
+  const { data, error } = await query.limit(20)
+  return error ? [] : data
+}
+
+export async function salvaClienteAgendaDb(negozioId, { nome, telefono }) {
+  if (!telefono) {
+    const { data, error } = await supabase.from('clienti_agenda')
+      .insert({ negozio_id: negozioId, nome, telefono: null }).select().single()
+    return error ? null : data
+  }
+  const { data, error } = await supabase.from('clienti_agenda')
+    .upsert({ negozio_id: negozioId, nome, telefono }, { onConflict: 'negozio_id,telefono' })
+    .select().single()
+  return error ? null : data
+}
+
+export async function getPrenotazioniDb(negozioId, data) {
+  const { data: rows, error } = await supabase.from('prenotazioni')
+    .select('*').eq('negozio_id', negozioId).eq('data', data).order('ora')
+  return error ? [] : rows
+}
+
+export async function salvaPrenotazioneDb(negozioId, p) {
+  const payload = {
+    id: p.id || undefined,
+    negozio_id: negozioId,
+    cliente_id: p.clienteId || null,
+    cliente_nome: p.clienteNome,
+    cliente_telefono: p.clienteTelefono || null,
+    servizi: p.servizi || [],
+    totale: p.totale || 0,
+    data: p.data,
+    ora: p.ora,
+    num_slot: p.numSlot || 1,
+    note: p.note || null,
+    stato: p.stato || 'prenotato',
+    operatore_id: p.operatoreId || null,
+    operatore_nome: p.operatoreNome || null,
+  }
+  const { data, error } = await supabase.from('prenotazioni').upsert(payload).select().single()
+  return error ? null : data
+}
+
+export async function eliminaPrenotazioneDb(id) {
+  const { error } = await supabase.from('prenotazioni').delete().eq('id', id)
+  return !error
+}
+
+export async function chiudiPrenotazioneDb(negozioId, id) {
+  const { error } = await supabase.from('prenotazioni').update({ stato: 'completato' }).eq('id', id).eq('negozio_id', negozioId)
+  return !error
 }

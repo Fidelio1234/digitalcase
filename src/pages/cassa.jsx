@@ -103,6 +103,8 @@ export default function CassaPage() {
   const [aggiunte, setAggiunte] = useState([]) // [{nome, costo}]
 
   const [tavoliOccupati, setTavoliOccupati] = useState(0)
+  const [asportiAperti, setAsportiAperti] = useState(0)
+  const [prenotazioniOggi, setPrenotazioniOggi] = useState(0)
   const [clientiFidelityInScadenza, setClientiFidelityInScadenza] = useState(0)
 
   const {
@@ -178,6 +180,18 @@ export default function CassaPage() {
         sessionStorage.removeItem('fidelity_ritorno_scontrino')
       } catch(e) { console.error(e) }
     }
+
+    const agendaDaChiudere = sessionStorage.getItem('agenda_da_chiudere')
+    if (agendaDaChiudere) {
+      try {
+        const { righe } = JSON.parse(agendaDaChiudere)
+        setTimeout(() => {
+          caricaRigheEsterne(righe)
+          apriScontrino()
+        }, 300)
+        sessionStorage.removeItem('agenda_da_chiudere')
+      } catch(e) { console.error(e) }
+    }
   }, [])
 
 
@@ -196,6 +210,47 @@ export default function CassaPage() {
     const interval = setInterval(contaTavoli, 5000)
     return () => clearInterval(interval)
   }, [NEGOZIO_ID])
+
+
+
+
+   // Badge sul pulsante Asporto: conta quanti ordini asporto sono aperti in questo momento.
+   useEffect(() => {
+    if (!NEGOZIO_ID) return
+    async function contaAsportiAperti() {
+      const { data } = await supabase
+        .from('asporti')
+        .select('id', { count: 'exact' })
+        .eq('negozio_id', NEGOZIO_ID)
+        .eq('stato', 'aperto')
+      setAsportiAperti(data?.length || 0)
+    }
+    contaAsportiAperti()
+    const interval = setInterval(contaAsportiAperti, 5000)
+    return () => clearInterval(interval)
+  }, [NEGOZIO_ID])
+
+
+
+
+  useEffect(() => {
+    if (!NEGOZIO_ID) return
+    async function contaPrenotazioni() {
+      const oggi = new Date().toISOString().split('T')[0]
+      const { data } = await supabase
+        .from('prenotazioni')
+        .select('id', { count: 'exact' })
+        .eq('negozio_id', NEGOZIO_ID)
+        .eq('data', oggi)
+        .eq('stato', 'prenotato')
+      setPrenotazioniOggi(data?.length || 0)
+    }
+    contaPrenotazioni()
+    const interval = setInterval(contaPrenotazioni, 5000)
+    return () => clearInterval(interval)
+  }, [NEGOZIO_ID])
+
+
 
   useEffect(() => {
     if (!NEGOZIO_ID || !impostazioni.fidelityAbilitato) return
@@ -426,20 +481,33 @@ export default function CassaPage() {
     setRigheBackup([])
     resetScontrinoAperto()
 
-    // Scala giacenze magazzino
-    if (impostazioni.magazzinoAbilitato) {
-      const avvisi = []
-      for (const riga of scontrinoCorrente?.righe || []) {
-        if (riga.giacenza !== null && riga.giacenza !== undefined) {
-          const nuovaGiacenza = Math.max(0, riga.giacenza - riga.quantita)
-          await aggiornaGiacenza(NEGOZIO_ID, riga.id, riga.nome, 'vendita', riga.quantita, nuovaGiacenza)
-          if (riga.giacenzaMinima !== null && nuovaGiacenza <= riga.giacenzaMinima) {
-            avvisi.push({ nome: riga.nome, giacenza: nuovaGiacenza, minima: riga.giacenzaMinima })
+    
+      // Scala giacenze magazzino
+      if (impostazioni.magazzinoAbilitato) {
+        const avvisi = []
+        const righeConGiacenza = (scontrinoCorrente?.righe || []).filter(r => r.giacenza !== null && r.giacenza !== undefined)
+        if (righeConGiacenza.length > 0) {
+          // Rileggo la giacenza VERA dal database proprio ora, invece di fidarmi del
+          // valore congelato nel carrello da quando la pagina cassa è stata aperta.
+          const ids = [...new Set(righeConGiacenza.map(r => r.id))]
+          const { data: prodottiFreschi } = await supabase
+            .from('prodotti')
+            .select('id, giacenza')
+            .in('id', ids)
+          const giacenzaAttuale = {}
+          for (const p of prodottiFreschi || []) giacenzaAttuale[p.id] = p.giacenza
+  
+          for (const riga of righeConGiacenza) {
+            const giacenzaCorrente = giacenzaAttuale[riga.id] ?? riga.giacenza
+            const nuovaGiacenza = Math.max(0, giacenzaCorrente - riga.quantita)
+            await aggiornaGiacenza(NEGOZIO_ID, riga.id, riga.nome, 'vendita', riga.quantita, nuovaGiacenza)
+            if (riga.giacenzaMinima !== null && nuovaGiacenza <= riga.giacenzaMinima) {
+              avvisi.push({ nome: riga.nome, giacenza: nuovaGiacenza, minima: riga.giacenzaMinima })
+            }
           }
         }
+        if (avvisi.length > 0) setAvvisoMagazzino(avvisi)
       }
-      if (avvisi.length > 0) setAvvisoMagazzino(avvisi)
-    }
 
     // Stampa su RT se configurato
     if (rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0) {
@@ -492,9 +560,18 @@ export default function CassaPage() {
               }
             }
           }
+         /* if (info.metodo === 'carta') {
+            cmd += '3T'
+          } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {*/
+
+
           if (info.metodo === 'carta') {
             cmd += '3T'
+          } else if (info.metodo === 'nonriscosso') {
+            cmd += '102T'   // pagamento a credito = Non Riscosso (Glovo): chiude senza incasso, niente cassetto
           } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {
+
+
             // Contanti o cortesia — stesso trattamento
             const contantiCents = info.totale + (info.resto || 0)
             if (contantiCents > info.totale) {
@@ -760,7 +837,7 @@ export default function CassaPage() {
           <div className={styles.displayImporto}>
             <div className={styles.displayLabel}>TOTALE IMPORTO</div>
             <div className={styles.displayValue}>
-              {inputCents > 0 ? `€ ${fmt(inputCents)}` : righe.length > 0 ? `€ ${fmt(totale)}` : '€ 0,00'}
+            {inputCents > 0 ? `€ ${fmt(inputCents)}` : righe.length > 0 ? `€ ${fmt(totale)}` : '€ 0,00'}
             </div>
             {ultimaChiusa && righe.length === 0 && (
               <div className={styles.ultimaChiusa}>
@@ -820,15 +897,55 @@ export default function CassaPage() {
 
 
           <div style={{display:'flex', gap:8, marginBottom:8, flexWrap:'wrap'}}>
-            {impostazioni.asportoAbilitato && (
+          {impostazioni.asportoAbilitato && (
               <button onClick={() => router.push('/asporto')}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
                   color:'#6482ff', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
-                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+                  position:'relative'}}>
+                {asportiAperti > 0 && (
+                  <div style={{
+                    position:'absolute', top:-6, right:-6,
+                    background:'#6482ff', color:'white',
+                    borderRadius:'50%', width:20, height:20,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:'0.68rem', fontWeight:700,
+                    fontFamily:"'DM Mono',monospace",
+                    boxShadow:'0 0 8px rgba(100,130,255,0.6)',
+                  }}>
+                    {asportiAperti}
+                  </div>
+                )}
                 <span style={{fontSize:'1.4rem'}}>🛵</span>
                 <span>Asporto</span>
               </button>
             )}
+
+          {impostazioni.agendaAbilitato && (
+              <button onClick={() => router.push('/agenda')}
+                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                  color:'#c44dff', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+                  position:'relative'}}>
+                {prenotazioniOggi > 0 && (
+                  <div style={{
+                    position:'absolute', top:-6, right:-6,
+                    background:'#c44dff', color:'white',
+                    borderRadius:'50%', width:20, height:20,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:'0.68rem', fontWeight:700,
+                    fontFamily:"'DM Mono',monospace",
+                    boxShadow:'0 0 6px #c44dff88',
+                  }}>
+                    {prenotazioniOggi}
+                  </div>
+                )}
+                <span style={{fontSize:'1.4rem'}}>🗓️</span>
+                <span>Agenda</span>
+              </button>
+            )}
+
+
             {impostazioni.magazzinoAbilitato && (
               <button onClick={() => router.push('/magazzino')}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
@@ -1014,16 +1131,6 @@ export default function CassaPage() {
   </button>
 </div>
 
-
-
-
-
-
-
-
-
-
-
                 </div>
               ))}
             </div>
@@ -1142,12 +1249,24 @@ export default function CassaPage() {
 
       {/* MODAL CHIUSURA */}
       {showChiusura && scontrinoCorrente && (
+       /* <ChiusuraModal
+          scontrino={scontrinoCorrente}
+          onAnnulla={handleAnnullaChiusura}
+          onSuccesso={handleSuccesso}
+          cortesiaAbilitato={impostazioni.cortesiaAbilitato}
+        />*/
+
         <ChiusuraModal
           scontrino={scontrinoCorrente}
           onAnnulla={handleAnnullaChiusura}
           onSuccesso={handleSuccesso}
           cortesiaAbilitato={impostazioni.cortesiaAbilitato}
+          marca={rtConfig?.marca}
+          nonRiscossoAbilitato={impostazioni.nonRiscossoAbilitato}
         />
+
+
+
       )}
 
       {/* MODAL CONFERMA ANNULLA */}
@@ -1193,7 +1312,7 @@ export default function CassaPage() {
             )}
             <div className={styles.successTotale}>€ {fmt(showSuccesso.totale)}</div>
             <div className={styles.successMeta}>
-              {showSuccesso.metodo === 'carta' ? '💳 Carta / POS' : '💵 Contanti'}
+            {showSuccesso.metodo === 'carta' ? '💳 Carta / POS' : showSuccesso.metodo === 'nonriscosso' ? '🛵 Non riscosso (Glovo)' : '💵 Contanti'}
               {showSuccesso.metodo === 'contanti' && showSuccesso.resto > 0 &&
                 ` · Resto €${fmt(showSuccesso.resto)}`}
             </div>
@@ -1457,7 +1576,9 @@ export default function CassaPage() {
     </>
   )
 }
-function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) {
+//function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) {
+  //function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato, marca }) {
+    function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato, marca, nonRiscossoAbilitato }) {
   const [metodo, setMetodo] = useState('carta')
   const [datoCliente, setDatoCliente] = useState('')
   const [contanti, setContanti] = useState('')
@@ -1541,6 +1662,14 @@ function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) 
             <button className={`${styles.metodoBtn} ${metodo==='contanti' ? styles.metodoActive : ''}`} onClick={() => setMetodo('contanti')}>
               💵 Contanti
             </button>
+
+            {marca === '3i' && nonRiscossoAbilitato && (
+            <button className={`${styles.metodoBtn} ${metodo==='nonriscosso' ? styles.metodoActive : ''}`} onClick={() => setMetodo('nonriscosso')}>
+              🛵 Non riscosso (Glovo)
+            </button>
+            )}
+
+
             {cortesiaAbilitato && (
             <button className={`${styles.metodoBtn1} ${metodo==='cortesia' ? styles.metodoActive : ''}`} onClick={() => setMetodo('cortesia')}>
               ��️ Fiscale + Cortesia
