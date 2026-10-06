@@ -1,0 +1,15 @@
+{
+    "name": "DigitalCase Agenda",
+    "short_name": "DC Agenda",
+    "description": "Prenotazioni e appuntamenti DigitalCase",
+    "start_url": "/agenda",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#08090c",
+    "theme_color": "#c44dff",
+    "orientation": "portrait",
+    "icons": [
+      { "src": "/icon-agenda-192.png", "sizes": "192x192", "type": "image/png" },
+      { "src": "/icon-agenda-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
+  }
