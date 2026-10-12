@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useNegozioId } from '@/hooks/useNegozioId'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/router'
-import { getUtenti, saveUtenti, generateId } from '@/lib/storage'
 import styles from '@/styles/Utenti.module.css'
 
 const RUOLI = [
@@ -11,44 +8,55 @@ const RUOLI = [
 
 ]
 
+const PIN_VUOTO = () => Array(8).fill('')
+
 const emptyUtente = () => ({
-  id: '', nome: '', pin: '', ruolo: 'staff', abilitato: true
+  id: '', nome: '', ruolo: 'staff', abilitato: true
 })
 
+function slugCorrente() {
+  const hn = window.location.hostname
+  if (hn === 'localhost' || hn === '127.0.0.1') return process.env.NEXT_PUBLIC_NEGOZIO_SLUG || 'dmi'
+  return hn.replace('.digitalcase.it', '')
+}
+
+// Tutte le operazioni sugli utenti passano dal server (il PIN non torna mai al browser)
+async function apiUtenti(body) {
+  try {
+    const res = await fetch('/api/utenti-gestione', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: slugCorrente(), ...body }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) return { error: data.error || 'Errore', status: res.status }
+    return data
+  } catch {
+    return { error: 'Errore di rete' }
+  }
+}
+
 export default function UtentiPage() {
-  const NEGOZIO_ID = useNegozioId()
-  const { user, login } = useAuth()
+  const { user, loadUtenti } = useAuth()
   const router = useRouter()
   const [utenti, setUtenti] = useState([])
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
-  const [pinInput, setPinInput] = useState(['','','','','','','',''])
-  const [pinConfirm, setPinConfirm] = useState(['','','','','','','',''])
+  const [pinInput, setPinInput] = useState(PIN_VUOTO())
+  const [pinConfirm, setPinConfirm] = useState(PIN_VUOTO())
   const [errore, setErrore] = useState('')
   const [showPin, setShowPin] = useState(false)
   const [toast, setToast] = useState('')
   const [confirmElimina, setConfirmElimina] = useState(null)
-  const [testando, setTestando] = useState(false)
-  const [statoConnessione, setStatoConnessione] = useState(null)
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
     if (user?.role !== 'owner') { router.replace('/cassa'); return }
-    supabase
-      .from('utenti')
-      .select('*')
-      .eq('negozio_id', NEGOZIO_ID)
-      .order('created_at')
-      .then(({ data }) => {
-        if (data) {
-          const sorted = [...data].sort((a,b) => {
-            if (a.ruolo === 'owner') return -1
-            if (b.ruolo === 'owner') return 1
-            return a.nome.localeCompare(b.nome)
-          })
-          setUtenti(sorted)
-        }
-      })
+    apiUtenti({ azione: 'lista' }).then(r => {
+      if (r.status === 401) { router.replace('/login'); return }
+      if (r.utenti) setUtenti(r.utenti)
+    })
   }, [user, router])
 
   function showToast(msg) {
@@ -58,87 +66,49 @@ export default function UtentiPage() {
 
   function openAdd() {
     setForm(emptyUtente())
-    setPinInput(['','','',''])
-    setPinConfirm(['','','',''])
+    setPinInput(PIN_VUOTO())
+    setPinConfirm(PIN_VUOTO())
     setErrore('')
     setModal('add')
     setTimeout(() => document.getElementById('pin-0')?.focus(), 100)
   }
 
   function openEdit(u) {
+    // Il PIN esistente non è recuperabile: lasciare vuoto = non cambiarlo
     setForm({ ...u })
-    const pinArr = u.pin.split('').concat(Array(8).fill('')).slice(0,8)
-    setPinInput(pinArr)
-    setPinConfirm(pinArr)
+    setPinInput(PIN_VUOTO())
+    setPinConfirm(PIN_VUOTO())
     setErrore('')
     setModal('edit')
-    setTimeout(() => document.getElementById('pin-0')?.focus(), 100)
   }
 
   function closeModal() { setModal(null); setForm({}); setErrore('') }
-
-  function handlePinDigit(idx, val, which) {
-    if (!/^\d?$/.test(val)) return
-    const arr = which === 'pin' ? [...pinInput] : [...pinConfirm]
-    arr[idx] = val
-    which === 'pin' ? setPinInput(arr) : setPinConfirm(arr)
-    // focus next
-    if (val && idx < 3) {
-      const next = document.getElementById(`${which}-${idx+1}`)
-      if (next) next.focus()
-    }
-  }
-
-  function handlePinKey(e, idx, which) {
-    if (e.key === 'Backspace' && !e.target.value && idx > 0) {
-      const prev = document.getElementById(`${which}-${idx-1}`)
-      if (prev) prev.focus()
-    }
-  }
 
   async function salva() {
     if (!form.nome?.trim()) { setErrore('Inserisci il nome'); return }
     const pin = pinInput.join('')
     const confirm = pinConfirm.join('')
-    if (pin.length < 8) { setErrore('Il PIN deve essere di almeno 8 cifre'); return }
-    if (pin !== confirm) { setErrore('I PIN non coincidono'); return }
-
-    const duplicato = utenti.find(u => u.pin === pin && u.id !== form.id)
-    if (duplicato) { setErrore(`PIN già usato da ${duplicato.nome}`); return }
-
-    if (modal === 'add') {
-      const { error } = await supabase.from('utenti').insert({
-        negozio_id: NEGOZIO_ID,
-        nome: form.nome,
-        pin,
-        ruolo: form.ruolo,
-        abilitato: form.abilitato ?? true,
-      })
-      if (error) { setErrore('Errore salvataggio: ' + error.message); return }
-    } else {
-      const { error } = await supabase.from('utenti')
-        .update({ nome: form.nome, pin, ruolo: form.ruolo, abilitato: form.abilitato })
-        .eq('id', form.id)
-        .select()
-      if (error) { setErrore('Errore salvataggio: ' + error.message); return }
+    const pinDaImpostare = modal === 'add' || pin.length > 0 || confirm.length > 0
+    if (pinDaImpostare) {
+      if (pin.length !== 8) { setErrore('Il PIN deve essere di 8 cifre'); return }
+      if (pin !== confirm) { setErrore('I PIN non coincidono'); return }
     }
 
-    // Ricarica utenti da Supabase
-    const { data } = await supabase.from('utenti').select('*').eq('negozio_id', NEGOZIO_ID).order('created_at')
-    if (data) {
-      const sorted = [...data].sort((a,b) => a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome))
-      setUtenti(sorted)
-    }
-    // Ricarica utenti localmente
-    const { data: nuoviUtenti } = await supabase.from('utenti').select('*').eq('negozio_id', NEGOZIO_ID).order('created_at')
-    if (nuoviUtenti) {
-      const sorted = [...nuoviUtenti].sort((a,b) => a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome))
-      setUtenti(sorted)
-    }
+    const r = await apiUtenti({
+      azione: 'salva',
+      id: modal === 'edit' ? form.id : undefined,
+      nome: form.nome,
+      ruolo: form.ruolo,
+      abilitato: form.abilitato ?? true,
+      pin: pinDaImpostare ? pin : undefined,
+    })
+    if (r.status === 401) { router.replace('/login'); return }
+    if (r.error) { setErrore(r.error); return }
+
+    if (r.utenti) setUtenti(r.utenti)
     showToast(modal === 'add' ? 'Utente aggiunto ✓' : 'Utente salvato ✓')
     closeModal()
-    // Forza reload AuthContext
-    window.location.reload()
+    loadUtenti() // aggiorna l'elenco della schermata di login
   }
 
   function elimina(id) {
@@ -152,21 +122,23 @@ export default function UtentiPage() {
   }
 
   async function confermaElimina() {
-    await supabase.from('utenti').delete().eq('id', confirmElimina.id)
-    const { data } = await supabase.from('utenti').select('*').eq('negozio_id', NEGOZIO_ID).order('created_at')
-    if (data) {
-      const sorted = [...data].sort((a,b) => a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome))
-      setUtenti(sorted)
-    }
+    const r = await apiUtenti({ azione: 'elimina', id: confirmElimina.id })
+    if (r.status === 401) { router.replace('/login'); return }
+    if (r.error) { showToast('⚠ ' + r.error); setConfirmElimina(null); return }
+    if (r.utenti) setUtenti(r.utenti)
     showToast('Utente eliminato')
     setConfirmElimina(null)
+    loadUtenti()
   }
 
   async function toggleAbilitato(id) {
     const target = utenti.find(u => u.id === id)
     if (target?.ruolo === 'owner') { showToast('⚠ Non puoi disabilitare il titolare'); return }
-    await supabase.from('utenti').update({ abilitato: !target.abilitato }).eq('id', id).select()
-    setUtenti(prev => prev.map(u => u.id === id ? { ...u, abilitato: !u.abilitato } : u))
+    const r = await apiUtenti({ azione: 'abilita', id })
+    if (r.status === 401) { router.replace('/login'); return }
+    if (r.error) { showToast('⚠ ' + r.error); return }
+    if (r.utenti) setUtenti(r.utenti)
+    loadUtenti()
   }
 
   const PinBoxes = ({ which, values, setValues, show }) => {
@@ -227,32 +199,6 @@ export default function UtentiPage() {
     )
   }
 
-
-  async function testConnessione() {
-    setTestando(true)
-    setStatoConnessione(null)
-    try {
-      const { data: negozio } = await supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single()
-      const cfg = negozio?.rt_config?.config
-      if (!cfg?.ip) { setStatoConnessione('errore'); setTestando(false); return }
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      let res
-      if (isLocalhost) {
-        res = await fetch('/api/ditron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {}, marca: cfg.marca }) })
-      } else {
-        res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca: cfg.marca, ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {} }) })
-      }
-      const data = await res.json()
-      setStatoConnessione(data.ok ? 'ok' : 'errore')
-    } catch (e) {
-      setStatoConnessione('errore')
-    }
-    setTestando(false)
-  }
-
-
-
-
   return (
     <div className={styles.page}>
 
@@ -267,37 +213,13 @@ export default function UtentiPage() {
           <span>Utenti e PIN</span>
           <span className={styles.headerSub}>{utenti.length} utenti configurati</span>
         </div>
-
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            onClick={testConnessione}
-            disabled={testando}
-            style={{
-              padding: '8px 14px', borderRadius: 10, border: '1px solid #252830',
-              background: '#1a1c24', color: testando ? '#5a5d6e' : '#eef0f6',
-              cursor: testando ? 'not-allowed' : 'pointer',
-              fontSize: '0.82rem', fontFamily: "'DM Mono',monospace",
-              display: 'flex', alignItems: 'center', gap: 6
-            }}
-          >
-            {testando ? '⏳' : ''}
-            {testando ? 'Test...' : 'Test RT'}
-            {statoConnessione === 'ok' && <span style={{ color: '#00e5a0', fontSize: '2.1rem' }}>✓</span>}
-            {statoConnessione === 'errore' && <span style={{ color: '#ff4d6a',fontSize: '2.1rem' }}>✗</span>}
-          </button>
-          <button className={styles.addBtn} onClick={openAdd}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Nuovo utente
-          </button>
-        </div>
+        <button className={styles.addBtn} onClick={openAdd}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Nuovo utente
+        </button>
       </header>
-
-
-
-
 
       <div className={styles.content}>
         {utenti.map(u => {
@@ -313,7 +235,7 @@ export default function UtentiPage() {
                   <div className={styles.userMeta}>
                     <span style={{ color: ruolo?.colore }}>{ruolo?.label}</span>
                     <span className={styles.dot}>·</span>
-                    <span>PIN: {'●'.repeat(u.pin?.length || 8)}</span>
+                    <span>PIN: {'●'.repeat(8)}</span>
                   </div>
                 </div>
               </div>
@@ -387,11 +309,11 @@ export default function UtentiPage() {
 
               <div className={styles.field}>
                 <label style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                <span>PIN (8 cifre)</span>
+                <span>{modal === 'edit' ? 'Nuovo PIN (8 cifre) — vuoto = invariato' : 'PIN (8 cifre)'}</span>
                   <div style={{display:'flex',gap:8}}>
                     <button
                       type="button"
-                      onClick={() => { setPinInput(['','','','']); setPinConfirm(['','','','']); setShowPin(false); setTimeout(() => document.getElementById('pin-0')?.focus(), 50) }}
+                      onClick={() => { setPinInput(PIN_VUOTO()); setPinConfirm(PIN_VUOTO()); setShowPin(false); setTimeout(() => document.getElementById('pin-0')?.focus(), 50) }}
                       style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontSize:'0.95rem',display:'flex',alignItems:'center',gap:4}}
                     >
                       ✕ Pulisci
@@ -411,11 +333,6 @@ export default function UtentiPage() {
               <div className={styles.field}>
                 <label>Conferma PIN</label>
                 <PinBoxes which="confirm" values={pinConfirm} setValues={setPinConfirm} show={showPin} />
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.checkRow}>
-                </label>
               </div>
 
               {errore && <div className={styles.errore}>{errore}</div>}

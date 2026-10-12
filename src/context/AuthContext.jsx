@@ -1,89 +1,3 @@
-/*import { createContext, useContext, useState, useEffect } from 'react'
-import { NEGOZIO_ID as NEGOZIO_ID_DEFAULT } from '@/lib/config'
-
-const AuthContext = createContext(null)
-
-export function AuthProvider({ children, negozioId, negozioSlug }) {
-  const NEGOZIO_ID = negozioId || NEGOZIO_ID_DEFAULT
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [utenti, setUtenti] = useState([])
-
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem('sd_user')
-      if (saved) setUser(JSON.parse(saved))
-    } catch {}
-  }, [])
-
-  // Ricarica utenti ogni volta che cambia lo slug del negozio
-  useEffect(() => {
-    caricaUtenti()
-  }, [negozioSlug])
-
-  async function caricaUtenti() {
-    setLoading(true)
-    try {
-      // Passa lo slug come query param così la API sa quale negozio caricare
-      const slug = negozioSlug || (typeof window !== 'undefined'
-        ? window.location.hostname.replace('.digitalcase.it', '')
-        : 'dmi')
-      const res = await fetch(`/api/utenti?slug=${slug}`)
-      const data = await res.json()
-      if (Array.isArray(data)) setUtenti(data)
-    } catch(e) {
-      console.error('Errore caricamento utenti:', e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function login(userId, pinInput) {
-    const u = utenti.find(u => u.id === userId)
-    if (!u) return { ok: false, reason: 'Utente non trovato' }
-    if (!u.abilitato) return { ok: false, reason: 'Utente disabilitato' }
-    if (pinInput !== u.pin) return { ok: false, reason: 'PIN errato' }
-    const session = {
-      id: u.id,
-      name: u.nome,
-      role: u.ruolo,
-      initials: u.nome.substring(0, 2).toUpperCase(),
-      negozioId: NEGOZIO_ID,
-    }
-    setUser(session)
-    sessionStorage.setItem('sd_user', JSON.stringify(session))
-    return { ok: true }
-  }
-
-  function logout() {
-    setUser(null)
-    sessionStorage.removeItem('sd_user')
-  }
-
-  function can(permission) {
-    if (!user) return false
-    if (user.role === 'owner') return true
-    if (permission === 'cassa') return true
-    return false
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout, can, utenti, negozioId: NEGOZIO_ID, loadUtenti: caricaUtenti }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth deve essere dentro <AuthProvider>')
-  return ctx
-}
-
-
-*/
-
-
 import { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext(null)
@@ -95,17 +9,31 @@ export function AuthProvider({ children, negozioSlug }) {
   const [utenti, setUtenti] = useState([])
 
   useEffect(() => {
+    let salvato = null
     try {
-      const saved = sessionStorage.getItem('sd_user')
-      if (saved) setUser(JSON.parse(saved))
+      salvato = sessionStorage.getItem('sd_user')
+      if (salvato) setUser(JSON.parse(salvato))
     } catch {}
     caricaUtenti()
+    if (salvato) verificaSessione()
   }, [slug])
+
+  // Se il server non riconosce più la sessione (scaduta o utente disabilitato) si esce.
+  // Un errore di rete NON disconnette: la cassa deve continuare a funzionare.
+  async function verificaSessione() {
+    try {
+      const res = await fetch('/api/sessione', { credentials: 'same-origin' })
+      if (res.status === 401) {
+        setUser(null)
+        try { sessionStorage.removeItem('sd_user') } catch {}
+      }
+    } catch {}
+  }
 
   async function caricaUtenti() {
     setLoading(true)
     try {
-      const res = await fetch(`/api/utenti?slug=${slug}`)
+      const res = await fetch(`/api/utenti?slug=${encodeURIComponent(slug)}`)
       const data = await res.json()
       if (Array.isArray(data)) setUtenti(data)
     } catch (e) {
@@ -115,25 +43,29 @@ export function AuthProvider({ children, negozioSlug }) {
     }
   }
 
+  // Il PIN viene verificato dal server: nel browser non arriva mai nessun PIN.
   async function login(userId, pinInput) {
-    const u = utenti.find(u => u.id === userId)
-    if (!u) return { ok: false, reason: 'Utente non trovato' }
-    if (!u.abilitato) return { ok: false, reason: 'Utente disabilitato' }
-    if (pinInput !== u.pin) return { ok: false, reason: 'PIN errato' }
-    const session = {
-      id: u.id,
-      name: u.nome,
-      role: u.ruolo,
-      initials: u.nome.substring(0, 2).toUpperCase(),
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, userId, pin: pinInput }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.ok) return { ok: false, reason: data.reason || 'PIN errato' }
+      setUser(data.user)
+      sessionStorage.setItem('sd_user', JSON.stringify(data.user))
+      return { ok: true }
+    } catch {
+      return { ok: false, reason: 'Errore di rete' }
     }
-    setUser(session)
-    sessionStorage.setItem('sd_user', JSON.stringify(session))
-    return { ok: true }
   }
 
   function logout() {
     setUser(null)
-    sessionStorage.removeItem('sd_user')
+    try { sessionStorage.removeItem('sd_user') } catch {}
+    fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {})
   }
 
   function can(permission) {

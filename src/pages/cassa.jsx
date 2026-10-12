@@ -130,7 +130,11 @@ export default function CassaPage() {
   }
 
   useEffect(() => {
-    if (!user && !loading) { router.replace('/login'); return }
+    if (!user && !loading) router.replace('/login')
+  }, [user, loading, router])
+
+  useEffect(() => {
+    if (!user) return
     async function loadReparti() {
       const r = (await getRepartiDb(NEGOZIO_ID)).filter(r => r.abilitato)
       setReparti(r)
@@ -564,11 +568,12 @@ export default function CassaPage() {
             cmd += '3T'
           } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {*/
 
-
           if (info.metodo === 'carta') {
             cmd += '3T'
           } else if (info.metodo === 'nonriscosso') {
-            cmd += '102T'   // pagamento a credito = Non Riscosso (Glovo): chiude senza incasso, niente cassetto
+            cmd += '102T'   // Non Riscosso beni (Glovo): chiude senza incasso, niente cassetto
+          } else if (info.metodo === 'seguefattura') {
+            cmd += '104T'   // Segue fattura: documento commerciale legato a fattura, niente doppia IVA
           } else if (info.metodo === 'cortesia' || info.metodo === 'contanti') {
 
 
@@ -750,7 +755,7 @@ export default function CassaPage() {
         <div className={styles.headerLeft}>
           <div className={styles.logoMark}>🧾</div>
           <div>
-            <div className={styles.logoName}>ScontrinoDigitale</div>
+            <div className={styles.logoName}>DigitalCase</div>
             <div className={styles.headerUser}>{user?.name} · {user?.role === 'owner' ? 'Admin' : 'Cassiere'}</div>
           </div>
         </div>
@@ -841,7 +846,7 @@ export default function CassaPage() {
             </div>
             {ultimaChiusa && righe.length === 0 && (
               <div className={styles.ultimaChiusa}>
-                Ultimo scontrino: {ultimaChiusa.nome} €{fmt(ultimaChiusa.importo)}
+                Ultimo scontrino: €{fmt(ultimaChiusa.totale)}
               </div>
             )}
           </div>
@@ -1019,8 +1024,22 @@ export default function CassaPage() {
             )}
 
 
-
-
+{impostazioni.fatturazioneAbilitato && (
+              <button onClick={() => {
+                  if (righe.length > 0) {
+                    sessionStorage.setItem('fattura_da_cassa', JSON.stringify({ righe, totale }))
+                    router.push('/fatture/nuova')
+                  } else {
+                    router.push('/fatture')
+                  }
+                }}
+                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                  color:'#ffd06b', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
+                <span style={{fontSize:'1.4rem'}}>🧾</span>
+                <span>Fatture</span>
+              </button>
+            )}
 
           </div>
           {scontrinoAperto && righe.length === 0 && (
@@ -1066,7 +1085,7 @@ export default function CassaPage() {
                   }}
                 />
               </div>
-              <span className={styles.righeCount}>{righe.length} VOCI</span>
+              <span className={styles.righeCount}>{righe.length} {righe.length === 1 ? 'VOCE' : 'VOCI'}</span>
             </div>
             <div className={styles.righeList}>
               {righe.length === 0 && (
@@ -1263,6 +1282,7 @@ export default function CassaPage() {
           cortesiaAbilitato={impostazioni.cortesiaAbilitato}
           marca={rtConfig?.marca}
           nonRiscossoAbilitato={impostazioni.nonRiscossoAbilitato}
+          fatturazioneAbilitato={impostazioni.fatturazioneAbilitato}
         />
 
 
@@ -1276,7 +1296,7 @@ export default function CassaPage() {
             <div className={styles.confirmIcona}>🗑️</div>
             <div className={styles.confirmTitolo}>Annullare il conto?</div>
             <div className={styles.confirmSub}>
-              Verranno eliminate {righe.length} voci per un totale di €{fmt(totale)}.<br/>
+            {righe.length === 1 ? 'Verrà eliminata 1 voce' : `Verranno eliminate ${righe.length} voci`} per un totale di
               Questa operazione non può essere annullata.
             </div>
             <div className={styles.confirmBtns}>
@@ -1312,7 +1332,7 @@ export default function CassaPage() {
             )}
             <div className={styles.successTotale}>€ {fmt(showSuccesso.totale)}</div>
             <div className={styles.successMeta}>
-            {showSuccesso.metodo === 'carta' ? '💳 Carta / POS' : showSuccesso.metodo === 'nonriscosso' ? '🛵 Non riscosso (Glovo)' : '💵 Contanti'}
+            {showSuccesso.metodo === 'carta' ? '💳 Carta / POS' : showSuccesso.metodo === 'nonriscosso' ? '🛵 Non riscosso (Glovo)' : showSuccesso.metodo === 'seguefattura' ? '📄 Segue fattura' : '💵 Contanti'}
               {showSuccesso.metodo === 'contanti' && showSuccesso.resto > 0 &&
                 ` · Resto €${fmt(showSuccesso.resto)}`}
             </div>
@@ -1576,9 +1596,8 @@ export default function CassaPage() {
     </>
   )
 }
-//function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato }) {
-  //function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato, marca }) {
-    function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato, marca, nonRiscossoAbilitato }) {
+
+  function ChiusuraModal({ scontrino, onAnnulla, onSuccesso, cortesiaAbilitato, marca, nonRiscossoAbilitato, fatturazioneAbilitato }) {
   const [metodo, setMetodo] = useState('carta')
   const [datoCliente, setDatoCliente] = useState('')
   const [contanti, setContanti] = useState('')
@@ -1668,11 +1687,16 @@ export default function CassaPage() {
               🛵 Non riscosso (Glovo)
             </button>
             )}
+            {marca === '3i' && fatturazioneAbilitato && (
+            <button className={`${styles.metodoBtn} ${metodo==='seguefattura' ? styles.metodoActive : ''}`} onClick={() => setMetodo('seguefattura')}>
+              📄 Segue fattura
+            </button>
+            )}
 
 
             {cortesiaAbilitato && (
             <button className={`${styles.metodoBtn1} ${metodo==='cortesia' ? styles.metodoActive : ''}`} onClick={() => setMetodo('cortesia')}>
-              ��️ Fiscale + Cortesia
+                            🧾 Fiscale + Cortesia
             </button>
             )}
           </div>

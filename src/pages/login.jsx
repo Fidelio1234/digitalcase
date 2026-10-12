@@ -7,8 +7,6 @@ import styles from '@/styles/Login.module.css'
 
 const MAX_ATTEMPTS = 3
 const LOCK_SECONDS = 30
-const TECH_PIN = 'CRI1stia!'
-const MASTER_PWD = 'DMI2026ivan'
 
 function getSlug() {
   if (typeof window === 'undefined') return 'dmi'
@@ -140,13 +138,25 @@ router.replace(redirect)
     clearTimeout(longPressTimer.current); setLogoPressed(false)
   }
 
-  function checkTechPwd(val) {
-    if (val === TECH_PIN || val === MASTER_PWD) {
-      setTechMode(false)
-      router.push('/tech')
-      return true
+  async function checkTechPwd(val) {
+    if (!val) return
+    try {
+      const res = await fetch('/api/tech-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: val }),
+      })
+      if (res.ok) {
+        setTechMode(false)
+        router.push('/tech')
+        return
+      }
+      setTechError(res.status === 429 ? 'Troppi tentativi, riprova tra qualche minuto' : 'Password errata')
+    } catch {
+      setTechError('Errore di rete')
     }
-    return false
+    setTechPin('')
+    setTimeout(() => setTechError(''), 2500)
   }
 
   if (techMode) {
@@ -174,21 +184,15 @@ router.replace(redirect)
             <input
               type="password"
               value={techPin}
-              onChange={e => {
-                const val = e.target.value
-                setTechPin(val)
-                if (!checkTechPwd(val)) {
-                  const maxLen = Math.max(TECH_PIN.length, MASTER_PWD.length)
-                  if (val.length > maxLen) {
-                    setTechError('Password errata')
-                    setTechPin('')
-                    setTimeout(() => setTechError(''), 2000)
-                  }
-                }
-              }}
+
+
+
+              onChange={e => setTechPin(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter') checkTechPwd(techPin)
               }}
+
+
               autoFocus
               placeholder="Inserisci password..."
               style={{
@@ -200,6 +204,17 @@ router.replace(redirect)
               }}
             />
             {techError && <div style={{color:'#ff4d6a', fontSize:'0.8rem', textAlign:'center'}}>{techError}</div>}
+
+
+
+            <button onClick={() => checkTechPwd(techPin)}
+              style={{background:'#ffb830', border:'none', borderRadius:10, padding:'12px',
+                color:'#08090c', fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:700, cursor:'pointer'}}>
+              Entra
+            </button>
+
+
+
             <button onClick={() => { setTechMode(false); setTechPin(''); setTechError('') }}
               style={{background:'transparent', border:'1px solid #252830', borderRadius:10, padding:'10px',
                 color:'#eef0f6', fontFamily:"'DM Mono',monospace", fontSize:'0.8rem', cursor:'pointer'}}>
@@ -241,7 +256,7 @@ router.replace(redirect)
           </svg>
         </div>
         <div>
-          <div className={styles.logoName}>Scontrino<span>Digitale</span></div>
+          <div className={styles.logoName}>Digital<span>Case</span></div>
           <div className={styles.logoSub}>
             {loading ? 'Caricamento...' : 'Punto cassa'}
           </div>
@@ -285,7 +300,7 @@ router.replace(redirect)
         {!success ? (
           <>
             <div className={styles.pinDisplay}>
-              <div className={styles.pinHint}>'Inserisci PIN'</div>
+            <div className={styles.pinHint}>Inserisci PIN</div>
               <div className={styles.pinDots}>
               {[0,1,2,3,4,5,6,7].map(i => (
                   <div key={i} className={[

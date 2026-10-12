@@ -180,7 +180,7 @@ export function useCassa() {
       totale: righe.reduce((s, r) => s + r.totaleRiga, 0),
       timestamp: new Date().toISOString(),
     }
-    setUltimaChiusa(righe[righe.length - 1])
+    setUltimaChiusa({ totale: scontrino.totale })
     setRighe([])
     setInputCents(0)
     return scontrino

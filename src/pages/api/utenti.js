@@ -1,40 +1,30 @@
-import { supabase } from '@/lib/supabase'
-import { NEGOZIO_ID as NEGOZIO_ID_DEFAULT } from '@/lib/config'
+import { supabaseAdmin, negozioDaSlug } from '@/lib/serverAuth'
 
+// Elenco pubblico per la schermata di login: SENZA PIN, solo utenti abilitati.
 export default async function handler(req, res) {
-  // Ricava lo slug dal query param o dall'header
-  const slug = req.query.slug || req.headers['x-negozio-slug']
+  res.setHeader('Cache-Control', 'no-store')
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Metodo non consentito' })
 
-  let negozioId = NEGOZIO_ID_DEFAULT
+  try {
+    const slug = req.query.slug || req.headers['x-negozio-slug']
+    const negozio = await negozioDaSlug(slug)
+    if (!negozio) return res.status(404).json({ error: 'Negozio non trovato' })
 
-  if (slug) {
-    const { data: negozio, error } = await supabase
-      .from('negozi')
-      .select('id')
-      .eq('slug', slug)
-      .eq('attivo', true)
-      .single()
+    const { data, error } = await supabaseAdmin()
+      .from('utenti')
+      .select('id, nome, ruolo, abilitato')
+      .eq('negozio_id', negozio.id)
+      .eq('abilitato', true)
+    if (error) return res.status(500).json({ error: 'Errore del server' })
 
-    if (negozio?.id) {
-      negozioId = negozio.id
-    } else {
-      console.warn(`API utenti: negozio con slug "${slug}" non trovato, uso fallback DMI`)
-    }
+    const ordinati = [...data].sort((a, b) => {
+      if (a.ruolo === 'owner') return -1
+      if (b.ruolo === 'owner') return 1
+      return a.nome.localeCompare(b.nome)
+    })
+    return res.status(200).json(ordinati)
+  } catch (e) {
+    console.error('api/utenti:', e.message)
+    return res.status(500).json({ error: 'Errore del server' })
   }
-
-  const { data, error } = await supabase
-    .from('utenti')
-    .select('id, nome, pin, ruolo, abilitato')
-    .eq('negozio_id', negozioId)
-    .eq('abilitato', true)
-
-  if (error) return res.status(500).json({ error: error.message })
-
-  const sorted = [...data].sort((a, b) => {
-    if (a.ruolo === 'owner') return -1
-    if (b.ruolo === 'owner') return 1
-    return a.nome.localeCompare(b.nome)
-  })
-
-  return res.json(sorted)
 }

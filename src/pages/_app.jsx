@@ -1,10 +1,24 @@
 
 import '@/styles/globals.css'
-import { AuthProvider } from '@/context/AuthContext'
+import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { NegozioProvider, useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 
+const PAGINE_SENZA_LOGIN = ['/', '/login', '/card', '/scaduto', '/tech']
+
+function GuardiaSessione({ children }) {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const pubblica = PAGINE_SENZA_LOGIN.includes(router.pathname)
+
+  useEffect(() => {
+    if (!pubblica && !loading && !user) router.replace('/login')
+  }, [pubblica, loading, user, router])
+
+  if (!pubblica && !user) return null
+  return children
+}
 
 function AuthProviderWrapper({ children }) {
   const { negozio, loading, errore } = useNegozio() || {}
@@ -43,7 +57,7 @@ function AuthProviderWrapper({ children }) {
 
   return (
     
-    <AuthProvider negozioSlug={negozio?.slug || 'dmi'}>
+<AuthProvider negozioSlug={negozio?.slug || 'dmi'}>
       {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
         <div style={{
           background:'#ffb83022', borderBottom:'2px solid #ffb830',
@@ -54,7 +68,7 @@ function AuthProviderWrapper({ children }) {
           ⚠️ Licenza in scadenza tra <strong>{negozio.giorniRimanenti} giorni</strong> — contatta il tuo rivenditore
         </div>
       )}
-      {children}
+      <GuardiaSessione>{children}</GuardiaSessione>
     </AuthProvider>
   )
 }

@@ -7,6 +7,31 @@ import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabase'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Tech.module.css'
+import { COOKIE_TECH, tokenValido } from '@/lib/techSession'
+
+
+
+function slugCorrente() {
+  const hn = window.location.hostname
+  if (hn === 'localhost' || hn === '127.0.0.1') return process.env.NEXT_PUBLIC_NEGOZIO_SLUG || 'dmi'
+  return hn.replace('.digitalcase.it', '')
+}
+
+async function apiUtenti(body) {
+  try {
+    const res = await fetch('/api/utenti-gestione', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: slugCorrente(), ...body }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) return { error: data.error || 'Errore' }
+    return data
+  } catch {
+    return { error: 'Errore di rete' }
+  }
+}
 
 export default function TechPage() {
   const NEGOZIO_ID = useNegozioId()
@@ -19,7 +44,6 @@ export default function TechPage() {
   const [editNegozio, setEditNegozio] = useState(false)
   const [editingPin, setEditingPin] = useState(null)
   const [newPin, setNewPin] = useState('')
-  const [showPin, setShowPin] = useState({})
   const [expandedReparto, setExpandedReparto] = useState(null)
   const [showReset, setShowReset] = useState(false)
   const [toast, setToast] = useState('')
@@ -33,17 +57,8 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
   async function load() {
     setLoading(true)
     // Utenti da Supabase
-    const { data: utentiData } = await supabase
-      .from('utenti')
-      .select('*')
-      .eq('negozio_id', NEGOZIO_ID)
-      .order('created_at')
-    if (utentiData) {
-      const sorted = [...utentiData].sort((a,b) =>
-        a.ruolo === 'owner' ? -1 : b.ruolo === 'owner' ? 1 : a.nome.localeCompare(b.nome)
-      )
-      setUtenti(sorted)
-    }
+    const r = await apiUtenti({ azione: 'lista' })
+    if (r.utenti) setUtenti(r.utenti)
 
     // Reparti da Supabase
     const { data: repartiData } = await supabase
@@ -87,14 +102,10 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
 
   // ── PIN ────────────────────────────────────────────────────────────────────
   async function resetPin(utente) {
-    if (newPin.length < 8) { showToast('⚠ PIN deve essere almeno 8 cifre'); return }
-    const { error } = await supabase
-      .from('utenti')
-      .update({ pin: newPin })
-      .eq('id', utente.id)
-      .select()
-    if (error) { showToast('⚠ Errore: ' + error.message); return }
-    setUtenti(prev => prev.map(u => u.id === utente.id ? { ...u, pin: newPin } : u))
+    if (!/^\d{8}$/.test(newPin)) { showToast('⚠ Il PIN deve essere di 8 cifre'); return }
+    const r = await apiUtenti({ azione: 'salva', id: utente.id, pin: newPin })
+    if (r.error) { showToast('⚠ ' + r.error); return }
+    if (r.utenti) setUtenti(r.utenti)
     setEditingPin(null)
     setNewPin('')
     await loadUtenti() // aggiorna AuthContext
@@ -102,13 +113,9 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
   }
 
   async function toggleUtente(utente) {
-    const { error } = await supabase
-      .from('utenti')
-      .update({ abilitato: !utente.abilitato })
-      .eq('id', utente.id)
-      .select()
-    if (error) { showToast('⚠ Errore'); return }
-    setUtenti(prev => prev.map(u => u.id === utente.id ? { ...u, abilitato: !u.abilitato } : u))
+    const r = await apiUtenti({ azione: 'abilita', id: utente.id })
+    if (r.error) { showToast('⚠ ' + r.error); return }
+    if (r.utenti) setUtenti(r.utenti)
     showToast('✓ Stato aggiornato')
   }
 
@@ -203,7 +210,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
           <span>🔧 Pannello Tecnico</span>
           <span className={styles.headerSub}>Accesso riservato — invisibile ai clienti</span>
         </div>
-        <button className={styles.exitBtn} onClick={() => router.replace('/login')}>
+        <button className={styles.exitBtn} onClick={async () => { await fetch('/api/tech-login', { method: 'DELETE' }); router.replace('/login') }}>
           ← Esci
         </button>
       </header>
@@ -287,6 +294,62 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
 
 
 
+
+
+
+
+                  {/* PIN display/edit */}
+                  {editingPin === u.id ? (
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8}}>
+                      <span style={{fontSize:'0.75rem',color:'#5a5d6e'}}>Nuovo PIN (8 cifre):</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={8}
+                        placeholder="Nuovo PIN"
+                        value={newPin}
+                        onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0,8))}
+                        className={styles.pinEditInput}
+                        autoFocus
+                      />
+                      <button className={styles.savePin} onClick={() => resetPin(u)}>✓</button>
+                      <button className={styles.cancelPin} onClick={() => { setEditingPin(null); setNewPin('') }}>✕</button>
+                    </div>
+                  ) : (
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginTop:6}}>
+                      <span style={{fontSize:'0.75rem',color:'white'}}>PIN:</span>
+                      <span style={{
+                        fontFamily:'monospace', fontSize:'0.9rem',
+                        color:'#ffb830', letterSpacing:3,
+                        background:'rgba(255,184,48,0.1)',
+                        padding:'2px 10px', borderRadius:6,
+                      }}>
+                        {'●'.repeat(8)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {editingPin !== u.id && (
+                  <div className={styles.userActions}>
+                    <button className={styles.techBtn} onClick={() => { setEditingPin(u.id); setNewPin('') }}>
+                      🔑 Cambia PIN
+                    </button>
+                    {u.ruolo !== 'owner' && (
+                      <button
+                        className={`${styles.techBtn} ${u.abilitato ? styles.techBtnOff : styles.techBtnOn}`}
+                        onClick={() => toggleUtente(u)}
+                      >
+                        {u.abilitato ? '🔒 Disabilita' : '🔓 Abilita'}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
 {/* ── DASHBOARD TITOLARE ── */}
 <div className={styles.section}>
   <div className={styles.sectionTitle}>📊 Dashboard Titolare</div>
@@ -351,68 +414,6 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
   </div>
 </div>
 
-
-
-
-                  {/* PIN display/edit */}
-                  {editingPin === u.id ? (
-                    <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8}}>
-                      <span style={{fontSize:'0.75rem',color:'#5a5d6e'}}>Vecchio PIN: <strong style={{color:'#ffb830'}}>{u.pin}</strong></span>
-                      <span style={{color:'#5a5d6e'}}>→</span>
-                      <span style={{fontSize:'0.75rem',color:'#5a5d6e'}}>Nuovo:</span>
-                      <input
-                        type="text"
-                        maxLength={16}
-                        placeholder="Nuovo PIN"
-                        value={newPin}
-                        onChange={e => setNewPin(e.target.value.slice(0,16))}
-                        className={styles.pinEditInput}
-                        autoFocus
-                      />
-                      <button className={styles.savePin} onClick={() => resetPin(u)}>✓</button>
-                      <button className={styles.cancelPin} onClick={() => { setEditingPin(null); setNewPin('') }}>✕</button>
-                    </div>
-                  ) : (
-                    <div style={{display:'flex',alignItems:'center',gap:8,marginTop:6}}>
-                      <span style={{fontSize:'0.75rem',color:'white'}}>PIN:</span>
-                      <span style={{
-                        fontFamily:'monospace', fontSize:'0.9rem',
-                        color:'#ffb830', letterSpacing:3,
-                        background:'rgba(255,184,48,0.1)',
-                        padding:'2px 10px', borderRadius:6,
-                      }}>
-                        {showPin[u.id] ? u.pin : '●'.repeat(u.pin?.length || 4)}
-                      </span>
-                      <button
-                        onClick={() => setShowPin(p => ({...p, [u.id]: !p[u.id]}))}
-                        style={{background:'none',border:'none',cursor:'pointer',color:'#5a5d6e',fontSize:'0.75rem'}}
-                      >
-                        {showPin[u.id] ? '🙈' : '👁'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {editingPin !== u.id && (
-                  <div className={styles.userActions}>
-                    <button className={styles.techBtn} onClick={() => { setEditingPin(u.id); setNewPin('') }}>
-                      🔑 Cambia PIN
-                    </button>
-                    {u.ruolo !== 'owner' && (
-                      <button
-                        className={`${styles.techBtn} ${u.abilitato ? styles.techBtnOff : styles.techBtnOn}`}
-                        onClick={() => toggleUtente(u)}
-                      >
-                        {u.abilitato ? '🔒 Disabilita' : '🔓 Abilita'}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* ── REPARTI ── */}
         <div className={styles.section}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -438,8 +439,8 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                     fontSize:'1.1rem',flexShrink:0
                   }}>
                     {r.icona === 'coffee' ? '☕' : r.icona === 'beer' ? '🍺' :
-                     r.icona === 'wine' ? '🍷' : r.icona === 'cake' ? '��' :
-                     r.icona === 'pizza' ? '��' : '📦'}
+                     r.icona === 'wine' ? '🍷' : r.icona === 'cake' ? '🍰' :
+                     r.icona === 'pizza' ? '🍕' : '📦'}
                   </div>
                   <div style={{flex:1}}>
                     <div style={{fontSize:'0.9rem',fontWeight:500}}>{r.nome}</div>
@@ -536,6 +537,13 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
           <SezioneNonRiscosso negozioId={NEGOZIO_ID} showToast={showToast} />
         </div>
 
+
+        {/* ── FATTURAZIONE ELETTRONICA ── */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>🧾 Fatturazione Elettronica</div>
+          <SezioneFatturazione negozioId={NEGOZIO_ID} showToast={showToast} />
+        </div>
+
         {/* ── REGISTRATORE TELEMATICO ── */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>🖨️ Stampanti Comande</div>
@@ -578,6 +586,16 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
   )
 }
 
+
+export async function getServerSideProps({ req }) {
+  if (!tokenValido(req.cookies?.[COOKIE_TECH])) {
+    return { redirect: { destination: '/login', permanent: false } }
+  }
+  return { props: {} }
+}
+
+
+
 function SezioneNonRiscosso({ negozioId, showToast }) {
   const [attivo, setAttivo] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -601,6 +619,12 @@ function SezioneNonRiscosso({ negozioId, showToast }) {
     showToast(nuovo ? '✓ Non riscosso attivato' : '✓ Non riscosso disattivato')
   }
 
+
+
+
+
+
+
   return (
     <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12}}>
       <div style={{fontSize:'0.82rem', color:'white'}}>
@@ -614,6 +638,44 @@ function SezioneNonRiscosso({ negozioId, showToast }) {
           color: attivo ? '#00e5a0' : '#5a5d6e'}}>
         {attivo ? 'ON' : 'OFF'}
       </button>
+    </div>
+  )
+}
+
+
+function SezioneFatturazione({ negozioId, showToast }) {
+  const [attivo, setAttivo] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!negozioId) return
+    supabase.from('impostazioni_negozio').select('fatturazione_abilitato')
+      .eq('negozio_id', negozioId).single()
+      .then(({ data }) => { setAttivo(!!data?.fatturazione_abilitato); setLoaded(true) })
+  }, [negozioId])
+
+  async function toggle() {
+    const nuovo = !attivo
+    const { error } = await supabase.from('impostazioni_negozio')
+      .update({ fatturazione_abilitato: nuovo }).eq('negozio_id', negozioId)
+    if (error) { showToast('⚠ Errore: ' + error.message); return }
+    setAttivo(nuovo)
+    showToast(nuovo ? '✓ Fatturazione attivata' : '✓ Fatturazione disattivata')
+  }
+
+  if (!loaded) return <div style={{ color: '#5a5d6e' }}>Caricamento…</div>
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6' }}>Modulo Fatturazione</div>
+        <div style={{ fontSize: '0.72rem', color: '#5a5d6e', marginTop: 2 }}>Abilita l'emissione di fatture elettroniche (pagina /fatture)</div>
+      </div>
+      <div onClick={toggle}
+        style={{ width: 44, height: 24, borderRadius: 12, cursor: 'pointer',
+          background: attivo ? '#00e5a0' : '#252830', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+        <div style={{ position: 'absolute', top: 2, left: attivo ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left 0.2s' }} />
+      </div>
     </div>
   )
 }
