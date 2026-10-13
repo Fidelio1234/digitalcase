@@ -148,6 +148,7 @@ router.replace(redirect)
       })
       if (res.ok) {
         setTechMode(false)
+        setTechPin('')
         router.push('/tech')
         return
       }
@@ -183,8 +184,8 @@ router.replace(redirect)
             </div>
             <input
               type="password"
+              autoComplete="new-password"
               value={techPin}
-
 
 
               onChange={e => setTechPin(e.target.value)}
@@ -349,7 +350,7 @@ router.replace(redirect)
         )}
       </div>
 
-      <div className={styles.bottomBar}>DigitalCase v0.1 · © 2026</div>
+     
       <button
 onClick={async () => {
   if (shutdownPending) return

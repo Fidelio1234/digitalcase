@@ -19,16 +19,36 @@ const NATURA_IVA_OPTIONS = [
 
 
 const ICONE = {
-  coffee:'☕', cake:'🍰', food:'🍽️', drink:'🥤', beer:'🍺',
-  wine:'🍷', pizza:'🍕', sandwich:'🥪', ice_cream:'🍦', candy:'🍬',
-  bread:'🥐', fruit:'🍎', salad:'🥗', fish:'🐟', meat:'🥩',
-  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️', box:'��',
+  // Caffetteria e colazione
+  coffee:'☕', tea:'🍵', croissant:'🥐', bread:'🥐',
+  // Dolci
+  cake:'🍰', cupcake:'🧁', donut:'🍩', cookie:'🍪', chocolate:'🍫',
+  candy:'🍬', ice_cream:'🍦', icecream_bowl:'🍨',
+  // Cibo
+  food:'🍽️', pizza:'🍕', sandwich:'🥪', burger:'🍔',
+  fries:'🍟', taco:'🌮', pasta:'🍝', ramen:'🍜',
+  sushi:'🍣', cheese:'🧀', salad:'🥗',
+  soup:'🥣', meat:'🥩', bacon:'🥓', chicken:'🍗',
+  fish:'🐟', skewer:'🍢', popcorn:'🍿', pretzel:'🥨',
+  // Frutta e verdura
+  fruit:'🍎',
+  // Bevande
+  drink:'🥤', water:'💧', juice:'🧃', milk:'🥛', beer:'🍺',
+  wine:'🍷', cocktail:'🍸', whisky:'🥃',
+  wine_bottle:'🍾',
+  // Negozio e generico
+  shopping:'🛍️', gift:'🎁', star:'⭐', tag:'🏷️',
+  box:'📦', bag:'👜', heart:'❤️', fire:'🔥', sparkles:'✨',
+  money:'💶', card:'💳', scissors:'✂️', book:'📖',
+  flower:'💐', plant:'🌿', shirt:'👕',
 }
 
 const COLORI = [
   '#00e5a0','#ff9f43','#ff6b6b','#6482ff',
   '#ffd93d','#c44dff','#00d2ff','#ff4d94',
-  '#a8e063','#f7971e',
+  '#a8e063','#f7971e','#FFFAF0','#FFB6C1','#FF00FF',
+  '#7FFFD4','#0000FF','#8A2BE2','#B22222',
+  '#ADFF2F','#008000','#E0FFFF','#808080',
 ]
 
 const emptyReparto = () => ({
