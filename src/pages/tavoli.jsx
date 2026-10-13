@@ -62,8 +62,11 @@ export default function TavoliPage() {
     })
     setTavoli(tutti)
     setImpostazioni(imp)
-    setReparti(r.filter(r => r.abilitato))
-    if (r.length > 0) setRepartoAttivo(prev => prev || r[0].id)
+    const abilitati = r.filter(x => x.abilitato)
+    setReparti(abilitati)
+    setRepartoAttivo(prev =>
+      abilitati.some(x => x.id === prev) ? prev : (abilitati[0]?.id ?? null)
+    )
   }, [NEGOZIO_ID])
 
   // ── caricamento iniziale ─────────────────────────────────────────────────
@@ -85,72 +88,7 @@ export default function TavoliPage() {
     return () => clearInterval(interval)
   }, [vista, carica])
 
-  // ── funzioni ─────────────────────────────────────────────────────────────
-
-
-  /*useEffect(() => {
-    if (!NEGOZIO_ID) return
-    if (vista !== 'griglia') return
-    const interval = setInterval(() => {
-      getTavoliDb(NEGOZIO_ID).then(t => {
-        setTavoli(prev => {
-          const tavMap = Object.fromEntries(t.map(x => [x.numero, x]))
-          return prev.map(p => tavMap[p.numero] || p)
-        })
-      })
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [vista, NEGOZIO_ID])   */
   
-
-
-
-  /*function startLongPress(tavolo) {
-    if (tavolo.stato !== 'occupato') return
-    longPressTimer.current = setTimeout(() => {
-      setModalElimina(tavolo.numero)
-      setPinElimina('')
-      setPinErrore(false)
-    }, 2000)
-  }
-
-  function cancelLongPress() {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
-  }
-
-  async function verificaPinEdElimina(pin) {
-    const { data: utenti } = await supabase
-      .from('utenti')
-      .select('pin, ruolo')
-      .eq('negozio_id', NEGOZIO_ID)
-      .eq('ruolo', 'owner')
-      .single()
-
-    if (!utenti || utenti.pin !== pin) {
-      setPinErrore(true)
-      setPinElimina('')
-      setTimeout(() => setPinErrore(false), 1500)
-      return
-    }
-
-
-
-
-
-
-
-    await chiudiTavoloDb(NEGOZIO_ID, modalElimina)
-    setModalElimina(null)
-    setPinElimina('')
-    await carica()
-  }
-
-
-*/
-
 
 
   function apriTavolo(tavolo) {
@@ -786,98 +724,9 @@ export default function TavoliPage() {
     )
   }
 
-  // ── MODAL NOTA ───────────────────────────────────────────────────────────
-  if (notaModal !== null) {
-    return (
-      <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
-        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, display:'flex', flexDirection:'column', gap:16 }}>
-          <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#eef0f6' }}>✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}</div>
-          <div style={{ display:'flex', gap:8 }}>
-            <button onClick={() => setNotaTipo('rimozione')}
-              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
-                background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
-                color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
-              − Rimozione
-            </button>
-            <button onClick={() => setNotaTipo('aggiunta')}
-              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
-                background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
-                color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
-              + Aggiunta
-            </button>
-          </div>
-            {notaTipo === 'aggiunta' && impostazioni.aggiunteRapide?.length > 0 && (() => {
-              const gruppiMap = {}
-              for (const a of impostazioni.aggiunteRapide) {
-                if (!gruppiMap[a.costo]) gruppiMap[a.costo] = new Set()
-                gruppiMap[a.costo].add(a.nome)
-              }
-              const tiers = Object.entries(gruppiMap).map(([costo, s]) => ({ costo: parseInt(costo), items: [...s] })).sort((a,b) => a.costo - b.costo)
-              return (
-                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>AGGIUNTE RAPIDE</div>
-                  {tiers.map(({ costo, items }) => (
-                    <div key={costo}>
-                      <div style={{ fontSize:'0.82rem', color:'#ffb830', marginBottom:4 }}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
-                      <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                        {items.map(item => {
-                        const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
-                        return (
-                          <button key={`${costo}-${item}`}
-                            onClick={() => setAggiunte(prev => {
-                              const esiste = prev.find(a => a.nome === item)
-                              if (esiste) return prev.filter(a => a.nome !== item)
-                              return [...prev, { nome: item, costo }]
-                            })}
-                            style={{
-                              padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                              border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
-                              background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
-                              color: selected ? '#00e5a0' : '#eef0f6',
-                              fontWeight: selected ? 700 : 400,
-                            }}>
-                            {item}
-                          </button>
-                        )
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                  {aggiunte.length > 0 && (
-                    <div style={{ fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px' }}>
-                      💰 Totale: +€{(aggiunte.reduce((s,a) => s + a.costo, 0)/100).toFixed(2).replace('.',',')} — {aggiunte.map(a => a.nome).join(', ')}
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
-          <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value)}
-            placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi...'}
-            rows={3}
-            style={{ background:'#1a1c24', border:'1px solid #252830', borderRadius:10, padding:12, color:'#eef0f6', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}
-          />
-          <div style={{ display:'flex', gap:10 }}>
-            <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
-              style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>Annulla</button>
-            <button onClick={() => {
-                if (notaTipo === 'aggiunta' && aggiunte.length > 0) {
-                  const nomi = aggiunte.map(a => a.nome).join(', ')
-                  const testoFinale = notaTesto ? `${nomi} — ${notaTesto}` : nomi
-                  salvaNota(notaModal, testoFinale, notaTipo, aggiunte.reduce((s,a) => s + a.costo, 0))
-                } else {
-                  salvaNota(notaModal, notaTesto, notaTipo, impostazioni.costoAggiunta ?? 50)
-                }
-                setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([])
-              }}
-              style={{ flex:1, padding:12, borderRadius:10, background:'#00e5a0', border:'none', color:'#08090c', fontWeight:700, cursor:'pointer' }}>Salva</button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
-  
-  
+
+
 
   // ── VISTA GRIGLIA TAVOLI ─────────────────────────────────────────────────
   return (
@@ -919,7 +768,7 @@ export default function TavoliPage() {
                 {occupato ? (
                   <>
                     <div style={{ fontSize:'0.98rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totTavolo)}</div>
-                    <div style={{ fontSize:'0.88rem', color:'#00ffb3' }}>{t.righe?.filter(r => r.id !== 'coperto').length || 0} prodotti</div>
+                    <div style={{ fontSize:'0.88rem', color:'#00ffb3' }}>{(() => { const n = t.righe?.filter(r => r.id !== 'coperto').length || 0; return n === 1 ? '1 prodotto' : `${n} prodotti` })()}</div>
                     {tempo && <div style={{ fontSize:'0.95rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>}
                     {impostazioni.copertoAbilitato && t.coperti > 0 && (
                       <div style={{ fontSize:'0.95rem', color:'#00ffb3' }}>👤 {t.coperti} coperti</div>
