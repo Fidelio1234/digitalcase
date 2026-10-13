@@ -223,7 +223,7 @@ export default function AsportoPage() {
         </button>
         <div style={{ flex:1 ,textAlign:'center'}}>
           <div style={{ fontSize:'1.5rem', fontWeight:700, }}>🛵 Asporto</div>
-          <div style={{ fontSize:'1.5rem', color:'#ffb830' }}>{asporti.length} ordini aperti</div>
+          <div style={{ fontSize:'1.5rem', color:'#ffb830' }}>{asporti.length === 1 ? '1 ordine aperto' : `${asporti.length} ordini aperti`}</div>
         </div>
         <button onClick={() => setShowNuovoAsporto(true)}
           style={{ background:'#00e5a0', border:'none', borderRadius:10, color:'#08090c', padding:'10px 20px', cursor:'pointer', fontSize:'0.82rem', fontWeight:700 }}>
@@ -260,7 +260,7 @@ export default function AsportoPage() {
               </div>
               <div style={{ fontWeight:700, fontSize:'1.2rem', marginTop:2 }}>{a.nome_cliente}</div>
               <div style={{ fontSize:'0.9rem', color:'#ffb830', marginTop:2 }}>
-                {fmtOra(a.aperto_alle)} · {(a.righe || []).length} prodotti
+              {fmtOra(a.aperto_alle)} · {(a.righe || []).length === 1 ? '1 prodotto' : `${(a.righe || []).length} prodotti`}
               </div>
             </div>
           ))}

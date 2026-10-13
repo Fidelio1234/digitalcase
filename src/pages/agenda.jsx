@@ -328,7 +328,7 @@ export default function AgendaPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{p.cliente_nome}{p.cliente_telefono ? ` · ${p.cliente_telefono}` : ''}</div>
                   <div style={{ fontSize: '0.78rem', color: '#eef0f6aa' }}>{(p.servizi || []).map(s => s.nome).join(' + ')} · € {fmtEuro(p.totale || 0)}{p.num_slot > 1 ? ` · ${p.num_slot * STEP_MIN} min` : ''}</div>
-                  {p.operatore_nome && <div style={{ fontSize: '0.92rem', color: '#00FF00' }}>👤 ORDINE PRESO DA {p.operatore_nome}</div>}
+                  {p.operatore_nome && <div style={{ fontSize: '0.92rem', color: '#00FF00' }}>👤 PRENOTATO DA {p.operatore_nome}</div>}
                   {p.note && <div style={{ fontSize: '0.78rem', color: 'yellow', marginTop: 2 }}> 📝 {p.note}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
