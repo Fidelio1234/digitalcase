@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useNegozioId } from '@/hooks/useNegozioId'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/router'
 import styles from '@/styles/Utenti.module.css'
@@ -38,6 +40,7 @@ async function apiUtenti(body) {
 }
 
 export default function UtentiPage() {
+  const NEGOZIO_ID = useNegozioId()
   const { user, loadUtenti } = useAuth()
   const router = useRouter()
   const [utenti, setUtenti] = useState([])
@@ -49,6 +52,8 @@ export default function UtentiPage() {
   const [showPin, setShowPin] = useState(false)
   const [toast, setToast] = useState('')
   const [confirmElimina, setConfirmElimina] = useState(null)
+  const [testando, setTestando] = useState(false)
+  const [statoConnessione, setStatoConnessione] = useState(null)
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
@@ -58,6 +63,26 @@ export default function UtentiPage() {
       if (r.utenti) setUtenti(r.utenti)
     })
   }, [user, router])
+
+  async function testConnessione() {
+    setTestando(true)
+    setStatoConnessione(null)
+    try {
+      const { data: negozio } = await supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single()
+      const cfg = negozio?.rt_config?.config
+      if (!cfg?.ip) { setStatoConnessione('errore'); setTestando(false); return }
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      let res
+      if (isLocalhost) {
+        res = await fetch('/api/ditron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {}, marca: cfg.marca }) })
+      } else {
+        res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca: cfg.marca, ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {} }) })
+      }
+      const data = await res.json()
+      setStatoConnessione(data.ok ? 'ok' : 'errore')
+    } catch (e) { setStatoConnessione('errore') }
+    setTestando(false)
+  }
 
   function showToast(msg) {
     setToast(msg)
@@ -213,12 +238,28 @@ export default function UtentiPage() {
           <span>Utenti e PIN</span>
           <span className={styles.headerSub}>{utenti.length} utenti configurati</span>
         </div>
-        <button className={styles.addBtn} onClick={openAdd}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Nuovo utente
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={testConnessione}
+            disabled={testando}
+            style={{
+              padding: '8px 14px', borderRadius: 10, border: '1px solid #252830',
+              background: '#1a1c24', color: testando ? '#5a5d6e' : '#eef0f6',
+              cursor: testando ? 'not-allowed' : 'pointer', fontSize: '0.82rem',
+              fontFamily: "'DM Mono',monospace", display: 'flex', alignItems: 'center', gap: 6
+            }}
+          >
+            {testando ? '⏳' : ''}{testando ? 'Test...' : 'Test RT'}
+            {statoConnessione === 'ok' && <span style={{ color: '#00e5a0', fontSize: '2.1rem' }}>✓</span>}
+            {statoConnessione === 'errore' && <span style={{ color: '#ff4d6a', fontSize: '2.1rem' }}>✗</span>}
+          </button>
+          <button className={styles.addBtn} onClick={openAdd}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nuovo utente
+          </button>
+        </div>
       </header>
 
       <div className={styles.content}>
