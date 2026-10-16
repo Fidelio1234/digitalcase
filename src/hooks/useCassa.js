@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from 'react'
+import { totaliPerIva } from '@/lib/iva'
 
 export function useCassa() {
   const [inputCents, setInputCents] = useState(0)
   const [righe, setRighe] = useState([])
   const [scontrinoAperto, setScontrinoAperto] = useState(false)
   const [ultimaChiusa, setUltimaChiusa] = useState(null)
+  
 
   // Carica da sessionStorage solo lato client
   useEffect(() => {
@@ -187,14 +189,8 @@ export function useCassa() {
   }, [righe])
 
   const totale = righe.reduce((s, r) => s + r.totaleRiga, 0)
-  const subtotalePerIva = righe.reduce((acc, r) => {
-    const k = String(r.iva)
-    acc[k] = (acc[k] || 0) + r.totaleRiga
-    return acc
-  }, {})
 
-
-
+  const subtotalePerIva = totaliPerIva(righe)
 
 
 
@@ -249,7 +245,7 @@ export function useCassa() {
   function applicaSconto(tipo, valore) {
     if (tipo === 'euro') {
       // Stessa logica della cassa: input in centesimi
-      const scontoCents = parseInt(valore) || 0
+      const scontoCents = euroInCentesimi(valore)
       if (scontoCents <= 0 || scontoCents >= totale) return false
       setRighe(prev => {
         // Aggiunge una riga sconto negativa
@@ -268,7 +264,7 @@ export function useCassa() {
       })
     } else {
       const perc = parseFloat(valore.replace(',','.'))
-      if (perc <= 0 || perc >= 100) return false
+      if (!(perc > 0 && perc < 100)) return false
       const scontoCents = Math.round(totale * perc / 100)
       setRighe(prev => [...prev, {
         id: Date.now(),
@@ -295,6 +291,19 @@ export function useCassa() {
     apriScontrino: () => setScontrinoAperto(true)
   }
 }
+
+
+// Converte quello che scrive l'utente (es. "2", "2,22", "2.22", "1.250,50") in centesimi interi.
+// Restituisce 0 se il valore non è valido (per esempio più di due decimali).
+export function euroInCentesimi(testo) {
+  let s = String(testo ?? '').trim().replace(/\s/g, '')
+  if (!s) return 0
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.')
+  if (!/^\d*\.?\d{0,2}$/.test(s)) return 0
+  return Math.round(parseFloat(s) * 100) || 0
+}
+
+
 
 function fmt(cents) {
   return (cents / 100).toFixed(2).replace('.', ',')

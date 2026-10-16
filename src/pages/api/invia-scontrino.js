@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { totaliPerIva } from '@/lib/iva'
 
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -28,13 +29,8 @@ export default async function handler(req, res) {
     </tr>
   `).join('')
 
-  const ivaRighe = Object.entries(
-    scontrino.righe.reduce((acc, r) => {
-      const k = String(r.iva)
-      acc[k] = (acc[k] || 0) + r.totaleRiga
-      return acc
-    }, {})
-  ).map(([iva, imp]) => `
+  const ivaRighe = Object.entries(totaliPerIva(scontrino.righe)).map(([iva, imp]) => `
+
     <tr>
       <td colspan="2" style="padding:6px 16px;color:#5a5d6e;font-size:12px">IVA ${iva}%</td>
       <td style="padding:6px 16px;color:#5a5d6e;font-size:12px;text-align:right;font-family:monospace">

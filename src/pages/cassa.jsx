@@ -3,12 +3,12 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
-
+import { totaliPerIva } from '@/lib/iva'
 import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza, salvaAnnulloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
-import { useCassa } from '@/hooks/useCassa'
+import { useCassa, euroInCentesimi } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini } from '@/lib/storage'
 import Head from 'next/head'
@@ -878,19 +878,26 @@ export default function CassaPage() {
             </button>
           </div>
 
+
+
+
+
           {(righe.length > 0 || scontrinoAperto) && (
             <div className={styles.subtotale}>
-              <div className={styles.subtotaleRow}
-                style={{cursor:'pointer', userSelect:'none'}}
-                onMouseDown={() => { longPressTimer.current = setTimeout(() => setShowSconto(true), 600) }}
-                onMouseUp={() => clearTimeout(longPressTimer.current)}
-                onMouseLeave={() => clearTimeout(longPressTimer.current)}
-                onTouchStart={() => { longPressTimer.current = setTimeout(() => setShowSconto(true), 600) }}
-                onTouchEnd={() => clearTimeout(longPressTimer.current)}
-              >
-                <span>Subtotale {showSconto && '✂️'}</span>
+              <div className={styles.subtotaleRow} style={{alignItems:'center'}}>
+                <span>Subtotale</span>
+                {righe.length > 0 && (
+                  <button
+                    onClick={() => setShowSconto(true)}
+                    style={{padding:'4px 14px', borderRadius:8, background:'#1a1c24',
+                      border:'1px solid #00e5a0', color:'#00e5a0', fontWeight:700,
+                      fontSize:'0.8rem', cursor:'pointer'}}>
+                    ✂️ Sconto
+                  </button>
+                )}
                 <span>€ {fmt(totale)}</span>
               </div>
+
               {Object.entries(subtotalePerIva).map(([iva, imp]) => (
                 <div key={iva} className={styles.subtotaleIva}>
                   <span>IVA {iva}%</span>
@@ -899,6 +906,8 @@ export default function CassaPage() {
               ))}
             </div>
           )}
+
+
 
 
           <div style={{display:'flex', gap:8, marginBottom:8, flexWrap:'wrap'}}>
@@ -1121,6 +1130,7 @@ export default function CassaPage() {
   <div className={styles.rigaTotale}>€ {fmt(r.totaleRiga)}</div>
   
   {/* Bottoni quantità */}
+  {!(r.repartoId === null && r.importo < 0) && (
   <div style={{ display:'flex', alignItems:'center', gap:4, marginRight: 18 }}>
     <button
       onClick={() => aggiornaQuantita(r.id, -1)}
@@ -1134,8 +1144,9 @@ export default function CassaPage() {
       style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
     >+</button>
   </div>
+  )}
 
-  {(impostazioni.cortesiaAbilitato || impostazioni.tavoliAbilitati) && (
+    {(impostazioni.cortesiaAbilitato || impostazioni.tavoliAbilitati) && !(r.repartoId === null && r.importo < 0) && (
                     <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
                       title="Aggiungi nota"
                       style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
@@ -1394,7 +1405,7 @@ export default function CassaPage() {
             />
             {valoreSconto && tipoSconto === 'euro' && (
               <div style={{textAlign:'center',color:'#00e5a0',marginBottom:12,fontSize:'0.85rem'}}>
-                Sconto: € {fmt(parseInt(valoreSconto) || 0)} · Nuovo totale: € {fmt(totale - (parseInt(valoreSconto) || 0))}
+                Sconto: € {fmt(euroInCentesimi(valoreSconto))} · Nuovo totale: € {fmt(totale - euroInCentesimi(valoreSconto))}
               </div>
             )}
             {valoreSconto && tipoSconto === 'percentuale' && (
@@ -1659,13 +1670,10 @@ export default function CassaPage() {
           </div>
         </div>
         <div className={styles.modalIva}>
-          {Object.entries(
-            scontrino.righe.reduce((acc,r) => {
-              const k = String(r.iva)
-              acc[k] = (acc[k]||0) + r.totaleRiga
-              return acc
-            }, {})
-          ).map(([iva,imp]) => (
+
+        {Object.entries(totaliPerIva(scontrino.righe)).map(([iva,imp]) => (
+
+
             <div key={iva} className={styles.modalIvaRow}>
               <span>IVA {iva}% su €{fmt(imp)}</span>
               <span>€ {fmt(Math.round(imp * parseInt(iva) / (100 + parseInt(iva))))}</span>

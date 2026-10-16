@@ -5,6 +5,7 @@ import { getNegozio, getContatori } from '@/lib/storage'
 import { getStoricoDb, salvaChiusuraDb, getChiusureDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Storico.module.css'
+import { totaliPerIva } from '@/lib/iva'
 
 function fmt(cents) {
   return (cents / 100).toFixed(2).replace('.', ',')
@@ -73,10 +74,7 @@ export default function StoricoPage() {
   const totaleCarte = scontriniFiltrati.filter(x => !x.annullato && x.metodo === 'carta').reduce((s, x) => s + (x.totale || 0), 0)
   const totaleContanti = scontriniFiltrati.filter(x => !x.annullato && x.metodo === 'contanti').reduce((s, x) => s + (x.totale || 0), 0)
   const totaleIva = scontriniFiltrati.filter(x => !x.annullato).reduce((acc, s) => {
-    s.righe?.forEach(r => {
-      const k = String(r.iva)
-      acc[k] = (acc[k] || 0) + r.totaleRiga
-    })
+    for (const [k, v] of Object.entries(totaliPerIva(s.righe))) acc[k] = (acc[k] || 0) + v
     return acc
   }, {})
 
@@ -105,10 +103,7 @@ async function eseguiChiusura() {
     const totaleCarteFresco = scontriniDaChiudere.filter(x => !x.annullato && x.metodo === 'carta').reduce((s, x) => s + (x.totale || 0), 0)
     const totaleContantiFresco = scontriniDaChiudere.filter(x => !x.annullato && x.metodo === 'contanti').reduce((s, x) => s + (x.totale || 0), 0)
     const totaleIvaFresco = scontriniDaChiudere.filter(x => !x.annullato).reduce((acc, s) => {
-      s.righe?.forEach(r => {
-        const k = String(r.iva)
-        acc[k] = (acc[k] || 0) + r.totaleRiga
-      })
+      for (const [k, v] of Object.entries(totaliPerIva(s.righe))) acc[k] = (acc[k] || 0) + v
       return acc
     }, {})
 
@@ -330,13 +325,8 @@ async function eseguiChiusura() {
                       <span>TOTALE</span>
                       <span>€ {fmt(s.totale)}</span>
                     </div>
-                    {Object.entries(
-                      s.righe?.reduce((acc, r) => {
-                        const k = String(r.iva)
-                        acc[k] = (acc[k] || 0) + r.totaleRiga
-                        return acc
-                      }, {}) || {}
-                    ).map(([iva, imp]) => (
+
+                      {Object.entries(totaliPerIva(s.righe)).map(([iva, imp]) => (
                       <div key={iva} className={styles.dettaglioIva}>
                         <span>IVA {iva}%</span>
                         <span>€ {fmt(Math.round(imp * parseInt(iva) / (100 + parseInt(iva))))}</span>
