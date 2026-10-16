@@ -1051,19 +1051,25 @@ export default function CassaPage() {
             )}
 
           </div>
-          {scontrinoAperto && righe.length === 0 && (
-            <button className={styles.chiudiBtn}
-              style={{background:'#ff4d6a'}}
-              onClick={() => setShowConfirmAnnulla(true)}>
-              🗑️ Annulla scontrino
-            </button>
-          )}
-          <button className={styles.chiudiBtn} onClick={handleChiudi} disabled={righe.length === 0 || (scontrinoAperto && righe.length === 0)}>
-            Chiudi scontrino
-            {righe.length > 0 && <span className={styles.chiudiBadge}>€ {fmt(totale)}</span>}
-          </button>
-        </div>
 
+          <div style={{marginTop:'auto', position:'sticky', bottom:0, zIndex:5,
+            display:'flex', flexDirection:'column', gap:10}}>
+            {scontrinoAperto && righe.length === 0 && (
+              <button className={styles.chiudiBtn}
+                style={{background:'#ff4d6a', position:'static', marginTop:0}}
+                onClick={() => setShowConfirmAnnulla(true)}>
+                🗑️ Annulla scontrino
+              </button>
+            )}
+            <button className={styles.chiudiBtn}
+              style={{position:'static', marginTop:0}}
+              onClick={handleChiudi}
+              disabled={righe.length === 0 || (scontrinoAperto && righe.length === 0)}>
+              Chiudi scontrino
+              {righe.length > 0 && <span className={styles.chiudiBadge}>€ {fmt(totale)}</span>}
+            </button>
+          </div>
+        </div>
         {/* CENTRO */}
         <div className={styles.colCenter}>
           {/* SCONTRINO IN CORSO - metà superiore */}
@@ -1307,7 +1313,9 @@ export default function CassaPage() {
             <div className={styles.confirmIcona}>🗑️</div>
             <div className={styles.confirmTitolo}>Annullare il conto?</div>
             <div className={styles.confirmSub}>
-            {righe.length === 1 ? 'Verrà eliminata 1 voce' : `Verranno eliminate ${righe.length} voci`} per un totale di
+            {righe.length === 0
+              ? 'Lo scontrino aperto verrà annullato.'
+              : <>{righe.length === 1 ? 'Verrà eliminata 1 voce' : `Verranno eliminate ${righe.length} voci`} per un totale di €{fmt(totale)}.</>}<br/>
               Questa operazione non può essere annullata.
             </div>
             <div className={styles.confirmBtns}>
