@@ -33,6 +33,7 @@ export default function LoginPage() {
   const longPressTimer = useRef(null)
   const [logoPressed, setLogoPressed] = useState(false)
   const [shutdownPending, setShutdownPending] = useState(false)
+  const [manifestHref, setManifestHref] = useState('/manifest-cassa.json')
 
   /*useEffect(() => {
     if (user) {
@@ -43,6 +44,10 @@ export default function LoginPage() {
       }, 100)
     }
   }, [user, router])*/
+
+  useEffect(() => {
+    if (sessionStorage.getItem('login_redirect') === '/ordini') setManifestHref('/manifest.json')
+  }, [])
 
   // Carica utenti via API con slug corretto
   useEffect(() => {
@@ -231,7 +236,7 @@ router.replace(redirect)
   return (
     
     <>
-    <Head><link rel="manifest" href="/manifest-cassa.json" /></Head>
+    <Head><link rel="manifest" href={manifestHref} /></Head>
     <div className={styles.screen}>
       
       <div className={styles.bgGrid} />
