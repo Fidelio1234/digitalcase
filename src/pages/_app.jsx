@@ -13,7 +13,10 @@ function GuardiaSessione({ children }) {
   const pubblica = PAGINE_SENZA_LOGIN.includes(router.pathname)
 
   useEffect(() => {
-    if (!pubblica && !loading && !user) router.replace('/login')
+    if (!pubblica && !loading && !user) {
+      try { sessionStorage.setItem('login_redirect', router.asPath) } catch {}
+      router.replace('/login')
+    }
   }, [pubblica, loading, user, router])
 
   if (!pubblica && !user) return null
