@@ -18,7 +18,7 @@ try {
 const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_KEY = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const NEGOZIO_ID = env.NEXT_PUBLIC_NEGOZIO_ID
-const STAMPANTE_SERVICE = 'http://localhost:3002'
+const STAMPANTE_SERVICE = 'http://127.0.0.1:3002'
 const POLL_INTERVAL = 2000
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -131,12 +131,22 @@ async function stampaTavolo(tavolo, pending, attive, reparti) {
     // Filtra righe per reparti
     // Coperto sempre incluso + filtra per reparti
     const copertoRiga = righe.find(r => r.id === 'coperto')
-    let righeFiltrate = stampante.gruppi?.length > 0
-      ? righe.filter(r => r.id !== 'coperto' && stampante.gruppi.includes(r.repartoId))
+
+
+    const gruppiValidi = (stampante.gruppi || []).filter(g => reparti.some(rep => rep.id === g))
+    if (stampante.gruppi?.length > 0 && gruppiValidi.length === 0) {
+      console.log(`⚠️ Stampante ${stampante.nome || stampante.ip}: i reparti configurati non esistono più, stampo tutto`)
+    }
+    let righeFiltrate = gruppiValidi.length > 0
+      ? righe.filter(r => r.id !== 'coperto' && gruppiValidi.includes(r.repartoId))
       : righe.filter(r => r.id !== 'coperto')
+
     if (copertoRiga) righeFiltrate = [copertoRiga, ...righeFiltrate]
 
-    if (!righeFiltrate.length) continue
+    if (!righeFiltrate.length) {
+      console.log(`⚠️ Nessuna riga da stampare per ${stampante.nome || stampante.ip} (gruppi: ${JSON.stringify(stampante.gruppi)})`)
+      continue
+    }
 
     if (tipo === 'preconto') {
       await httpPost(STAMPANTE_SERVICE, {
@@ -204,8 +214,11 @@ async function poll() {
         // intatto e viene ritentato al prossimo ciclo (niente comande perse).
         await stampaTavolo(tavolo, pending, attive, reparti)
 
+               // Cancella solo la comanda appena stampata: se nel frattempo ne è arrivata
+        // una nuova (id diverso), resta in coda e va in stampa al prossimo giro.
+        const filtroId = pending.id ? `&comanda_pending->>id=eq.${pending.id}` : ''
         await httpPatch(
-          `${SUPABASE_URL}/rest/v1/tavoli?negozio_id=eq.${NEGOZIO_ID}&numero=eq.${tavolo.numero}`,
+          `${SUPABASE_URL}/rest/v1/tavoli?negozio_id=eq.${NEGOZIO_ID}&numero=eq.${tavolo.numero}${filtroId}`,
           { comanda_pending: null }
         )
 
@@ -213,7 +226,8 @@ async function poll() {
       } catch (errTavolo) {
         // Errore isolato: non blocca gli altri tavoli in questo ciclo.
         // comanda_pending NON viene toccato → ritentativo automatico al prossimo poll.
-        console.error(`✗ Stampa Tavolo ${tavolo.numero} fallita, verrà ritentata: ${errTavolo.message}`)
+        console.error(`✗ Stampa Tavolo ${tavolo.numero} fallita, verrà ritentata: ${errTavolo.message || '(nessun messaggio)'} | ${errTavolo.name} ${errTavolo.code || ''}`)
+if (errTavolo.errors) errTavolo.errors.forEach(e => console.error('   ↳', e.code, e.message))
       }
     }
   } catch(e) {
