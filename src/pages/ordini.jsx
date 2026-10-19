@@ -380,7 +380,7 @@ if (user && palmare === 'bloccato') {
   const campo = { width:'100%', boxSizing:'border-box', background:'#252830', border:'none', borderRadius:10, color:'#eef0f6', padding:'12px', fontSize:'1rem', marginBottom:10 }
   return (
     <>
-      <Head><link rel="manifest" href="/manifest.json" /></Head>
+      <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
       <div style={{ minHeight:'100vh', background:'#05070d', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
         <div style={{ width:'100%', maxWidth:360, background:'#13151c', borderRadius:16, padding:24, color:'#eef0f6', textAlign:'center' }}>
           <div style={{ fontSize:'2rem', marginBottom:8 }}>📱</div>
@@ -413,7 +413,7 @@ if (notaModal !== null) {
   const riga = righeComanda.find(r => r.id === notaModal)
   return (
     <>
-    <Head><link rel="manifest" href="/manifest.json" /></Head>
+    <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
     <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
 
 
@@ -523,7 +523,7 @@ if (notaModal !== null) {
   if (modalCoperti !== null) {
     return (
       <>
-      <Head><link rel="manifest" href="/manifest.json" /></Head>
+      <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
       <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:500, padding:20 }}>
 
 
@@ -555,7 +555,7 @@ if (notaModal !== null) {
   if (vista === 'comanda') {
     return (
       <>
-      <Head><link rel="manifest" href="/manifest.json" /></Head>
+      <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
       <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column' }}>
 
 
@@ -746,7 +746,7 @@ if (notaModal !== null) {
     }
     return (
       <>
-      <Head><link rel="manifest" href="/manifest.json" /></Head>
+      <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
       <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif" }}>
   
         <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderBottom:'1px solid #1a1c24', position:'sticky', top:0, zIndex:100 }}>
