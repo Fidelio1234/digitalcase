@@ -30,6 +30,7 @@ export default function OrdiniPage() {
   const NEGOZIO_ID = useNegozioId()
   const { user, loading } = useAuth()
   const router = useRouter()
+  const inviandoRef = useRef(false)
   const [tavoli, setTavoli] = useState([])
   const [reparti, setReparti] = useState([])
   const [impostazioni, setImpostazioni] = useState({ copertoAbilitato: false, copertoImporto: 200, numeroTavoli: 10 })
@@ -75,6 +76,59 @@ const [erroreMsg, setErroreMsg] = useState('')
     }
     carica()
   }, [user, loading, carica])
+
+
+
+  // ── Licenza palmare: il telefono deve essere stato attivato con un codice ──
+  const [palmare, setPalmare] = useState('verifica') // 'verifica' | 'ok' | 'bloccato'
+  const [codicePalmare, setCodicePalmare] = useState('')
+  const [nomePalmare, setNomePalmare] = useState('')
+  const [erroreAttivazione, setErroreAttivazione] = useState('')
+  const [attivando, setAttivando] = useState(false)
+
+  // true = può lavorare. Blocca SOLO sulla risposta esplicita 403:
+  // un errore di rete o del server non ferma il servizio.
+  const palmareOk = useCallback(async () => {
+    try {
+      const res = await fetch('/api/palmare-verifica', {
+        method: 'POST', credentials: 'same-origin', signal: AbortSignal.timeout(8000),
+      })
+      if (res.status === 403) { setPalmare('bloccato'); return false }
+      setPalmare('ok')
+      return true
+    } catch {
+      setPalmare(p => (p === 'verifica' ? 'ok' : p))
+      return true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (loading || !user) return
+    palmareOk()
+    const t = setInterval(palmareOk, 60000)
+    return () => clearInterval(t)
+  }, [user, loading, palmareOk])
+
+  async function attivaPalmare() {
+    if (attivando) return
+    setAttivando(true)
+    setErroreAttivazione('')
+    try {
+      const res = await fetch('/api/palmare-attiva', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codice: codicePalmare, nome: nomePalmare }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) { setPalmare('ok'); setCodicePalmare('') }
+      else setErroreAttivazione(data.error || 'Errore')
+    } catch {
+      setErroreAttivazione('Errore di rete')
+    }
+    setAttivando(false)
+  }
+
+
 
   useEffect(() => {
     const interval = setInterval(() => setTimer(t => t + 1), 30000)
@@ -248,8 +302,20 @@ function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
 
 
 
- async function inviaComanda() {
-  if (righeComanda.length === 0) return
+  async function inviaComanda() {
+    if (inviandoRef.current || righeComanda.length === 0) return
+    inviandoRef.current = true
+    try {
+      if (!(await palmareOk())) return
+      await inviaComandaInterna()
+    } finally {
+      // Tengo il blocco qualche secondo: un secondo tocco ravvicinato
+      // rimanderebbe le stesse righe.
+      setTimeout(() => { inviandoRef.current = false }, 3000)
+    }
+  }
+  
+   async function inviaComandaInterna() {
   const ora = new Date().toISOString()
 
   try {
@@ -306,7 +372,40 @@ function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
 
 
 
+if (user && palmare === 'verifica') {
+  return <div style={{ minHeight:'100vh', background:'#05070d' }} />
+}
 
+if (user && palmare === 'bloccato') {
+  const campo = { width:'100%', boxSizing:'border-box', background:'#252830', border:'none', borderRadius:10, color:'#eef0f6', padding:'12px', fontSize:'1rem', marginBottom:10 }
+  return (
+    <>
+      <Head><link rel="manifest" href="/manifest.json" /></Head>
+      <div style={{ minHeight:'100vh', background:'#05070d', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+        <div style={{ width:'100%', maxWidth:360, background:'#13151c', borderRadius:16, padding:24, color:'#eef0f6', textAlign:'center' }}>
+          <div style={{ fontSize:'2rem', marginBottom:8 }}>📱</div>
+          <div style={{ fontWeight:700, fontSize:'1.1rem', marginBottom:6 }}>Attiva questo palmare</div>
+          <div style={{ fontSize:'0.8rem', color:'#8a8d9e', marginBottom:16 }}>
+            Chiedi il codice di attivazione all'assistenza e inseriscilo qui.
+          </div>
+          <input value={nomePalmare} onChange={e => setNomePalmare(e.target.value)} maxLength={40}
+            placeholder="Nome del palmare (facoltativo)" style={campo} />
+          <input value={codicePalmare}
+            onChange={e => setCodicePalmare(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8))}
+            placeholder="CODICE" autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false}
+            style={{ ...campo, textAlign:'center', letterSpacing:'0.25em', fontFamily:'monospace', fontWeight:700 }} />
+          {erroreAttivazione && (
+            <div style={{ color:'#ff6b6b', fontSize:'0.8rem', marginBottom:10 }}>{erroreAttivazione}</div>
+          )}
+          <button onClick={attivaPalmare} disabled={attivando || codicePalmare.length !== 8}
+            style={{ width:'100%', padding:'13px', border:'none', borderRadius:12, background:'#00e5a0', color:'#08090c', fontWeight:700, fontSize:'0.95rem', cursor:'pointer', opacity: (attivando || codicePalmare.length !== 8) ? 0.5 : 1 }}>
+            {attivando ? 'Attivazione…' : 'Attiva'}
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
 
 
 

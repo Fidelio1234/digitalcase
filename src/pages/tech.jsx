@@ -33,6 +33,25 @@ async function apiUtenti(body) {
   }
 }
 
+
+async function apiPalmari(body) {
+  try {
+    const res = await fetch('/api/palmare-gestione', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: slugCorrente(), ...body }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) return { error: data.error || 'Errore' }
+    return data
+  } catch {
+    return { error: 'Errore di rete' }
+  }
+}
+
+
+
 export default function TechPage() {
   const NEGOZIO_ID = useNegozioId()
   const router = useRouter()
@@ -544,6 +563,13 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
           <SezioneFatturazione negozioId={NEGOZIO_ID} showToast={showToast} />
         </div>
 
+        {/* ── LICENZA PALMARI (/ordini) ── */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>📱 Licenza Palmari</div>
+          <SezionePalmari showToast={showToast} />
+        </div>
+
+
         {/* ── REGISTRATORE TELEMATICO ── */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>🖨️ Stampanti Comande</div>
@@ -676,6 +702,134 @@ function SezioneFatturazione({ negozioId, showToast }) {
           background: attivo ? '#00e5a0' : '#252830', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
         <div style={{ position: 'absolute', top: 2, left: attivo ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left 0.2s' }} />
       </div>
+    </div>
+  )
+}
+
+
+
+function SezionePalmari({ showToast }) {
+  const [dati, setDati] = useState(null) // { max, palmari }
+  const [maxInput, setMaxInput] = useState('0')
+  const [codice, setCodice] = useState(null) // { codice, scade_il }
+  const [occupato, setOccupato] = useState(false)
+  const [daDisattivare, setDaDisattivare] = useState(null) // palmare in attesa di conferma
+
+  useEffect(() => {
+    apiPalmari({ azione: 'stato' }).then(r => {
+      if (r.error) { showToast('⚠ ' + r.error); return }
+      setDati(r)
+      setMaxInput(String(r.max))
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function chiama(body, okMsg) {
+    if (occupato) return null
+    setOccupato(true)
+    const r = await apiPalmari(body)
+    setOccupato(false)
+    if (r.error) { showToast('⚠ ' + r.error); return null }
+    if (okMsg) showToast(okMsg)
+    return r
+  }
+
+  async function salvaMax() {
+    const r = await chiama({ azione: 'imposta_max', max: maxInput }, '✓ Licenza aggiornata')
+    if (r) setDati(r)
+  }
+
+  async function genera() {
+    const r = await chiama({ azione: 'genera_codice' })
+    if (r) {
+      setCodice({ codice: r.codice, scade_il: r.scade_il })
+      setDati({ max: r.max, palmari: r.palmari })
+    }
+  }
+
+  async function disattiva(id) {
+    const r = await chiama({ azione: 'disattiva', id }, '✓ Palmare disattivato')
+    setDaDisattivare(null)
+    if (r) setDati(r)
+  }
+
+  const quando = (iso) => iso
+    ? new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    : '—'
+
+  if (!dati) return <div style={{ color: '#5a5d6e' }}>Caricamento…</div>
+  const attivi = dati.palmari.filter(p => p.attivo).length
+  const campo = { background: '#252830', border: 'none', borderRadius: 8, color: '#eef0f6', padding: '8px 10px', fontSize: '0.85rem' }
+  const bottone = { border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {daDisattivare && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
+          <div style={{ width:'100%', maxWidth:340, background:'#13151c', borderRadius:16, padding:22, textAlign:'center' }}>
+            <div style={{ fontSize:'1.6rem', marginBottom:6 }}>📱</div>
+            <div style={{ fontWeight:700, color:'#eef0f6', marginBottom:6 }}>Disattivare il palmare?</div>
+            <div style={{ fontSize:'0.8rem', color:'#8a8d9e', marginBottom:16 }}>
+              «{daDisattivare.nome || 'Palmare senza nome'}» smetterà di funzionare entro un minuto. Per riattivarlo servirà un nuovo codice.
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => setDaDisattivare(null)} disabled={occupato}
+                style={{ ...bottone, flex:1, background:'#252830', color:'#eef0f6' }}>Annulla</button>
+              <button onClick={() => disattiva(daDisattivare.id)} disabled={occupato}
+                style={{ ...bottone, flex:1, background:'#ff6b6b', color:'#08090c' }}>Disattiva</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div>
+        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6' }}>Palmari autorizzati su /ordini</div>
+        <div style={{ fontSize: '0.72rem', color: '#5a5d6e', marginTop: 2 }}>
+          In uso: {attivi} su {dati.max}. Con 0 nessun telefono può usare /ordini.
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input type="number" min="0" max="20" value={maxInput} onChange={e => setMaxInput(e.target.value)}
+          style={{ ...campo, width: 80 }} />
+        <button onClick={salvaMax} disabled={occupato} style={{ ...bottone, background: '#252830', color: '#eef0f6' }}>
+          Salva massimo
+        </button>
+        <button onClick={genera} disabled={occupato} style={{ ...bottone, background: '#00e5a0', color: '#08090c' }}>
+          Genera codice
+        </button>
+      </div>
+
+      {codice && (
+        <div style={{ background: '#252830', borderRadius: 10, padding: 14, textAlign: 'center' }}>
+          <div style={{ fontSize: '1.8rem', letterSpacing: '0.25em', fontWeight: 700, color: '#00e5a0', fontFamily: 'monospace' }}>
+            {codice.codice}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#5a5d6e', marginTop: 6 }}>
+            Inseriscilo sul telefono entro le {new Date(codice.scade_il).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}. Si usa una sola volta.
+          </div>
+        </div>
+      )}
+
+      {dati.palmari.length === 0 && (
+        <div style={{ fontSize: '0.78rem', color: '#5a5d6e' }}>Nessun telefono attivato.</div>
+      )}
+      {dati.palmari.map(p => (
+        <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, opacity: p.attivo ? 1 : 0.45 }}>
+          <div>
+            <div style={{ fontSize: '0.85rem', color: '#eef0f6' }}>{p.nome || 'Palmare senza nome'}{p.attivo ? '' : ' (disattivato)'}</div>
+            <div style={{ fontSize: '0.72rem', color: '#5a5d6e' }}>
+              Attivato {quando(p.creato_il)} · ultimo accesso {quando(p.ultimo_accesso)}
+            </div>
+          </div>
+          {p.attivo && (
+            <button onClick={() => setDaDisattivare(p)} disabled={occupato}
+              style={{ ...bottone, background: 'transparent', color: '#ff6b6b', border: '1px solid #ff6b6b' }}>
+              Disattiva
+            </button>
+          )}
+        </div>
+      ))}
     </div>
   )
 }
