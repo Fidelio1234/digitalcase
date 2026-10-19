@@ -759,7 +759,7 @@ function SezionePalmari({ showToast }) {
 
   if (!dati) return <div style={{ color: '#5a5d6e' }}>Caricamento…</div>
   const attivi = dati.palmari.filter(p => p.attivo).length
-  const campo = { background: '#252830', border: 'none', borderRadius: 8, color: '#eef0f6', padding: '8px 10px', fontSize: '0.85rem' }
+  const campo = { background: '#252830', border: 'none', borderRadius: 8, color: '#eef0f6', padding: '8px 10px', fontSize: '0.9rem' }
   const bottone = { border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }
 
   return (
@@ -783,8 +783,8 @@ function SezionePalmari({ showToast }) {
       )}
 
       <div>
-        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6' }}>Palmari autorizzati su /ordini</div>
-        <div style={{ fontSize: '0.72rem', color: '#5a5d6e', marginTop: 2 }}>
+        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'red' }}>Palmari autorizzati su /ordini</div>
+        <div style={{ fontSize: '0.80rem', color: 'red', marginTop: 2 }}>
           In uso: {attivi} su {dati.max}. Con 0 nessun telefono può usare /ordini.
         </div>
       </div>
@@ -817,8 +817,8 @@ function SezionePalmari({ showToast }) {
       {dati.palmari.map(p => (
         <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, opacity: p.attivo ? 1 : 0.45 }}>
           <div>
-            <div style={{ fontSize: '0.85rem', color: '#eef0f6' }}>{p.nome || 'Palmare senza nome'}{p.attivo ? '' : ' (disattivato)'}</div>
-            <div style={{ fontSize: '0.72rem', color: '#5a5d6e' }}>
+            <div style={{ fontSize: '0.85rem', color: 'white' }}>{p.nome || 'Palmare senza nome'}{p.attivo ? '' : ' (disattivato)'}</div>
+            <div style={{ fontSize: '0.72rem', color: 'white' }}>
               Attivato {quando(p.creato_il)} · ultimo accesso {quando(p.ultimo_accesso)}
             </div>
           </div>
