@@ -1,7 +1,8 @@
 import { supabase } from '@/lib/supabase'
+import { cronAutorizzato } from '@/lib/cron-auth'
 
 export default async function handler(req, res) {
-  if (req.headers['x-cron-secret'] !== process.env.CRON_SECRET) {
+  if (!cronAutorizzato(req)) {
     return res.status(401).json({ error: 'Non autorizzato' })
   }
 

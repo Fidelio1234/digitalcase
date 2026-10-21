@@ -1,11 +1,12 @@
 import { supabase } from '@/lib/supabase'
+import { cronAutorizzato } from '@/lib/cron-auth'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req, res) {
   // Sicurezza — solo chiamate interne
-  if (req.headers['x-cron-secret'] !== process.env.CRON_SECRET) {
+  if (!cronAutorizzato(req)) {
     return res.status(401).json({ error: 'Non autorizzato' })
   }
 
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
     if (giorni !== 7 && giorni !== 3) continue
 
     await resend.emails.send({
-      from: 'DigitalCase <noreply@digitalcase.it>',
+      from: process.env.FROM_EMAIL ? `DigitalCase <${process.env.FROM_EMAIL}>` : 'DigitalCase <noreply@digitalcase.it>',
       to: negozio.email_titolare,
       subject: `⚠️ Licenza DigitalCase in scadenza tra ${giorni} giorni`,
       html: `
