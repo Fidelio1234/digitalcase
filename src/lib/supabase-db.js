@@ -332,6 +332,7 @@ export async function getTavoliDb(negozioId) {
     righe: t.righe || [],
     ultimoOrdine: t.ultimo_ordine,
     apertoAlle: t.aperto_alle,
+    divisione: t.divisione || null,
   }))
 }
 
@@ -375,7 +376,8 @@ export async function salvaStoricoTavolo(negozioId, tavolo) {
       righe: tavolo.righe || [],
       totale,
     })
-  if (error) console.error('Errore storico tavolo:', error)
+    if (error) { console.error('Errore storico tavolo:', error); return false }
+  return true
 }
 
 export async function chiudiTavoloDb(negozioId, numero) {
@@ -387,37 +389,71 @@ export async function chiudiTavoloDb(negozioId, numero) {
       righe: [],
       ultimo_ordine: null,
       aperto_alle: null,
+      divisione: null,
     })
     .eq('negozio_id', negozioId)
     .eq('numero', numero)
   return !error
 }
 
-/*export async function getImpostazioniDb(negozioId) {
-  const { data } = await supabase
-    .from('impostazioni_negozio')
-    .select('*')
-    .eq('negozio_id', negozioId)
-    .single()
-  return {
-    copertoAbilitato: data?.coperto_abilitato || false,
-    copertoImporto: data?.coperto_importo || 200,
-    numeroTavoli: data?.numero_tavoli || 10,
-    tavoliAbilitati: data?.tavoli_abilitati !== false,
-    magazzinoAbilitato: data?.magazzino_abilitato || false,
-    cortesiaAbilitato: data?.cortesia_abilitato || false,
-    asportoAbilitato: data?.asporto_abilitato || false,
-    costoAggiunta: data?.costo_aggiunta ?? 50,
-    // Lista "aggiunte rapide" configurabile per negozio: [{ nome, costo }]
-    // Se non configurata (es. cliente nuovo), torna [] e il blocco non viene mostrato.
-    aggiunteRapide: data?.aggiunte_rapide || [],
+
+// Toglie dal tavolo le quantità incassate, rileggendo il tavolo DAL DB.
+// Chiude il tavolo solo se non resta nulla. pagate = [{ id, quantita }]
+export async function scalaRigheTavoloDb(negozioId, numero, pagate) {
+  const { data: t, error } = await supabase
+    .from('tavoli').select('righe')
+    .eq('negozio_id', negozioId).eq('numero', numero).maybeSingle()
+  if (error || !t) return { ok: false, chiuso: false, tolte: 0 }
+
+  const daTogliere = new Map()
+  for (const p of pagate || []) {
+    const k = String(p.id)
+    daTogliere.set(k, (daTogliere.get(k) || 0) + (p.quantita || 0))
   }
+  let tolte = 0
+  const rimaste = []
+  for (const r of t.righe || []) {
+    const qta = r.quantita || 0
+    const rimosse = Math.min(qta, daTogliere.get(String(r.id)) || 0)
+    tolte += rimosse
+    if (qta - rimosse > 0) rimaste.push({ ...r, quantita: qta - rimosse, totaleRiga: r.importo * (qta - rimosse) })
+  }
+  if (tolte === 0) return { ok: true, chiuso: false, tolte: 0 }
+  if (rimaste.length === 0) {
+    const ok = await chiudiTavoloDb(negozioId, numero)
+    return { ok, chiuso: true, tolte }
+  }
+  const { error: e2 } = await supabase.from('tavoli').update({ righe: rimaste })
+    .eq('negozio_id', negozioId).eq('numero', numero)
+  return { ok: !e2, chiuso: false, tolte }
 }
-*/
 
 
 
 
+// Registra il pagamento di una quota alla romana. Chiude il tavolo solo quando
+// l'incassato copre il conto. Se chiude, restituisce le righe per lo storico.
+export async function registraQuotaRomanaDb(negozioId, numero, { persone, quote, importo }) {
+  const { data: t, error } = await supabase
+    .from('tavoli').select('righe, divisione')
+    .eq('negozio_id', negozioId).eq('numero', numero).maybeSingle()
+  if (error || !t) return { ok: false, chiuso: false, righe: [] }
+
+  const div = t.divisione || { persone, quotePagate: 0, importoPagato: 0 }
+  const nuova = {
+    persone: div.persone,
+    quotePagate: div.quotePagate + quote,
+    importoPagato: div.importoPagato + importo,
+  }
+  const totale = (t.righe || []).reduce((s, r) => s + (r.totaleRiga || 0), 0)
+  if (nuova.importoPagato >= totale) {
+    const ok = await chiudiTavoloDb(negozioId, numero)
+    return { ok, chiuso: true, righe: t.righe || [] }
+  }
+  const { error: e2 } = await supabase.from('tavoli').update({ divisione: nuova })
+    .eq('negozio_id', negozioId).eq('numero', numero)
+  return { ok: !e2, chiuso: false, righe: [] }
+}
 
 
 
@@ -471,26 +507,6 @@ export async function salvaAggiunteRapideDb(negozioId, lista) {
   return !error
 }
 
-/*export async function salvaImpostazioniDb(negozioId, imp) {
-  const { error } = await supabase
-    .from('impostazioni_negozio')
-    .upsert({
-      negozio_id: negozioId,
-      coperto_abilitato: imp.copertoAbilitato,
-      coperto_importo: imp.copertoImporto,
-      numero_tavoli: imp.numeroTavoli,
-      tavoli_abilitati: imp.tavoliAbilitati !== false,
-      magazzino_abilitato: imp.magazzinoAbilitato || false,
-      cortesia_abilitato: imp.cortesiaAbilitato || false,
-      asporto_abilitato: imp.asportoAbilitato || false,
-      costo_aggiunta: imp.costoAggiunta ?? 50,
-      // Incluso solo se passato esplicitamente (altrimenti la chiave è 'undefined'
-      // e viene omessa dal JSON, lasciando intatto il valore già salvato).
-      aggiunte_rapide: imp.aggiunteRapide,
-    }, { onConflict: 'negozio_id' })
-  return !error
-}
-*/
 
 
 

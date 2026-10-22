@@ -226,7 +226,7 @@ export function useCassa() {
       if ((r.quantita || 1) > 1) {
         const nuove = [...prev]
         nuove[idx] = { ...r, quantita: r.quantita - 1, totaleRiga: importoBase * (r.quantita - 1) }
-        const rigaStaccata = applicaNota({ ...r, id: Date.now() + Math.random(), quantita: 1 })
+        const rigaStaccata = applicaNota({ ...r, id: Date.now() + Math.random(), idOrigine: r.idOrigine ?? r.id, quantita: 1 })
         nuove.splice(idx + 1, 0, rigaStaccata)
         return nuove
       }

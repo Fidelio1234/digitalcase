@@ -1,10 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getTavoliDb, salvaTavoloDb, chiudiTavoloDb, getImpostazioniDb, getRepartiDb, salvaStoricoTavolo } from '@/lib/supabase-db'
 import { stampaComanda } from '@/lib/stampante'
 import { supabase } from '@/lib/supabase'
 import { useNegozioId } from '@/hooks/useNegozioId'
+
+
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
+
+
 
 const ICONE = {
   coffee:'☕', beer:'🍺', wine:'🍷', cocktail:'🍹', pizza:'🍕',
@@ -25,6 +30,36 @@ function tempoTrascorso(iso) {
   return Math.floor(diff / 3600) + 'h ' + Math.floor((diff % 3600) / 60) + 'm'
 }
 
+
+// Ripartisce la quota tra reparti/IVA in proporzione al conto. La somma delle righe = importoQuota.
+function righeQuotaRomana(righe, importoQuota, numeroTavolo) {
+  const gruppi = new Map()
+  for (const r of righe) {
+    if (!(r.totaleRiga > 0)) continue
+    const k = `${r.repartoId ?? 'x'}|${r.iva}`
+    const g = gruppi.get(k) || { repartoId: r.repartoId ?? null, iva: r.iva, colore: r.colore, icona: r.icona, totale: 0 }
+    g.totale += r.totaleRiga
+    gruppi.set(k, g)
+  }
+  const lista = [...gruppi.values()].sort((a, b) => b.totale - a.totale)
+  const totaleConto = lista.reduce((s, g) => s + g.totale, 0)
+  if (lista.length === 0 || totaleConto <= 0) return []
+  let assegnato = 0
+  for (const g of lista) { g.imp = Math.floor(importoQuota * g.totale / totaleConto); assegnato += g.imp }
+  lista[0].imp += importoQuota - assegnato
+  const ts = Date.now()
+  return lista.filter(g => g.imp > 0).map((g, i) => ({
+    id: `quota-${numeroTavolo}-${ts}-${i}`,
+    nome: lista.length > 1 ? `Quota tavolo ${numeroTavolo} (IVA ${g.iva}%)` : `Quota tavolo ${numeroTavolo}`,
+    importo: g.imp, quantita: 1, totaleRiga: g.imp, iva: g.iva,
+    colore: g.colore, icona: g.icona, repartoId: g.repartoId, sottoRepartoId: null,
+    quotaTavolo: numeroTavolo,
+  }))
+}
+
+
+
+
 export default function TavoliPage() {
   const NEGOZIO_ID = useNegozioId()
   const { user, loading } = useAuth()
@@ -39,13 +74,21 @@ export default function TavoliPage() {
   const [inputCents, setInputCents] = useState(0)
   const [timer, setTimer] = useState(0)
   const [modalCoperti, setModalCoperti] = useState(null)
-  const [numCoperti, setNumCoperti] = useState(2)
+  const [numCoperti, setNumCoperti] = useState(1)
   const [invioOk, setInvioOk] = useState(false)
   const [notaModal, setNotaModal] = useState(null)
   const [notaTesto, setNotaTesto] = useState('')
   const [notaTipo, setNotaTipo] = useState('rimozione')
   const [aggiunte, setAggiunte] = useState([]) // voci selezionate dalla lista "aggiunte rapide" (per negozio)
   const [modalAnnulla, setModalAnnulla] = useState(false)
+  const [infoAnnulla, setInfoAnnulla] = useState(null) // quote gia' incassate alla romana (centesimi)
+  const [showConto, setShowConto] = useState(false)
+    const [romanaPersone, setRomanaPersone] = useState(2)
+const [selezione, setSelezione] = useState({}) // { idRiga: quantità da pagare }
+
+
+
+
 
   // ── carica definita con useCallback per stabilità nelle dipendenze ──────
   const carica = useCallback(async () => {
@@ -88,11 +131,47 @@ export default function TavoliPage() {
     return () => clearInterval(interval)
   }, [vista, carica])
 
-  
 
+  const inviandoRef = useRef(false)
+  const [inviando, setInviando] = useState(false)
+
+
+   const riapriRef = useRef(null)
+  const [riapriAttesa, setRiapriAttesa] = useState(false)
+  useIsoLayoutEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('riapri_tavolo')
+      if (!raw) return
+      sessionStorage.removeItem('riapri_tavolo')
+      const d = JSON.parse(raw)
+      if (d && d.numero != null && Date.now() - (d.ts || 0) < 30000) {
+        riapriRef.current = d
+        setRiapriAttesa(true)
+        setTimeout(() => setRiapriAttesa(false), 4000)
+      }
+    } catch {}
+  }, [])
+  useEffect(() => {
+    const d = riapriRef.current
+    if (!d || !tavoli.length) return
+    riapriRef.current = null
+    const t = tavoli.find(x => String(x.numero) === String(d.numero))
+    if (t && t.stato !== 'libero') {
+      apriTavolo(t)
+      if (d.conto) {
+        const haCoperto = (t.righe || []).some(r => r.id === 'coperto' && r.quantita > 0)
+        setSelezione(haCoperto ? { coperto: 1 } : {})
+        const rCop = (t.righe || []).find(r => r.id === 'coperto')
+        setRomanaPersone(Math.max(2, rCop?.quantita || t.coperti || 2))
+        setShowConto(true)
+      }
+    }
+    setRiapriAttesa(false)
+  }, [tavoli])
 
   function apriTavolo(tavolo) {
     if (impostazioni.copertoAbilitato && tavolo.stato === 'libero') {
+      setNumCoperti(1)
       setModalCoperti(tavolo.numero)
       return
     }
@@ -228,11 +307,12 @@ export default function TavoliPage() {
   }
 
   function aggiornaQuantita(id, delta) {
+    const minimo = id === 'coperto' ? 1 : 0
     setRigheComanda(prev => prev
       .map(r => r.id === id
         ? { ...r,
-            quantita: Math.max(0, r.quantita + delta),
-            totaleRiga: r.importo * Math.max(0, r.quantita + delta)
+            quantita: Math.max(minimo, r.quantita + delta),
+            totaleRiga: r.importo * Math.max(minimo, r.quantita + delta)
           }
         : r
       )
@@ -242,7 +322,89 @@ export default function TavoliPage() {
 
   const totale = righeComanda.reduce((s, r) => s + r.totaleRiga, 0)
 
-  async function inviaComanda() {
+
+// La comanda è "sincronizzata" se quello che vedi coincide con quanto salvato nel DB.
+// Serve per pagare per prodotti: non si incassa ciò che non è mai stato registrato.
+const comandaSincronizzata = (() => {
+  const salvate = tavoli.find(t => t.numero === tavoloAttivo)?.righe || []
+  if (salvate.length !== righeComanda.length) return false
+  return righeComanda.every(r => {
+    const v = salvate.find(x => x.id === r.id)
+    return v && v.quantita === r.quantita && v.importo === r.importo && (v.nota || '') === (r.nota || '')
+  })
+})()
+
+const totaleSelezionato = righeComanda.reduce((s, r) => s + r.importo * (selezione[r.id] || 0), 0)
+
+
+const divisioneCorrente = tavoli.find(t => t.numero === tavoloAttivo)?.divisione || null
+const romanaPagato = divisioneCorrente?.importoPagato || 0
+const romanaQuotePagate = divisioneCorrente?.quotePagate || 0
+const romanaPersoneTot = divisioneCorrente?.persone ?? romanaPersone
+const romanaPersoneRestanti = Math.max(1, romanaPersoneTot - romanaQuotePagate)
+const romanaResiduo = Math.max(0, totale - romanaPagato)
+const romanaImporto = romanaPersoneRestanti <= 1
+  ? romanaResiduo
+  : Math.round(romanaResiduo / romanaPersoneRestanti)
+
+function pagaAllaRomana() {
+  const tavolo = tavoli.find(t => t.numero === tavoloAttivo)
+  if (!tavolo || !comandaSincronizzata || romanaImporto <= 0) return
+  const righeCassa = righeQuotaRomana(righeComanda, romanaImporto, tavoloAttivo)
+  if (righeCassa.length === 0) return
+  sessionStorage.setItem('tavolo_da_chiudere', JSON.stringify({
+    numero: tavoloAttivo,
+    righe: righeCassa,
+    romana: { persone: romanaPersoneTot, quote: 1 },
+    coperti: tavolo.coperti || 0,
+    apertoAlle: tavolo.apertoAlle || null,
+  }))
+  
+  router.push('/cassa')
+}
+
+
+
+
+function cambiaSelezione(id, delta, max) {
+  setSelezione(prev => ({ ...prev, [id]: Math.min(max, Math.max(0, (prev[id] || 0) + delta)) }))
+}
+
+function pagaSelezionati() {
+  const tavolo = tavoli.find(t => t.numero === tavoloAttivo)
+  if (!tavolo || !comandaSincronizzata) return
+  const righeScelte = righeComanda
+    .filter(r => (selezione[r.id] || 0) > 0)
+    .map(r => ({ ...r, quantita: selezione[r.id], totaleRiga: r.importo * selezione[r.id] }))
+  if (righeScelte.length === 0) return
+  sessionStorage.setItem('tavolo_da_chiudere', JSON.stringify({
+    numero: tavoloAttivo,
+    righe: righeScelte,
+    coperti: tavolo.coperti || 0,
+    apertoAlle: tavolo.apertoAlle || null,
+  }))
+  router.push('/cassa')
+}
+
+
+
+
+async function inviaComanda() {
+  if (inviandoRef.current || righeComanda.length === 0) return
+  inviandoRef.current = true
+  setInviando(true)
+  try {
+    
+    await inviaComandaInterna()
+  } finally {
+    // Tengo il blocco qualche secondo: la vista torna alla griglia dopo ~1,2 s
+    // e i dati del tavolo si aggiornano solo dopo, quindi un tocco subito dopo
+    // rimanderebbe le stesse righe.
+    setTimeout(() => { inviandoRef.current = false; setInviando(false) }, 3000)
+  }
+}
+
+async function inviaComandaInterna() {
     const tavolo = tavoli.find(t => t.numero === tavoloAttivo)
     if (!tavolo) return
     const ora = new Date().toISOString()
@@ -263,6 +425,7 @@ export default function TavoliPage() {
     const aggiornato = {
       ...tavolo,
       numero: tavoloAttivo,
+      coperti: righeComanda.find(r => r.id === 'coperto')?.quantita ?? tavolo.coperti ?? 0,
       stato: 'occupato',
       righe: righeComanda,
       ultimoOrdine: ora,
@@ -318,19 +481,55 @@ export default function TavoliPage() {
     sessionStorage.setItem('tavolo_da_chiudere', JSON.stringify({
       numero: tavoloAttivo,
       righe: righeFinali,
+      coperti: righeComanda.find(r => r.id === 'coperto')?.quantita ?? tavolo.coperti ?? 0,
+      apertoAlle: tavolo.apertoAlle || null,
+      ultimoOrdine: tavolo.ultimoOrdine || null,
     }))
     router.push('/cassa')
   }
 
 
 
-  function annullaComanda() {
+  async function annullaComanda() {
     if (!tavoloAttivo) return
+    // Rilegge il tavolo dal DB: se alla romana e' gia' stata pagata una quota (scontrino emesso) lo segnala.
+    let info = null
+    try {
+      const { getTavoliDb } = await import('@/lib/supabase-db')
+      const lista = await getTavoliDb(NEGOZIO_ID)
+      const t = (lista || []).find(x => x.numero === tavoloAttivo)
+      const pagato = t?.divisione?.importoPagato || 0
+      if (pagato > 0) {
+        const totale = (t.righe || []).reduce((a, r) => a + (r.totaleRiga || 0), 0)
+        info = {
+          pagato, totale, residuo: Math.max(0, totale - pagato),
+          persone: t.divisione.persone, quotePagate: t.divisione.quotePagate,
+          righe: t.righe || [], coperti: t.coperti || 0, apertoAlle: t.apertoAlle || null,
+        }
+      }
+    } catch (e) { console.error('Lettura tavolo prima di annullare fallita:', e) }
+    setInfoAnnulla(info)
     setModalAnnulla(true)
   }
 
   async function confermaAnnullaComanda() {
     setModalAnnulla(false)
+    const info = infoAnnulla
+    setInfoAnnulla(null)
+    if (info) {
+      // Quote gia' incassate: lascia una riga nello storico tavoli (totale = incassato, residuo annullato in negativo).
+      const { salvaStoricoTavolo } = await import('@/lib/supabase-db')
+      const ok = await salvaStoricoTavolo(NEGOZIO_ID, {
+        numero: tavoloAttivo,
+        righe: [...info.righe, { id: 'residuo-annullato', nome: '✕ Residuo annullato', quantita: 1, importo: -info.residuo, totaleRiga: -info.residuo }],
+        coperti: info.coperti,
+        apertoAlle: info.apertoAlle,
+      })
+      if (!ok) {
+        window.alert('Non sono riuscito a salvare la riga nello storico tavoli. Il tavolo NON è stato annullato: riprova.')
+        return
+      }
+    }
     await chiudiTavoloDb(NEGOZIO_ID, tavoloAttivo)
     setRigheComanda([])
     setInputCents(0)
@@ -344,8 +543,11 @@ export default function TavoliPage() {
 
   const repAttivo = reparti.find(r => r.id === repartoAttivo)
   const tavoloCorrente = tavoli.find(t => t.numero === tavoloAttivo)
+  const copertiAttuali = righeComanda.find(r => r.id === 'coperto')?.quantita ?? tavoloCorrente?.coperti ?? 0
 
   // ── VISTA COMANDA ────────────────────────────────────────────────────────
+  if (riapriAttesa) return <div style={{ minHeight: '100vh', background: '#05070d' }} />
+  
   if (vista === 'comanda') {
     return (
       <div style={{ display:'flex', height:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans', sans-serif" }}>
@@ -358,9 +560,9 @@ export default function TavoliPage() {
           <div style={{ textAlign:'center', padding:'12px', background:'#1a1c24', borderRadius:12, marginBottom:8 }}>
             <div style={{ fontSize:'0.9rem', color:'yellow', letterSpacing:2 }}>TAVOLO</div>
             <div style={{ fontSize:'2rem', fontWeight:700, color:'white' }}>{tavoloAttivo}</div>
-            {impostazioni.copertoAbilitato && tavoloCorrente?.coperti > 0 && (
+            {impostazioni.copertoAbilitato && copertiAttuali > 0 && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:8 }}>
-                <span style={{ fontSize:'0.7rem', color:'#ffffff' }}>👤 {tavoloCorrente.coperti} coperti</span>
+                              <span style={{ fontSize:'1.1rem', fontWeight:600, color:'#ffffff' }}>👤 {copertiAttuali} coperti</span>
               </div>
             )}
           </div>
@@ -372,6 +574,7 @@ export default function TavoliPage() {
             </div>
           </div>
 
+
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
             {[7,8,9,4,5,6,1,2,3].map(n => (
               <button key={n} onClick={() => pressDigit(n)} style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>{n}</button>
@@ -381,18 +584,35 @@ export default function TavoliPage() {
             <button onClick={() => setInputCents(prev => parseInt(String(prev) + '00'))} style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'0.9rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>00</button>
           </div>
 
-          <div style={{ marginTop:'auto', display:'flex', flexDirection:'column', gap:8 }}>
-            {totale > 0 && (
+
+
+
+
+
+
+
+                   <div style={{ marginTop:'auto', display:'flex', flexDirection:'column', gap:8 }}>
+                   {totale > 0 && (
               <>
                 <button onClick={stampaPreconto} style={{ padding:'12px', background:'#ffb830', border:'none', borderRadius:12, color:'#08090c', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
                   🧾 Preconto
                 </button>
-                <button onClick={chiudiTavolo} style={{ padding:'12px', background:'#ff4d6a', border:'none', borderRadius:12, color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
-                  💳 Chiudi tavolo
+                <button
+                  onClick={() => {
+                    const tv = tavoli.find(t => t.numero === tavoloAttivo)
+const haCoperto = righeComanda.some(r => r.id === 'coperto' && r.quantita > 0) || tv?.righe?.some(r => r.id === 'coperto' && r.quantita > 0)
+setSelezione(haCoperto ? { coperto: 1 } : {})
+const rCop = righeComanda.find(r => r.id === 'coperto') || tv?.righe?.find(r => r.id === 'coperto')
+setRomanaPersone(Math.max(2, rCop?.quantita || tv?.coperti || 2))
+setShowConto(true)
+                  }}
+                  style={{ padding:'12px', background:'#ff4d6a', border:'none', borderRadius:12, color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
+                  💳 Chiudi Conto
                 </button>
               </>
             )}
-            <button onClick={inviaComanda} disabled={righeComanda.length === 0} style={{ padding:'12px', background: righeComanda.length === 0 ? '#1a1c24' : '#00e5a0', border:'none', borderRadius:12, color: righeComanda.length === 0 ? '#5a5d6e' : '#08090c', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.85rem' }}>
+
+            <button onClick={inviaComanda} disabled={righeComanda.length === 0 || inviando} style={{ padding:'12px', background: righeComanda.length === 0 ? '#1a1c24' : '#00e5a0', border:'none', borderRadius:12, color: righeComanda.length === 0 ? '#5a5d6e' : '#08090c', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.85rem' }}>
               ✓ Invia comanda
             </button>
 
@@ -401,6 +621,8 @@ export default function TavoliPage() {
             </button>
           </div>
         </div>
+
+
 
         {/* CENTRO — scontrino + prodotti */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
@@ -431,17 +653,16 @@ export default function TavoliPage() {
                         📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                       </div>
                     )}
-                  {r.id !== 'coperto' && (
                       <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                        <button onClick={() => aggiornaQuantita(r.id, -1)}
-                          style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
-                        <button onClick={() => aggiornaQuantita(r.id, 1)}
-                          style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
-                        <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/,'') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
-                          style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px', marginLeft:28 }}>✏️</button>
-                        <button onClick={() => eliminaRiga(r.id)} style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>✕</button>
-                      </div>
-                    )}
+                      <button onClick={() => aggiornaQuantita(r.id, -1)}
+                        style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
+                      <button onClick={() => aggiornaQuantita(r.id, 1)}
+                        style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
+                      <button disabled={r.id === 'coperto'} onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/,'') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
+                        style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px', marginLeft:28, visibility: r.id === 'coperto' ? 'hidden' : 'visible' }}>✏️</button>
+                      <button disabled={r.id === 'coperto'} onClick={() => eliminaRiga(r.id)}
+                        style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem', visibility: r.id === 'coperto' ? 'hidden' : 'visible' }}>✕</button>
+                    </div>
 
 
                   </div>
@@ -454,6 +675,12 @@ export default function TavoliPage() {
                   <span style={{ color:'#ffffff' }}>TOTALE</span>
                   <span style={{ color:'#00e5a0', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totale)}</span>
                 </div>
+                 {romanaPagato > 0 && (
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8rem', color:'#ffb830' }}>
+                    <span>Pagato alla romana ({romanaQuotePagate}/{romanaPersoneTot})</span>
+                    <span>residuo € {fmt(romanaResiduo)}</span>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -576,15 +803,135 @@ export default function TavoliPage() {
 
 
 
+{showConto && (
+  <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700, padding:20 }}>
+    <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:640, maxHeight:'90vh', display:'flex', flexDirection:'column', gap:14, overflowY:'auto' }}>
+      <div style={{ fontSize:'1rem', fontWeight:700, color:'#eef0f6' }}>
+        💳 Conto tavolo {tavoloAttivo} — € {fmt(divisioneCorrente ? romanaResiduo : totale)}
+      </div>
+
+      {!comandaSincronizzata && (
+        <div style={{ fontSize:'0.8rem', color:'#ffb830', background:'rgba(255,184,48,0.1)', borderRadius:8, padding:'8px 10px' }}>
+          Ci sono modifiche non inviate: premi "Invia comanda" prima di pagare per prodotti o alla romana.
+        </div>
+      )}
+
+      {!divisioneCorrente && (
+        <button onClick={() => { setShowConto(false); chiudiTavolo() }}
+          style={{ padding:14, borderRadius:12, background:'#ff4d6a', border:'none', color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.95rem' }}>
+          Paga tutto € {fmt(totale)}
+        </button>
+      )}
+
+      {/* ALLA ROMANA */}
+      <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>ALLA ROMANA</div>
+      <div style={{ background:'#1a1c24', borderRadius:12, padding:14, display:'flex', flexDirection:'column', gap:12,
+        opacity: comandaSincronizzata ? 1 : 0.4, pointerEvents: comandaSincronizzata ? 'auto' : 'none' }}>
+        {divisioneCorrente ? (
+          <div style={{ fontSize:'0.82rem', color:'#ffb830' }}>
+            Pagato € {fmt(romanaPagato)} · Residuo € {fmt(romanaResiduo)}
+          </div>
+        ) : (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <span style={{ fontSize:'0.88rem' }}>Persone a tavola</span>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <button onClick={() => setRomanaPersone(p => Math.max(2, p - 1))} style={{ width:32, height:32, borderRadius:8, background:'#252830', border:'none', color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer' }}>−</button>
+              <span style={{ minWidth:24, textAlign:'center', fontFamily:"'DM Mono',monospace", fontSize:'1.1rem' }}>{romanaPersone}</span>
+              <button onClick={() => setRomanaPersone(p => Math.min(50, p + 1))} style={{ width:32, height:32, borderRadius:8, background:'#252830', border:'none', color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer' }}>+</button>
+            </div>
+          </div>
+        )}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(100px, 1fr))', gap:8 }}>
+          {Array.from({ length: Math.max(romanaPersoneTot, romanaQuotePagate) }, (_, i) => {
+            const pagato = i < romanaQuotePagate
+            return (
+              <button key={i} disabled={pagato} onClick={pagaAllaRomana}
+                style={{ padding:'14px 8px', borderRadius:12, border:'1px solid ' + (pagato ? '#252830' : '#00e5a0'),
+                  background: pagato ? '#111318' : 'rgba(0,229,160,0.12)', color: pagato ? '#5a5d6e' : '#eef0f6',
+                  cursor: pagato ? 'default' : 'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                <span style={{ fontSize:'0.72rem', letterSpacing:1 }}>PERSONA {i + 1}</span>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700 }}>
+                  {pagato ? '✓ pagato' : `€ ${fmt(romanaImporto)}`}
+                </span>
+              </button>
+            )
+          })}
+          {romanaQuotePagate >= romanaPersoneTot && romanaResiduo > 0 && (
+            <button onClick={pagaAllaRomana}
+              style={{ padding:'14px 8px', borderRadius:12, border:'1px solid #ffb830', background:'rgba(255,184,48,0.12)', color:'#eef0f6', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+              <span style={{ fontSize:'0.72rem', letterSpacing:1 }}>RESIDUO</span>
+              <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700 }}>€ {fmt(romanaResiduo)}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* PER PRODOTTI (nascosto se la divisione alla romana è in corso) */}
+      {!divisioneCorrente && (
+        <>
+          <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>OPPURE SCEGLI I PRODOTTI DA PAGARE</div>
+          <div style={{ overflowY:'auto', flex:1, opacity: comandaSincronizzata ? 1 : 0.4, pointerEvents: comandaSincronizzata ? 'auto' : 'none' }}>
+            {righeComanda.map(r => (
+              <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid #1a1c2440' }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:'0.88rem' }}>{r.nome} <span style={{ color:'#ffffff99' }}>× {r.quantita}</span></div>
+                  {r.nota && <div style={{ fontSize:'0.75rem', color: r.nota.startsWith('+') ? 'yellow' : 'red' }}>📝 {r.nota}</div>}
+                  <div style={{ fontSize:'0.72rem', color:'#ffffff99' }}>€ {fmt(r.importo)} cad.</div>
+                </div>
+
+                {r.id === 'coperto' ? <span style={{ width:32 }} /> : (
+                  <button onClick={() => cambiaSelezione(r.id, -1, r.quantita)} style={{ width:32, height:32, borderRadius:8, background:'#252830', border:'none', color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer' }}>−</button>
+                )}
+                <span style={{ minWidth:20, textAlign:'center', fontFamily:"'DM Mono',monospace", color: (selezione[r.id] || 0) > 0 ? '#00e5a0' : '#eef0f6' }}>{selezione[r.id] || 0}</span>
+                {r.id === 'coperto' ? <span style={{ width:32 }} /> : (
+                  <button onClick={() => cambiaSelezione(r.id, 1, r.quantita)} style={{ width:32, height:32, borderRadius:8, background:'#252830', border:'none', color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer' }}>+</button>
+                )}
+              </div>
+              
+            ))}
+          </div>
+        </>
+      )}
+
+      <div style={{ display:'flex', gap:10 }}>
+        <button onClick={() => setShowConto(false)}
+          style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>
+          Indietro
+        </button>
+        {!divisioneCorrente && (
+          <button onClick={pagaSelezionati} disabled={!comandaSincronizzata || totaleSelezionato === 0}
+            style={{ flex:1.4, padding:12, borderRadius:10, border:'none', fontWeight:700,
+              background: (!comandaSincronizzata || totaleSelezionato === 0) ? '#1a1c24' : '#00e5a0',
+              color: (!comandaSincronizzata || totaleSelezionato === 0) ? '#5a5d6e' : '#08090c',
+              cursor: (!comandaSincronizzata || totaleSelezionato === 0) ? 'not-allowed' : 'pointer' }}>
+            Paga selezionati € {fmt(totaleSelezionato)}
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
 {modalAnnulla && (
           <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700 }}>
             <div style={{ background:'#111318', border:'1px solid #ff4d6a44', borderRadius:20, padding:28, width:340, display:'flex', flexDirection:'column', gap:18, alignItems:'center' }}>
               <div style={{ fontSize:'1rem', fontWeight:700, color:'#ff4d6a' }}>🗑️ Annulla comanda</div>
               <div style={{ fontSize:'0.85rem', color:'#ffffff', textAlign:'center' }}>
-                Annullare la comanda del tavolo {tavoloAttivo}?<br/>Il tavolo verrà liberato.
+                {infoAnnulla ? (
+                  <>
+                    Sul tavolo {tavoloAttivo} sono già stati incassati <strong>€ {fmt(infoAnnulla.pagato)}</strong> ({infoAnnulla.quotePagate} {infoAnnulla.quotePagate === 1 ? 'quota' : 'quote'} su {infoAnnulla.persone}) con scontrino.<br/>
+                    Annullando perdi il residuo di <strong>€ {fmt(infoAnnulla.residuo)}</strong> e il tavolo verrà liberato.<br/>
+                    Nello storico tavoli resterà la riga con quanto incassato.
+                  </>
+                ) : (
+                  <>Annullare la comanda del tavolo {tavoloAttivo}?<br/>Il tavolo verrà liberato.</>
+                )}
               </div>
               <div style={{ display:'flex', gap:12, width:'100%' }}>
-                <button onClick={() => setModalAnnulla(false)}
+                <button onClick={() => { setModalAnnulla(false); setInfoAnnulla(null) }}
                   style={{ flex:1, padding:12, borderRadius:12, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>
                   No, torna indietro
                 </button>
@@ -767,7 +1114,8 @@ export default function TavoliPage() {
                 <div style={{ fontSize:'2.5rem', fontWeight:700, color: occupato ? '#ff4d6a' : '#00e5a0', lineHeight:1 }}>{t.numero}</div>
                 {occupato ? (
                   <>
-                    <div style={{ fontSize:'0.98rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totTavolo)}</div>
+                    <div style={{ fontSize:'0.98rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(Math.max(0, totTavolo - (t.divisione?.importoPagato || 0)))}</div>
+                    {t.divisione && <div style={{ fontSize:'0.8rem', color:'#ffb830' }}>alla romana {t.divisione.quotePagate}/{t.divisione.persone}</div>}
                     <div style={{ fontSize:'0.88rem', color:'#00ffb3' }}>{(() => { const n = t.righe?.filter(r => r.id !== 'coperto').length || 0; return n === 1 ? '1 prodotto' : `${n} prodotti` })()}</div>
                     {tempo && <div style={{ fontSize:'0.95rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>}
                     {impostazioni.copertoAbilitato && t.coperti > 0 && (

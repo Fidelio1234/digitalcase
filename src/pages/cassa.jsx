@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
 import { totaliPerIva } from '@/lib/iva'
-import { salvaScontrinoDb, chiudiTavoloDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza, salvaAnnulloDb } from '@/lib/supabase-db'
+import { salvaScontrinoDb, chiudiTavoloDb, scalaRigheTavoloDb, registraQuotaRomanaDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza, salvaAnnulloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { supabase } from '@/lib/supabase'
@@ -170,10 +170,17 @@ export default function CassaPage() {
       try {
         const parsed = JSON.parse(tavoloDaChiudere)
         tavoloDaChiudereRef.current = parsed
+        sessionStorage.setItem('cassa_tavolo', tavoloDaChiudere)
         console.log('Righe tavolo trovate:', parsed.righe?.length)
         setTimeout(() => caricaRigheEsterne(parsed.righe), 300)
         sessionStorage.removeItem('tavolo_da_chiudere')
       } catch(e) { console.error(e) }
+    } else {
+      // Pagina ricaricata: ripristino solo il collegamento (le righe tornano da cassa_righe)
+      try {
+        const salvato = sessionStorage.getItem('cassa_tavolo')
+        if (salvato) tavoloDaChiudereRef.current = JSON.parse(salvato)
+      } catch {}
     }
 
     const fidelityRitorno = sessionStorage.getItem('fidelity_ritorno_scontrino')
@@ -418,9 +425,21 @@ export default function CassaPage() {
       })
     }
     tavoloDaChiudereRef.current = null
+    try { sessionStorage.removeItem('tavolo_da_chiudere'); sessionStorage.removeItem('cassa_tavolo') } catch {}
     annullaTutto()
     setShowConfirmAnnulla(false)
   }
+
+
+  // Dopo uno scontrino da tavolo, torna ai tavoli
+  useEffect(() => {
+    if (!showSuccesso) return
+    setTimeout(() => {
+      try { if (sessionStorage.getItem('riapri_tavolo')) router.push('/tavoli') } catch {}
+    }, 1200)
+  }, [showSuccesso])
+
+
 
   async function handleSuccesso(info) {
     // Chiudi tavolo su Supabase se scontrino viene da un tavolo
@@ -428,22 +447,58 @@ export default function CassaPage() {
 
 
 
-   const tavoloInfo = tavoloDaChiudereRef.current
+    const tavoloInfo = tavoloDaChiudereRef.current
     if (tavoloInfo) {
+      let tavoloAperto = false
       try {
-        await salvaStoricoTavolo(NEGOZIO_ID, {
-          numero: tavoloInfo.numero,
-          righe: tavoloInfo.righe || [],
-          coperti: tavoloInfo.coperti || 0,
-          apertoAlle: tavoloInfo.apertoAlle || null,
-        })
-        await chiudiTavoloDb(NEGOZIO_ID, tavoloInfo.numero)
-        tavoloDaChiudereRef.current = null
-      } catch(e) {}
+        if (tavoloInfo.romana) {
+          // Pagamento di una quota alla romana
+          const righeQuota = (scontrinoCorrente?.righe || []).filter(r => r.quotaTavolo === tavoloInfo.numero)
+          const importoQuota = righeQuota.reduce((s, r) => s + r.totaleRiga, 0)
+          if (importoQuota > 0) {
+            const esito = await registraQuotaRomanaDb(NEGOZIO_ID, tavoloInfo.numero, {
+              persone: tavoloInfo.romana.persone,
+              quote: tavoloInfo.romana.quote,
+              importo: importoQuota,
+            })
+            if (esito.ok && !esito.chiuso) tavoloAperto = true
+            if (!esito.ok) {
+              console.error('Registrazione quota fallita:', tavoloInfo.numero)
+              window.alert(`Pagamento confermato, ma la quota del tavolo ${tavoloInfo.numero} non è stata registrata. Controllalo.`)
+            } else if (esito.chiuso) {
+              await salvaStoricoTavolo(NEGOZIO_ID, {
+                numero: tavoloInfo.numero,
+                righe: esito.righe,
+                coperti: tavoloInfo.coperti || 0,
+                apertoAlle: tavoloInfo.apertoAlle || null,
+              })
+            }
+          }
+        } else {
+          // Pagamento normale o per prodotti
+          const incassate = (scontrinoCorrente?.righe || []).filter(r => r.importo > 0)
+          const esito = await scalaRigheTavoloDb(
+            NEGOZIO_ID, tavoloInfo.numero,
+            incassate.map(r => ({ id: r.idOrigine ?? r.id, quantita: r.quantita }))
+          )
+          if (esito.ok && !esito.chiuso) tavoloAperto = true
+          if (!esito.ok) {
+            console.error('Aggiornamento tavolo fallito:', tavoloInfo.numero)
+            window.alert(`Pagamento confermato, ma il tavolo ${tavoloInfo.numero} non è stato aggiornato. Controllalo.`)
+          } else if (esito.tolte > 0) {
+            await salvaStoricoTavolo(NEGOZIO_ID, {
+              numero: tavoloInfo.numero,
+              righe: incassate,
+              coperti: esito.chiuso ? (tavoloInfo.coperti || 0) : 0,
+              apertoAlle: tavoloInfo.apertoAlle || null,
+            })
+          }
+        }
+      } catch (e) { console.error('Chiusura tavolo fallita:', e) }
+      try { if (tavoloAperto) sessionStorage.setItem('riapri_tavolo', JSON.stringify({ numero: tavoloInfo.numero, conto: !!tavoloInfo.romana, ts: Date.now() })) } catch {}
+      tavoloDaChiudereRef.current = null
+      try { sessionStorage.removeItem('cassa_tavolo') } catch {}
     }
-
-
-
 
     // Chiudi asporto se viene da asporto
     const asportoDaChiudere = sessionStorage.getItem('asporto_da_chiudere')
