@@ -140,7 +140,16 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
       colore: '#ffb830',
       onConferma: async () => {
         const res = await chiamaRT('chiusura_fiscale', { tipo })
-        await salvaChiusura(res?.ok ? 'inviata' : 'non_inviata')
+        try {
+          await salvaChiusura(res?.ok ? 'inviata' : 'non_inviata')
+        } catch (e) {
+          console.error('Errore salvataggio chiusura:', e)
+          setConferma({
+            titolo: 'Chiusura NON salvata',
+            messaggio: 'La chiusura è stata eseguita sul registratore, ma NON è stata salvata nello storico di DigitalCase. Non ripetere la chiusura. Avvisa subito l\'assistenza (339 119 9015) e segna i totali del giorno.',
+            colore: '#ff5d5d', onConferma: null
+          })
+        }
       }
     })
   }
@@ -153,49 +162,70 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
 
 
 
+  // Riprova una chiamata Supabase (3 tentativi, pausa crescente). Se fallisce sempre lancia l'errore:
+  // cosi' il chiamante puo' avvisare invece di perdere la chiusura in silenzio.
+  async function conRiprova(chiama, nome) {
+    let ultimo = null
+    for (let i = 1; i <= 3; i++) {
+      let res
+      try { res = await chiama() } catch (e) { res = { error: e } }
+      if (!res?.error) return res
+      ultimo = res.error
+      console.warn('⚠️ ' + nome + ': tentativo ' + i + '/3 non riuscito:', res.error.message || res.error)
+      if (i < 3) await new Promise(ok => setTimeout(ok, i * 1500))
+    }
+    throw new Error(nome + ': ' + (ultimo?.message || 'errore sconosciuto'))
+  }
+
   async function salvaChiusura(stato) {
     const ora = new Date().toISOString()
     const oggi = ora.split('T')[0]
-    const { data: ultimaChiusura } = await supabase
+    const { data: ultimaChiusura } = await conRiprova(() => supabase
       .from('chiusure').select('timestamp_chiusura')
       .eq('negozio_id', negozioId)
       .order('timestamp_chiusura', { ascending: false })
-      .limit(1).maybeSingle()
+      .limit(1).maybeSingle(), 'Lettura ultima chiusura')
     const dataFrom = ultimaChiusura?.timestamp_chiusura || (oggi + 'T00:00:00')
 
-    const { data: scontriniGrezzi } = await supabase
+    const { data: scontriniGrezzi } = await conRiprova(() => supabase
       .from('scontrini').select('totale, metodo, annullato')
       .eq('negozio_id', negozioId)
       .gt('timestamp_emissione', dataFrom)
-      .lte('timestamp_emissione', ora)
+      .lte('timestamp_emissione', ora), 'Lettura scontrini')
     const scontrini = scontriniGrezzi?.filter(s => !s.annullato) || []
     const totaleGiornaliero = scontrini.reduce((a, s) => a + s.totale, 0)
     const totaleCarte = scontrini.filter(s => s.metodo === 'carta').reduce((a, s) => a + s.totale, 0)
     const totaleContanti = scontrini.filter(s => s.metodo === 'contanti').reduce((a, s) => a + s.totale, 0)
     const numeroScontrini = scontrini.length
 
-
-
-    const { data: cont } = await supabase
+    const { data: cont } = await conRiprova(() => supabase
       .from('contatori').select('chiusure')
-      .eq('negozio_id', negozioId).eq('data', oggi).single()
+      .eq('negozio_id', negozioId).eq('data', oggi).maybeSingle(), 'Lettura contatori')
     const numChiusura = (cont?.chiusure || 0) + 1
 
-
-
-    const { error: erroreChiusura } = await supabase.from('chiusure').insert({
+    const riga = {
       negozio_id: negozioId, numero_chiusura: numChiusura, stato,
       timestamp_chiusura: ora, numero_scontrini: numeroScontrini,
       totale_giornaliero: totaleGiornaliero, totale_carte: totaleCarte,
       totale_contanti: totaleContanti, totale_iva: {},
-    })
-    if (erroreChiusura) console.error('⚠️ Errore salvataggio chiusura:', erroreChiusura)
+    }
+    await conRiprova(async () => {
+      // se un tentativo precedente e' arrivato al database ma la risposta si e' persa, non duplica la riga
+      const { data: esiste } = await supabase.from('chiusure').select('id')
+        .eq('negozio_id', negozioId).eq('timestamp_chiusura', ora).maybeSingle()
+      if (esiste) return { error: null }
+      return await supabase.from('chiusure').insert(riga)
+    }, 'Salvataggio chiusura')
 
-    const { error: erroreContatori } = await supabase.from('contatori').upsert({
-      negozio_id: negozioId, data: oggi,
-      chiusure: numChiusura, scontrini: cont?.scontrini || 0,
-    }, { onConflict: 'negozio_id,data' })
-    if (erroreContatori) console.error('⚠️ Errore salvataggio contatori:', erroreContatori)
+    // il contatore e' secondario: la chiusura e' gia' salvata, quindi un errore qui non la invalida
+    try {
+      await conRiprova(() => supabase.from('contatori').upsert({
+        negozio_id: negozioId, data: oggi,
+        chiusure: numChiusura, scontrini: cont?.scontrini || 0,
+      }, { onConflict: 'negozio_id,data' }), 'Aggiornamento contatori')
+    } catch (e) {
+      console.warn('⚠️ Contatori non aggiornati (la chiusura e\' salvata):', e.message)
+    }
   }
 
 
