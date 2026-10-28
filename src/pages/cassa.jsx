@@ -7,6 +7,7 @@ import { totaliPerIva } from '@/lib/iva'
 import { salvaScontrinoDb, chiudiTavoloDb, scalaRigheTavoloDb, registraQuotaRomanaDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza, salvaAnnulloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
+import { sincronizzaNegozioLocale } from '@/lib/supabase-db'
 import { supabase } from '@/lib/supabase'
 import { useCassa, euroInCentesimi } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
@@ -72,6 +73,8 @@ function fmt(cents) {
 export default function CassaPage() {
   //console.log('🔴 CASSA MONTATA - stack:', new Error().stack.split('\n')[2])
   const NEGOZIO_ID = useNegozioId()
+  // Copia i dati del negozio dal database al browser (usati da mail e report)
+  useEffect(() => { if (NEGOZIO_ID) sincronizzaNegozioLocale(NEGOZIO_ID) }, [NEGOZIO_ID])
   const { negozio } = useNegozio() || {}
   const { user, logout, loading } = useAuth()
   const router = useRouter()

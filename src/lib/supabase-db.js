@@ -746,3 +746,36 @@ export async function chiudiPrenotazioneDb(negozioId, id) {
   const { error } = await supabase.from('prenotazioni').update({ stato: 'completato' }).eq('id', id).eq('negozio_id', negozioId)
   return !error
 }
+// ─── SINCRONIZZA DATI NEGOZIO (database → browser) ────────────────────────
+// Copia nel localStorage (chiave sd_negozio) i dati del negozio inseriti dal Pannello Tecnico.
+// Legge solo le colonne necessarie. Un campo vuoto nel database non cancella quello locale.
+export async function sincronizzaNegozioLocale(negozioId) {
+  try {
+    if (typeof window === 'undefined' || !negozioId) return false
+    const { data, error } = await supabase
+      .from('negozi')
+      .select('ragione_sociale, indirizzo, partita_iva, telefono, sito_web, numero_rt')
+      .eq('id', negozioId)
+      .maybeSingle()
+    if (error || !data) return false
+    const dalDb = {
+      ragioneSociale: data.ragione_sociale,
+      indirizzo: data.indirizzo,
+      partitaIva: data.partita_iva,
+      telefono: data.telefono,
+      sitoWeb: data.sito_web,
+      numeroRt: data.numero_rt,
+    }
+    let locale = {}
+    try { locale = JSON.parse(localStorage.getItem('sd_negozio') || '{}') || {} } catch {}
+    const unito = { ...locale }
+    for (const [k, v] of Object.entries(dalDb)) {
+      if (typeof v === 'string' && v.trim() !== '') unito[k] = v.trim()
+    }
+    localStorage.setItem('sd_negozio', JSON.stringify(unito))
+    return true
+  } catch (e) {
+    console.warn('sincronizzaNegozioLocale:', e && e.message)
+    return false
+  }
+}

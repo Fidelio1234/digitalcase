@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getNegozio, getContatori } from '@/lib/storage'
+import { sincronizzaNegozioLocale } from '@/lib/supabase-db'
 import { getStoricoDb, salvaChiusuraDb, getChiusureDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Storico.module.css'
@@ -36,6 +37,7 @@ export default function StoricoPage() {
     getStoricoDb(NEGOZIO_ID).then(s => setStorico(s))
     getChiusureDb(NEGOZIO_ID).then(c => setChiusure(c))
     setNegozio(getNegozio())
+    sincronizzaNegozioLocale(NEGOZIO_ID).then(() => setNegozio(getNegozio()))
   }, [user, router])
 
   function showToast(msg) {
