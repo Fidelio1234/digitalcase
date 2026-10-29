@@ -551,20 +551,29 @@ export default function CassaPage() {
         if (righeConGiacenza.length > 0) {
           // Rileggo la giacenza VERA dal database proprio ora, invece di fidarmi del
           // valore congelato nel carrello da quando la pagina cassa è stata aperta.
-          const ids = [...new Set(righeConGiacenza.map(r => r.id))]
+          // Prodotto vero: una riga staccata (aggiunta/rimozione su 1 unità) ha un id nuovo, l'originale è in idOrigine.
+          const prodottoDi = r => r.sottoRepartoId ?? r.idOrigine ?? r.id
+          // Più righe dello stesso prodotto (riga originale + riga staccata): quantità sommate, una sola scrittura.
+          const perProdotto = new Map()
+          for (const r of righeConGiacenza) {
+            const pid = prodottoDi(r)
+            if (!perProdotto.has(pid)) perProdotto.set(pid, { nome: r.nome, quantita: 0, giacenzaCarrello: r.giacenza, giacenzaMinima: r.giacenzaMinima })
+            perProdotto.get(pid).quantita += r.quantita
+          }
+          const ids = [...perProdotto.keys()]
           const { data: prodottiFreschi } = await supabase
             .from('prodotti')
             .select('id, giacenza')
             .in('id', ids)
-          const giacenzaAttuale = {}
-          for (const p of prodottiFreschi || []) giacenzaAttuale[p.id] = p.giacenza
-  
-          for (const riga of righeConGiacenza) {
-            const giacenzaCorrente = giacenzaAttuale[riga.id] ?? riga.giacenza
-            const nuovaGiacenza = Math.max(0, giacenzaCorrente - riga.quantita)
-            await aggiornaGiacenza(NEGOZIO_ID, riga.id, riga.nome, 'vendita', riga.quantita, nuovaGiacenza)
-            if (riga.giacenzaMinima !== null && nuovaGiacenza <= riga.giacenzaMinima) {
-              avvisi.push({ nome: riga.nome, giacenza: nuovaGiacenza, minima: riga.giacenzaMinima })
+          const giacenzaAttuale = new Map()
+          for (const p of prodottiFreschi || []) giacenzaAttuale.set(p.id, p.giacenza)
+
+          for (const [pid, p] of perProdotto) {
+            const giacenzaCorrente = giacenzaAttuale.get(pid) ?? p.giacenzaCarrello
+            const nuovaGiacenza = Math.max(0, giacenzaCorrente - p.quantita)
+            await aggiornaGiacenza(NEGOZIO_ID, pid, p.nome, 'vendita', p.quantita, nuovaGiacenza)
+            if (p.giacenzaMinima != null && nuovaGiacenza <= p.giacenzaMinima) {
+              avvisi.push({ nome: p.nome, giacenza: nuovaGiacenza, minima: p.giacenzaMinima })
             }
           }
         }
