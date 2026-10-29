@@ -213,9 +213,15 @@ export async function getStoricoDb(negozioId, filtri = {}) {
     .order('timestamp_emissione', { ascending: false })
 
   if (filtri.data) {
-    query = query
-      .gte('timestamp_emissione', filtri.data + 'T00:00:00')
-      .lte('timestamp_emissione', filtri.data + 'T23:59:59')
+    // Giorno UTC [00:00Z, 00:00Z del giorno dopo): stessa regola del confronto per data nello Storico.
+    // (Prima: 'T00:00:00' senza fuso e senza l'ultimo secondo del giorno.)
+    const inizio = new Date(filtri.data + 'T00:00:00Z')
+    if (!Number.isNaN(inizio.getTime())) {
+      const fine = new Date(inizio.getTime() + 24 * 60 * 60 * 1000)
+      query = query
+        .gte('timestamp_emissione', inizio.toISOString())
+        .lt('timestamp_emissione', fine.toISOString())
+    }
   }
   if (filtri.metodo && filtri.metodo !== 'tutti') {
     query = query.eq('metodo', filtri.metodo)

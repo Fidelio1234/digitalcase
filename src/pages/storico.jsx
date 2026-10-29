@@ -67,11 +67,19 @@ export default function StoricoPage() {
   useEffect(() => {
     if (!user) { if (!loading) router.replace('/login'); return }
     if (user?.role !== 'owner') { router.replace('/cassa'); return }
-    getStoricoDb(NEGOZIO_ID).then(s => setStorico(s))
     getChiusureDb(NEGOZIO_ID).then(c => setChiusure(c))
     setNegozio(getNegozio())
     sincronizzaNegozioLocale(NEGOZIO_ID).then(() => setNegozio(getNegozio()))
   }, [user, router])
+
+  // Carica solo il giorno scelto: Supabase restituisce al massimo 1000 righe per richiesta, quindi
+  // senza filtro lo Storico vedeva soltanto gli ultimi 1000 scontrini. Data vuota = come prima (ultimi 1000).
+  useEffect(() => {
+    if (!user || user?.role !== 'owner' || !NEGOZIO_ID) return
+    let annullata = false
+    getStoricoDb(NEGOZIO_ID, filtroData ? { data: filtroData } : {}).then(s => { if (!annullata) setStorico(s) })
+    return () => { annullata = true }
+  }, [user, NEGOZIO_ID, filtroData])
 
   function showToast(msg) {
     setToast(msg)
@@ -121,7 +129,7 @@ async function eseguiChiusura() {
     // Ricarica gli scontrini freschi da Supabase PRIMA di calcolare i totali,
     // per evitare di usare uno stato locale non aggiornato (es. un annullo
     // appena fatto da un'altra pagina, non ancora rispecchiato qui).
-    const storicoFresco = await getStoricoDb(NEGOZIO_ID)
+    const storicoFresco = await getStoricoDb(NEGOZIO_ID, filtroData ? { data: filtroData } : {})
 
     const scontriniDaChiudere = storicoFresco.filter(s => {
       const dataOk = filtroData ? s.timestamp?.startsWith(filtroData) : true
@@ -155,7 +163,7 @@ async function eseguiChiusura() {
       scontrini: scontriniDaChiudere.map(s => s.id),
     }
     await salvaChiusuraDb(NEGOZIO_ID, chiusura)
-    getStoricoDb(NEGOZIO_ID).then(s => setStorico(s)) // aggiorna anche lo stato locale, per coerenza con la UI
+    getStoricoDb(NEGOZIO_ID, filtroData ? { data: filtroData } : {}).then(s => setStorico(s)) // aggiorna anche lo stato locale, per coerenza con la UI
     getChiusureDb(NEGOZIO_ID).then(c => setChiusure(c))
     showToast('✓ Chiusura fiscale eseguita')
     setTab('chiusure')
