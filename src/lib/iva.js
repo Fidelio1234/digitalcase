@@ -6,7 +6,7 @@ export function totaliPerIva(righe = []) {
     const merci = {}
     let scontoTot = 0
     for (const r of righe || []) {
-      if (r.repartoId === null && r.importo < 0) {
+      if (r.repartoId == null && r.importo < 0) {
         scontoTot += Math.abs(r.totaleRiga || 0)
         continue
       }
@@ -32,3 +32,52 @@ export function totaliPerIva(righe = []) {
     }
     return out
   }
+
+
+// Riepilogo IVA sulle vendite di un periodo (usato dal report "IVA mensile" dello Storico).
+// - Gli annullati sono esclusi.
+// - Gli scontrini NON STAMPATI dalla cassa (statoRt 'non_emesso') NON entrano nell'IVA: sono contati a parte.
+// - Gli scontrini 'da_verificare' entrano nell'IVA ma vengono segnalati.
+// - Lo sconto è ripartito tra le aliquote da totaliPerIva (stessa logica della chiusura).
+// Importi in centesimi, IVA inclusa; l'IVA è scorporata sul totale di ogni aliquota.
+export function riepilogoIvaMensile(scontrini = []) {
+  const perAliquota = {}
+  let numero = 0
+  let annullati = 0
+  let nonStampati = 0
+  let importoNonStampati = 0
+  let daVerificare = 0
+  let senzaRighe = 0
+  let totaleScontrini = 0
+  for (const s of scontrini || []) {
+    if (s.annullato) { annullati++; continue }
+    if (s.statoRt === 'non_emesso') { nonStampati++; importoNonStampati += s.totale || 0; continue }
+    if (s.statoRt === 'da_verificare') daVerificare++
+    numero++
+    totaleScontrini += s.totale || 0
+    if (!s.righe || s.righe.length === 0) { senzaRighe++; continue }
+    for (const [k, v] of Object.entries(totaliPerIva(s.righe))) perAliquota[k] = (perAliquota[k] || 0) + v
+  }
+  const righe = Object.keys(perAliquota)
+    .sort((a, b) => Number(a) - Number(b))
+    .map(k => {
+      const aliquota = Number(k)
+      const lordo = perAliquota[k]
+      const iva = Math.round(lordo * aliquota / (100 + aliquota))
+      return { aliquota, lordo, imponibile: lordo - iva, iva }
+    })
+  const totaleRighe = righe.reduce((a, r) => a + r.lordo, 0)
+  return {
+    righe,
+    totaleLordo: totaleRighe,
+    totaleImponibile: righe.reduce((a, r) => a + r.imponibile, 0),
+    totaleIva: righe.reduce((a, r) => a + r.iva, 0),
+    numero,
+    annullati,
+    nonStampati,
+    importoNonStampati,
+    daVerificare,
+    senzaRighe,
+    differenza: totaleScontrini - totaleRighe,
+  }
+}

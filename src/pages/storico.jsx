@@ -3,10 +3,10 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getNegozio, getContatori } from '@/lib/storage'
 import { sincronizzaNegozioLocale } from '@/lib/supabase-db'
-import { getStoricoDb, salvaChiusuraDb, getChiusureDb } from '@/lib/supabase-db'
+import { getStoricoDb, getScontriniPeriodoDb, salvaChiusuraDb, getChiusureDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Storico.module.css'
-import { totaliPerIva } from '@/lib/iva'
+import { totaliPerIva, riepilogoIvaMensile } from '@/lib/iva'
 
 function fmt(cents) {
   return (cents / 100).toFixed(2).replace('.', ',')
@@ -30,6 +30,39 @@ export default function StoricoPage() {
   const [tab, setTab] = useState('scontrini')
   const [negozio, setNegozio] = useState({})
   const [toast, setToast] = useState('')
+
+  // Report IVA mensile
+  const [ivaOpen, setIvaOpen] = useState(false)
+  const [ivaMese, setIvaMese] = useState(() => {
+    const d = new Date()
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+  })
+  const [ivaRiep, setIvaRiep] = useState(null)
+  const [ivaLoading, setIvaLoading] = useState(false)
+  const [ivaErrore, setIvaErrore] = useState('')
+
+  // Legge il mese a pagine (limite di 1000 righe di Supabase) quando il pannello è aperto
+  useEffect(() => {
+    if (!ivaOpen || !NEGOZIO_ID) return
+    let annullata = false
+    setIvaLoading(true)
+    setIvaRiep(null)
+    setIvaErrore('')
+    const [anno, mese] = ivaMese.split('-').map(Number)
+    getScontriniPeriodoDb(NEGOZIO_ID, new Date(anno, mese - 1, 1).toISOString(), new Date(anno, mese, 1).toISOString())
+      .then(r => {
+        if (annullata) return
+        if (!r.ok) setIvaErrore('Impossibile leggere gli scontrini del mese. Riprova.')
+        else setIvaRiep(riepilogoIvaMensile(r.scontrini))
+        setIvaLoading(false)
+      })
+      .catch(() => {
+        if (annullata) return
+        setIvaErrore('Errore di rete. Riprova.')
+        setIvaLoading(false)
+      })
+    return () => { annullata = true }
+  }, [ivaOpen, ivaMese, NEGOZIO_ID])
 
   useEffect(() => {
     if (!user) { if (!loading) router.replace('/login'); return }
@@ -246,6 +279,11 @@ async function eseguiChiusura() {
                   {m === 'tutti' ? 'Tutti' : m === 'carta' ? '💳 Carta' : m === 'contanti' ? '💵 Contanti' : '🗑️ Annullati'}
                 </button>
                 ))}
+                <button
+                  className={styles.metodoBtn}
+                  onClick={() => setIvaOpen(true)}>
+                  🧮 IVA mensile
+                </button>
             </div>
           </div>
 
@@ -384,6 +422,81 @@ async function eseguiChiusura() {
                 */}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {ivaOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#111318', border: '2px solid #00e5a0', borderRadius: 16, padding: 24, maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#00e5a0' }}>🧮 IVA mensile sulle vendite</div>
+              <button onClick={() => setIvaOpen(false)}
+                style={{ background: 'transparent', border: '1px solid #252830', borderRadius: 8, color: '#eef0f6', padding: '6px 12px', cursor: 'pointer' }}>✕</button>
+            </div>
+            <input type="month" value={ivaMese}
+              onChange={e => { if (e.target.value) setIvaMese(e.target.value) }}
+              className={styles.dateInput} />
+
+            {ivaLoading && <div style={{ marginTop: 16, color: '#ffb830' }}>⏳ Calcolo in corso…</div>}
+            {ivaErrore && <div style={{ marginTop: 16, color: '#ff4d6a', fontWeight: 700 }}>⚠ {ivaErrore}</div>}
+
+            {ivaRiep && (
+              <div style={{ marginTop: 16 }}>
+                {ivaRiep.righe.length === 0 ? (
+                  <div style={{ color: '#ffffff' }}>Nessuna vendita in questo mese.</div>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                    <thead>
+                      <tr style={{ color: '#ffffff', textAlign: 'right' }}>
+                        <th style={{ textAlign: 'left', padding: '6px 4px' }}>Aliquota</th>
+                        <th style={{ padding: '6px 4px' }}>Lordo</th>
+                        <th style={{ padding: '6px 4px' }}>Imponibile</th>
+                        <th style={{ padding: '6px 4px' }}>IVA</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ivaRiep.righe.map(r => (
+                        <tr key={r.aliquota} style={{ color: '#eef0f6', textAlign: 'right', borderTop: '1px solid #252830' }}>
+                          <td style={{ textAlign: 'left', padding: '8px 4px' }}>{r.aliquota}%</td>
+                          <td style={{ padding: '8px 4px' }}>€ {fmt(r.lordo)}</td>
+                          <td style={{ padding: '8px 4px' }}>€ {fmt(r.imponibile)}</td>
+                          <td style={{ padding: '8px 4px' }}>€ {fmt(r.iva)}</td>
+                        </tr>
+                      ))}
+                      <tr style={{ color: '#00e5a0', textAlign: 'right', fontWeight: 700, borderTop: '2px solid #00e5a0' }}>
+                        <td style={{ textAlign: 'left', padding: '8px 4px' }}>TOTALE</td>
+                        <td style={{ padding: '8px 4px' }}>€ {fmt(ivaRiep.totaleLordo)}</td>
+                        <td style={{ padding: '8px 4px' }}>€ {fmt(ivaRiep.totaleImponibile)}</td>
+                        <td style={{ padding: '8px 4px' }}>€ {fmt(ivaRiep.totaleIva)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                )}
+
+                <div style={{ marginTop: 12, fontSize: '0.8rem', color: '#ffffff' }}>
+                  {ivaRiep.numero} {ivaRiep.numero === 1 ? 'scontrino conteggiato' : 'scontrini conteggiati'} · {ivaRiep.annullati} {ivaRiep.annullati === 1 ? 'annullato (escluso)' : 'annullati (esclusi)'}
+                </div>
+                {ivaRiep.nonStampati > 0 && (
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,77,106,0.12)', border: '1px solid #ff4d6a', color: '#ff4d6a', fontSize: '0.85rem', fontWeight: 700 }}>
+                    🚫 {ivaRiep.nonStampati} {ivaRiep.nonStampati === 1 ? 'scontrino NON stampato' : 'scontrini NON stampati'} dalla cassa (€ {fmt(ivaRiep.importoNonStampati)}): {ivaRiep.nonStampati === 1 ? 'escluso' : 'esclusi'} dall'IVA.
+                  </div>
+                )}
+                {ivaRiep.daVerificare > 0 && (
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,184,48,0.12)', border: '1px solid #ffb830', color: '#ffb830', fontSize: '0.85rem', fontWeight: 700 }}>
+                    ⚠ {ivaRiep.daVerificare} {ivaRiep.daVerificare === 1 ? 'scontrino da verificare: incluso' : 'scontrini da verificare: inclusi'} nell'IVA, {ivaRiep.daVerificare === 1 ? 'controllalo' : 'controllali'} sulla cassa.
+                  </div>
+                )}
+                {(ivaRiep.senzaRighe > 0 || ivaRiep.differenza !== 0) && (
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,184,48,0.12)', border: '1px solid #ffb830', color: '#ffb830', fontSize: '0.85rem', fontWeight: 700 }}>
+                    ⚠ Controllo di coerenza: {ivaRiep.senzaRighe} {ivaRiep.senzaRighe === 1 ? 'scontrino senza righe' : 'scontrini senza righe'}, differenza tra totali scontrini e righe € {fmt(ivaRiep.differenza)}. I numeri potrebbero non essere completi.
+                  </div>
+                )}
+                <div style={{ marginTop: 14, fontSize: '0.75rem', color: '#ffffff', lineHeight: 1.5 }}>
+                  Dato indicativo calcolato dagli scontrini registrati: IVA sulle vendite, scorporata dal lordo di ogni aliquota. Non è la liquidazione: l'IVA da versare dipende anche da IVA sugli acquisti, credito e acconti (conferma con il commercialista). Il valore ufficiale resta quello del registratore: possibili differenze di pochi centesimi.
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

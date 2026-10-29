@@ -248,6 +248,47 @@ export async function getStoricoDb(negozioId, filtri = {}) {
   }))
 }
 
+// Scontrini di un periodo [daIso, aIso) letti a pagine: Supabase restituisce al massimo
+// 1000 righe per richiesta, quindi un mese intero va letto in più passaggi.
+// Restituisce { ok, scontrini }. Se una pagina fallisce ok è false (mai dati parziali).
+export async function getScontriniPeriodoDb(negozioId, daIso, aIso) {
+  const PAGINA = 200
+  const tutti = []
+  for (let da = 0; ; da += PAGINA) {
+    const { data, error } = await supabase
+      .from('scontrini')
+      .select('id, totale, annullato, stato_rt, timestamp_emissione, righe_scontrino(nome, importo, quantita, totale_riga, iva)')
+      .eq('negozio_id', negozioId)
+      .gte('timestamp_emissione', daIso)
+      .lt('timestamp_emissione', aIso)
+      .order('timestamp_emissione', { ascending: true })
+      .order('id', { ascending: true })
+      .range(da, da + PAGINA - 1)
+    if (error) {
+      console.error('getScontriniPeriodoDb', error.message)
+      return { ok: false, scontrini: [] }
+    }
+    for (const s of data || []) {
+      tutti.push({
+        id: s.id,
+        totale: s.totale,
+        annullato: s.annullato || false,
+        statoRt: s.stato_rt || null,
+        timestamp: s.timestamp_emissione,
+        righe: (s.righe_scontrino || []).map(r => ({
+          nome: r.nome,
+          importo: r.importo,
+          quantita: r.quantita,
+          totaleRiga: r.totale_riga,
+          iva: r.iva,
+        })),
+      })
+    }
+    if (!data || data.length < PAGINA) break
+  }
+  return { ok: true, scontrini: tutti }
+}
+
 // ─── CHIUSURE ─────────────────────────────────────────────────────────────
 
 export async function salvaChiusuraDb(negozioId, chiusura) {
