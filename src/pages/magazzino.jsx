@@ -18,6 +18,7 @@ export default function MagazzinoPage() {
   const [editVal, setEditVal] = useState('')
   const [toast, setToast] = useState('')
   const [tab, setTab] = useState('giacenze') // giacenze | movimenti
+  const [ricerca, setRicerca] = useState('')
 
   useEffect(() => {
     if (!user && !loading) { router.replace('/login'); return }
@@ -64,6 +65,12 @@ export default function MagazzinoPage() {
 
   const sottoSoglia = prodotti.filter(p => p.giacenza_minima !== null && p.giacenza <= p.giacenza_minima)
 
+  // Ricerca: senza maiuscole/minuscole e senza accenti
+  const normalizza = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+  const q = normalizza(ricerca)
+  const prodottiFiltrati = q ? prodotti.filter(p => normalizza(p.nome).includes(q)) : prodotti
+  const movimentiFiltrati = q ? movimenti.filter(m => normalizza(m.prodotto_nome).includes(q)) : movimenti
+
   if (loading || !user) return null
 
   return (
@@ -108,6 +115,15 @@ export default function MagazzinoPage() {
         ))}
       </div>
 
+      {/* Cerca prodotto */}
+      <style>{'.cercaMagazzino::placeholder { color: #ffffff; opacity: 1; }'}</style>
+      <div style={{ position:'relative', marginBottom:16 }}>
+        <input type="search" className="cercaMagazzino" value={ricerca} onChange={e => setRicerca(e.target.value)}
+          placeholder="🔍 Cerca prodotto"
+          style={{ width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #00e5a0', borderRadius:10, padding:'12px 14px', color:'#eef0f6', fontSize:'0.9rem' }}
+        />
+      </div>
+
       {caricando ? (
         <div style={{ textAlign:'center', color:'#5a5d6e', padding:40 }}>Caricamento...</div>
       ) : tab === 'giacenze' ? (
@@ -118,7 +134,9 @@ export default function MagazzinoPage() {
               <div>Nessun prodotto con giacenza impostata</div>
               <div style={{ fontSize:'0.75rem', marginTop:8 }}>Vai in Configurazione → Reparti e imposta la giacenza sui prodotti</div>
             </div>
-          ) : prodotti.map(p => {
+          ) : prodottiFiltrati.length === 0 ? (
+            <div style={{ textAlign:'center', color:'#5a5d6e', padding:40 }}>Nessun prodotto trovato</div>
+          ) : prodottiFiltrati.map(p => {
             const sottoMin = p.giacenza_minima !== null && p.giacenza <= p.giacenza_minima
             return (
               <div key={p.id} style={{ background:'#111318', border:`1px solid ${sottoMin ? '#ff4d6a' : '#252830'}`, borderRadius:12, padding:16 }}>
@@ -176,7 +194,9 @@ export default function MagazzinoPage() {
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           {movimenti.length === 0 ? (
             <div style={{ textAlign:'center', color:'#5a5d6e', padding:40 }}>Nessun movimento</div>
-          ) : movimenti.map(m => (
+          ) : movimentiFiltrati.length === 0 ? (
+            <div style={{ textAlign:'center', color:'#5a5d6e', padding:40 }}>Nessun movimento trovato</div>
+          ) : movimentiFiltrati.map(m => (
             <div key={m.id} style={{ background:'#111318', border:'1px solid #252830', borderRadius:10, padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
                 <div style={{ fontSize:'0.85rem', fontWeight:600 }}>{m.prodotto_nome}</div>
