@@ -360,7 +360,7 @@ export default function AsportoPage() {
                       const conteggio = contaOrdiniPerProdotto(sr.nome)
                       return (
                         <button key={sr.id} onClick={() => aggiungiProdotto(rep, sr)}
-                          style={{ padding:'10px 8px', borderRadius:10, border:`1px solid ${rep.colore}66`, background:'#111318', cursor:'pointer', textAlign:'center', position:'relative' }}>
+                          style={{ padding:'10px 8px', borderRadius:10, border:`1px solid ${rep.colore}66`, background:'#111318', cursor:'pointer', textAlign:'center', position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundImage: 'linear-gradient(to bottom, rgba(8,9,12,0) 15%, rgba(8,9,12,0.78) 55%, rgba(8,9,12,0.96) 100%), url("' + sr.immagine + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', textShadow: '0 1px 3px rgba(0,0,0,1), 0 0 6px rgba(0,0,0,0.9)' } : {}) }}>
                           {conteggio > 0 && (
                             <div style={{
                               position:'absolute', top:-8, right:-8,

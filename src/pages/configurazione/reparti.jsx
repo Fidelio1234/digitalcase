@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { formatEuro, parseEuro } from '@/lib/storage'
 import { getRepartiDb, saveRepartoDb, saveProdottoDb, deleteRepartoDb, deleteProdottoDb, getAggiunteRapideDb, salvaAggiunteRapideDb } from '@/lib/supabase-db'
+import ImmagineProdotto from '@/components/ImmagineProdotto'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Reparti.module.css'
 
@@ -261,6 +262,7 @@ export default function RepartiPage() {
         barcode: form.barcode || null,
         giacenza: form.giacenza !== '' && form.giacenza !== null && form.giacenza !== undefined ? parseInt(form.giacenza) : null,
         giacenzaMinima: form.giacenzaMinima !== '' && form.giacenzaMinima !== null ? parseInt(form.giacenzaMinima) : null,
+        immagine: form.immagine,
         abilitato: form.abilitato,
         ordine: form.ordine,
       }
@@ -537,6 +539,16 @@ export default function RepartiPage() {
                     valueCents={form.prezzoFisso}
                     onChange={v => setForm(f => ({ ...f, prezzoFisso:v }))}
                     placeholder="Es. 1,20"
+                  />
+                </div>
+              )}
+
+              {modal.tipo === 'sottoreparto' && (
+                <div className={styles.field}>
+                  <label>Foto (facoltativa)</label>
+                  <ImmagineProdotto
+                    value={form.immagine || null}
+                    onChange={url => setForm(f => ({ ...f, immagine: url }))}
                   />
                 </div>
               )}

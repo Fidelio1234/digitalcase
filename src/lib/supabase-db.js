@@ -107,6 +107,7 @@ export async function getRepartiDb(negozioId) {
       barcode: p.barcode || null,
       giacenza: p.giacenza ?? null,
       giacenzaMinima: p.giacenza_minima ?? null,
+      immagine: p.immagine || null,
       abilitato: p.abilitato,
       ordine: p.ordine,
     })).sort((a,b) => a.ordine - b.ordine)
@@ -153,6 +154,7 @@ export async function saveProdottoDb(negozioId, repartoId, prodotto) {
       barcode: prodotto.barcode || null,
       giacenza: prodotto.giacenza ?? null,
       giacenza_minima: prodotto.giacenzaMinima ?? null,
+      ...(prodotto.immagine !== undefined ? { immagine: prodotto.immagine || null } : {}),
     })
   return !error
 }

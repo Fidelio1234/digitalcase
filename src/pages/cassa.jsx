@@ -1266,7 +1266,7 @@ export default function CassaPage() {
   return (
     <button key={sr.id}
       className={styles.prodottoCard}
-      style={{borderColor: rep?.colore + '66', position:'relative'}}
+      style={{borderColor: rep?.colore + '66', position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundImage: 'linear-gradient(to bottom, rgba(8,9,12,0) 15%, rgba(8,9,12,0.78) 55%, rgba(8,9,12,0.96) 100%), url("' + sr.immagine + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, justifyContent: 'flex-end', textShadow: '0 1px 3px rgba(0,0,0,1), 0 0 6px rgba(0,0,0,0.9)' } : {})}}
       onClick={() => handleSottorepartoClick(rep, sr)}
     >
       {qtaInScontrino > 0 && (
