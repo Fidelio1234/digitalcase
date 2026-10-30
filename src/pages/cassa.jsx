@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
@@ -85,6 +86,7 @@ export default function CassaPage() {
 
   const [rtMappatura, setRtMappatura] = useState({})
   const [repartoAttivo, setRepartoAttivo] = useState(null)
+  const [pannelloProdotti, setPannelloProdotti] = useState(false)
   const [showChiusura, setShowChiusura] = useState(false)
   const [showConfirmAnnulla, setShowConfirmAnnulla] = useState(false)
   const [showSuccesso, setShowSuccesso] = useState(null)
@@ -338,7 +340,9 @@ export default function CassaPage() {
 
   function handleRepartoClick(reparto) {
     if (inputCents > 0) { aggiungiRiga(reparto); return }
-    setRepartoAttivo(prev => prev === reparto.id ? null : reparto.id)
+    if (repartoAttivo === reparto.id && pannelloProdotti) { setPannelloProdotti(false); return }
+    setRepartoAttivo(reparto.id)
+    setPannelloProdotti(true)
   }
 
   function handleSottorepartoClick(reparto, sr) {
@@ -1240,8 +1244,9 @@ export default function CassaPage() {
           </div>
 
           {/* PRODOTTI REPARTO - metà inferiore */}
-          {repartoAttivo && (
-            <div className={styles.colCenterBottom}>
+          {repartoAttivo && pannelloProdotti && createPortal(
+            <div className={styles.modalSfondo} onClick={() => setPannelloProdotti(false)}>
+            <div className={styles.colCenterBottom} onClick={e => e.stopPropagation()}>
               {(() => {
                 const rep = reparti.find(r => r.id === repartoAttivo)
                 const prodotti = rep?.sottoreparti?.filter(s => s.abilitato) || []
@@ -1251,6 +1256,7 @@ export default function CassaPage() {
                       <span style={{color: rep?.colore}}>{ICONE[rep?.icona]||'📦'}</span>
                       <span>{rep?.nome}</span>
                       <span className={styles.righeCount}>{prodotti.length} prodotti</span>
+                      <button onClick={() => setPannelloProdotti(false)} style={{ marginLeft:'auto', minHeight:40, padding:'8px 16px', background:'#1a1c24', color:'#eef0f6', border:'1px solid #252830', borderRadius:8, cursor:'pointer', fontSize:'0.85rem', letterSpacing:0 }}>✕ Chiudi</button>
                     </div>
                     {prodotti.length === 0 ? (
                       <div className={styles.righeEmpty} style={{padding:20}}>
@@ -1299,6 +1305,8 @@ export default function CassaPage() {
                 )
               })()}
             </div>
+            </div>,
+            document.body
           )}
         </div>
 
