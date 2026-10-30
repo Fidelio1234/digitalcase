@@ -698,7 +698,7 @@ setShowConto(true)
                   return (
                     <button key={sr.id}
                       onClick={() => aggiungiProdotto(repAttivo, sr)}
-                      style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundImage: 'linear-gradient(to bottom, rgba(8,9,12,0) 15%, rgba(8,9,12,0.78) 55%, rgba(8,9,12,0.96) 100%), url("' + sr.immagine + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, justifyContent: 'flex-end', textShadow: '0 1px 3px rgba(0,0,0,1), 0 0 6px rgba(0,0,0,0.9)' } : {}) }}>
+                      style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, justifyContent: 'space-between', textShadow: 'none' } : {}) }}>
                       {qtaInComanda > 0 && (
                         <div style={{
                           position:'absolute', top:-8, right:-8,
@@ -715,8 +715,9 @@ setShowConto(true)
                           {qtaInComanda}
                         </div>
                       )}
-                      <div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500 }}>{sr.nome}</div>
-                      <div style={{ fontSize:'0.85rem', fontWeight:700, color:repAttivo.colore, fontFamily:"'DM Mono',monospace" }}>€ {fmt(sr.prezzoFisso)}</div>
+                      {(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) && <div style={{ width:'100%', aspectRatio:'1 / 1', flexShrink:0, borderRadius:8, marginBottom:4, backgroundImage:'url("' + sr.immagine + '")', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }} />}
+<div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500, ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : {}) }}>{sr.nome}</div>
+                      <div style={{ fontSize:'0.85rem', fontWeight:700, color:repAttivo.colore, fontFamily:"'DM Mono',monospace", ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'1.05rem', fontWeight:700 } : {}) }}>€ {fmt(sr.prezzoFisso)}</div>
                     </button>
                   )
                 })}

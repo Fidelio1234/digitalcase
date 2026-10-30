@@ -360,7 +360,7 @@ export default function AsportoPage() {
                       const conteggio = contaOrdiniPerProdotto(sr.nome)
                       return (
                         <button key={sr.id} onClick={() => aggiungiProdotto(rep, sr)}
-                          style={{ padding:'10px 8px', borderRadius:10, border:`1px solid ${rep.colore}66`, background:'#111318', cursor:'pointer', textAlign:'center', position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundImage: 'linear-gradient(to bottom, rgba(8,9,12,0) 15%, rgba(8,9,12,0.78) 55%, rgba(8,9,12,0.96) 100%), url("' + sr.immagine + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', textShadow: '0 1px 3px rgba(0,0,0,1), 0 0 6px rgba(0,0,0,0.9)' } : {}) }}>
+                          style={{ padding:'10px 8px', borderRadius:10, border:`1px solid ${rep.colore}66`, background:'#111318', cursor:'pointer', textAlign:'center', position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', textShadow: 'none' } : {}) }}>
                           {conteggio > 0 && (
                             <div style={{
                               position:'absolute', top:-8, right:-8,
@@ -375,8 +375,9 @@ export default function AsportoPage() {
                               {conteggio}
                             </div>
                           )}
-                          <div style={{ fontSize:'0.82rem', fontWeight:600, color:'#eef0f6' }}>{sr.nome}</div>
-                          <div style={{ fontSize:'0.75rem', color:rep.colore, marginTop:4 }}>€ {fmt(sr.prezzoFisso)}</div>
+                          {(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) && <div style={{ width:'100%', aspectRatio:'1 / 1', flexShrink:0, borderRadius:8, marginBottom:4, backgroundImage:'url("' + sr.immagine + '")', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }} />}
+<div style={{ fontSize:'0.82rem', fontWeight:600, color:'#eef0f6', ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : {}) }}>{sr.nome}</div>
+                          <div style={{ fontSize:'0.75rem', color:rep.colore, marginTop:4, ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'1.05rem', fontWeight:700 } : {}) }}>€ {fmt(sr.prezzoFisso)}</div>
                         </button>
                       )
                     })}

@@ -1266,7 +1266,7 @@ export default function CassaPage() {
   return (
     <button key={sr.id}
       className={styles.prodottoCard}
-      style={{borderColor: rep?.colore + '66', position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundImage: 'linear-gradient(to bottom, rgba(8,9,12,0) 15%, rgba(8,9,12,0.78) 55%, rgba(8,9,12,0.96) 100%), url("' + sr.immagine + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, justifyContent: 'flex-end', textShadow: '0 1px 3px rgba(0,0,0,1), 0 0 6px rgba(0,0,0,0.9)' } : {})}}
+      style={{borderColor: rep?.colore + '66', position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, justifyContent: 'space-between', textShadow: 'none' } : {})}}
       onClick={() => handleSottorepartoClick(rep, sr)}
     >
       {qtaInScontrino > 0 && (
@@ -1285,8 +1285,9 @@ export default function CassaPage() {
           {qtaInScontrino}
         </div>
       )}
-      <div className={styles.prodottoNome}>{sr.nome}</div>
-      <div className={styles.prodottoPrezzo} style={{color: rep?.colore}}>
+      {(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) && <div style={{ width:'100%', aspectRatio:'1 / 1', flexShrink:0, borderRadius:8, marginBottom:4, backgroundImage:'url("' + sr.immagine + '")', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }} />}
+<div className={styles.prodottoNome} style={(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : undefined}>{sr.nome}</div>
+      <div className={styles.prodottoPrezzo} style={{color: rep?.colore, ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'1.05rem', fontWeight:700 } : {})}}>
         € {fmt(sr.prezzoFisso)}
       </div>
     </button>
