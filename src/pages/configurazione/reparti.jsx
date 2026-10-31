@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { formatEuro, parseEuro } from '@/lib/storage'
-import { getRepartiDb, saveRepartoDb, saveProdottoDb, deleteRepartoDb, deleteProdottoDb, getAggiunteRapideDb, salvaAggiunteRapideDb } from '@/lib/supabase-db'
+import { getRepartiDb, saveRepartoDb, saveProdottoDb, deleteRepartoDb, deleteProdottoDb, getAggiunteRapideDb, salvaAggiunteRapideDb, getImpostazioniDb } from '@/lib/supabase-db'
 import ImmagineProdotto from '@/components/ImmagineProdotto'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Reparti.module.css'
@@ -93,6 +93,7 @@ export default function RepartiPage() {
   const router = useRouter()
   const [reparti, setReparti] = useState([])
   const [aggiunteRapide, setAggiunteRapide] = useState([])
+  const [tavoliAttivi, setTavoliAttivi] = useState(false)
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
   const [expandedId, setExpandedId] = useState(null)
@@ -106,11 +107,21 @@ export default function RepartiPage() {
     if (user?.role !== 'owner') { router.replace('/cassa'); return }
     loadReparti()
     loadAggiunteRapide()
+    loadTavoliAttivi()
   }, [user, router])
 
   async function loadReparti() {
     const r = await getRepartiDb(NEGOZIO_ID)
     setReparti(r)
+  }
+
+  async function loadTavoliAttivi() {
+    try {
+      const imp = await getImpostazioniDb(NEGOZIO_ID)
+      setTavoliAttivi(imp?.tavoliAbilitati !== false)
+    } catch (e) {
+      setTavoliAttivi(true) // nel dubbio non nascondere nulla
+    }
   }
 
   async function loadAggiunteRapide() {
@@ -435,7 +446,7 @@ export default function RepartiPage() {
         ))}
       </div>
 
-      <div className={styles.content} style={{marginTop: 24}}>
+      <div className={styles.content} style={{marginTop: 24, display: tavoliAttivi ? undefined : 'none'}}>
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 12}}>
           <div className={styles.headerTitle} style={{display:'block'}}>
             <span>Aggiunte rapide (cassa)</span>
