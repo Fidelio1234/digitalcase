@@ -1246,7 +1246,7 @@ export default function CassaPage() {
           {/* PRODOTTI REPARTO - metà inferiore */}
           {repartoAttivo && pannelloProdotti && createPortal(
             <div className={styles.modalSfondo} onClick={() => setPannelloProdotti(false)}>
-            <div className={styles.colCenterBottom} onClick={e => e.stopPropagation()}>
+            <div className={styles.colCenterBottom} onClick={e => e.stopPropagation()} style={{ width: 'min(94vw, ' + Math.max(380, Math.min(Math.min((reparti.find(r => r.id === repartoAttivo)?.sottoreparti?.filter(s => s.abilitato).length) || 1, 7) * 140 + 40, 1000)) + 'px)' }}>
               {(() => {
                 const rep = reparti.find(r => r.id === repartoAttivo)
                 const prodotti = rep?.sottoreparti?.filter(s => s.abilitato) || []

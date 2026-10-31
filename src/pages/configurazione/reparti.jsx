@@ -488,7 +488,7 @@ export default function RepartiPage() {
 
       {modal && (
         <div className={styles.overlay} onClick={closeModal}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <div className={styles.modal + (modal.tipo !== 'aggiunta' ? ' ' + styles.modalLargo : '')} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <div className={styles.modalTitle}>
                 {modal.mode === 'add'
