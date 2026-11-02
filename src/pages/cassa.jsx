@@ -350,6 +350,8 @@ export default function CassaPage() {
   }
 
   async function handleChiudi() {
+    // Mai un documento con totale zero o negativo (es. prodotto tolto dopo uno sconto)
+    if (righe.length > 0 && totale <= 0) return
     if (righe.length === 0) return
 
     // Controlla giacenze insufficienti leggendo dal DB
@@ -1135,7 +1137,7 @@ export default function CassaPage() {
             <button className={styles.chiudiBtn}
               style={{position:'static', marginTop:0}}
               onClick={handleChiudi}
-              disabled={righe.length === 0 || (scontrinoAperto && righe.length === 0)}>
+              disabled={righe.length === 0 || (scontrinoAperto && righe.length === 0) || (righe.length > 0 && totale <= 0)}>
               Chiudi scontrino
               {righe.length > 0 && <span className={styles.chiudiBadge}>€ {fmt(totale)}</span>}
             </button>
