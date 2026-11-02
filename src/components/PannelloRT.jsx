@@ -337,7 +337,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
           <div style={{
             background:'#111318', border:'1px solid #252830',
             borderRadius:20, padding:24,
-            width:520, maxWidth:'95vw', maxHeight:'90vh', overflowY:'auto',
+            width:880, maxWidth:'95vw', maxHeight:'90vh', overflowY:'auto',
             boxShadow:'0 24px 64px rgba(0,0,0,0.7)',
             display:'flex', flexDirection:'column', gap:14,
           }} onClick={e => e.stopPropagation()}>
@@ -355,6 +355,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
               </div>
             )}
 
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(360px, 1fr))', gap:28, alignItems:'start'}}>
             <div>
               <div style={{display:'flex', flexDirection:'column', gap:6}}>
                 <div style={{width:'100%', color:'#ffb830'}}>CHIUSURE FISCALI</div>
@@ -376,8 +377,8 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
               </div>
 
             </div>
-            <br/>
 
+            <div style={{display:'flex', flexDirection:'column', gap:24}}>
             <div>
               <div style={{width:'100%', color:'#ff4d6a'}}>ANNULLO SCONTRINO RT</div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, marginBottom:6}}>
@@ -402,7 +403,6 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
               </div>
               <button style={btnStyle('#ff4d6a')} onClick={annulloScontrino} disabled={loading}>Annulla scontrino RT</button>
             </div>
-            <br/>
 
             <div>
               <div style={{width:'100%', color:'#00ff00'}}>RISTAMPA DA DGFE</div>
@@ -433,6 +433,8 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
                 </div>
               </div>
               <button style={btnStyle('#00ff00')} onClick={ristampaDGFE} disabled={loading}>Ristampa scontrini</button>
+            </div>
+            </div>
             </div>
 
             {loading && (
