@@ -1750,7 +1750,9 @@ export default function CassaPage() {
               )}
             </div>
           ))}
-          <div className={styles.modalTotale}>
+        </div>
+        <div style={{ padding:'12px 24px', borderBottom:'1px solid var(--border)', flexShrink:0 }}>
+          <div className={styles.modalTotale} style={{ borderTop:'none', paddingTop:0 }}>
             <span>TOTALE</span>
             <span>€ {fmt(scontrino.totale)}</span>
           </div>
