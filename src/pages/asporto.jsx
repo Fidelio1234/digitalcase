@@ -57,6 +57,7 @@ export default function AsportoPage() {
   const [notaModal, setNotaModal] = useState(null)
   const [notaTesto, setNotaTesto] = useState('')
   const [notaTipo, setNotaTipo] = useState('rimozione')
+  const [aggiunte, setAggiunte] = useState([]) // voci scelte dalle "aggiunte rapide"
 
   useEffect(() => {
     if (!user && !loading) { router.replace('/login'); return }
@@ -125,16 +126,45 @@ export default function AsportoPage() {
   }
 
   function salvaNota(id, nota, tipo = 'rimozione', costoAggiunta = 50) {
-    setRigheComanda(prev => prev.map(r => {
-      if (r.id !== id) return r
+    setRigheComanda(prev => {
+      const idx = prev.findIndex(r => r.id === id)
+      if (idx === -1) return prev
+      const r = prev[idx]
       const importoBase = r.importoBase ?? r.importo
-      const totaleBase = importoBase * r.quantita
-      if (tipo === 'aggiunta' && nota) {
-        return { ...r, nota: `+${nota}`, importoBase, importo: importoBase + costoAggiunta, totaleRiga: totaleBase + (costoAggiunta * r.quantita) }
-      } else {
-        return { ...r, nota: nota ? `-${nota}` : '', importoBase, importo: importoBase, totaleRiga: totaleBase }
+
+      function applicaNota(riga) {
+        if (tipo === 'aggiunta' && nota) {
+          return {
+            ...riga,
+            nota: `+${nota}`,
+            importoBase,
+            importo: importoBase + costoAggiunta,
+            totaleRiga: (importoBase + costoAggiunta) * riga.quantita,
+          }
+        }
+        return {
+          ...riga,
+          nota: nota ? `-${nota}` : '',
+          importoBase,
+          importo: importoBase,
+          totaleRiga: importoBase * riga.quantita,
+        }
       }
-    }))
+
+      // Se la riga rappresenta piu' di un'unita', la nota riguarda solo UNA unita':
+      // la stacchiamo in una riga separata con la nota, le altre restano invariate.
+      if ((r.quantita || 1) > 1) {
+        const nuove = [...prev]
+        nuove[idx] = { ...r, quantita: r.quantita - 1, totaleRiga: importoBase * (r.quantita - 1) }
+        const rigaStaccata = applicaNota({ ...r, id: Date.now() + Math.random(), quantita: 1 })
+        nuove.splice(idx + 1, 0, rigaStaccata)
+        return nuove
+      }
+
+      const nuove = [...prev]
+      nuove[idx] = applicaNota(r)
+      return nuove
+    })
   }
 
   async function salvaComanda() {
@@ -200,15 +230,15 @@ export default function AsportoPage() {
 
 
 
-  // Conta, per ogni reparto, quanti ordini asporto aperti contengono almeno
-  // un prodotto di quel reparto (badge generico, vale per tutti i reparti).
+  // Numerino sul reparto: unita della comanda in corso con prodotti di quel reparto.
   function contaOrdiniPerReparto(repartoId) {
-    return asporti.filter(a => (a.righe || []).some(r => r.repartoId === repartoId)).length
+    // unita della comanda in corso (live, come in Tavoli)
+    return righeComanda.filter(r => r.repartoId === repartoId).reduce((t, r) => t + (r.quantita || 0), 0)
   }
 
-  // Stesso conteggio ma per singolo prodotto (badge sui pulsanti prodotto).
+  // Numerino sul prodotto: unita della comanda in corso per quel prodotto.
   function contaOrdiniPerProdotto(nomeProdotto) {
-    return asporti.filter(a => (a.righe || []).some(r => r.nome === nomeProdotto)).length
+    return righeComanda.filter(r => r.nome === nomeProdotto).reduce((t, r) => t + (r.quantita || 0), 0)
   }
 
 
@@ -333,7 +363,7 @@ export default function AsportoPage() {
                     return prev.filter(x => x.id !== r.id)
                   })}
                     style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>×</button>
-                  <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/, '') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione') }}
+                  <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/, '') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
                     style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px' }}>✏️</button>
                 </div>
               </div>
@@ -434,7 +464,7 @@ export default function AsportoPage() {
       {/* MODAL NOTA */}
       {notaModal !== null && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:360,display:'flex',flexDirection:'column',gap:16}}>
+          <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:360,maxHeight:'90vh',overflowY:'auto',display:'flex',flexDirection:'column',gap:16}}>
             <div style={{fontSize:'0.9rem',fontWeight:700,color:'#eef0f6'}}>
               ✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}
             </div>
@@ -452,17 +482,71 @@ export default function AsportoPage() {
                 + Aggiunta
               </button>
             </div>
+            {notaTipo === 'aggiunta' && impostazioni.aggiunteRapide?.length > 0 && (() => {
+              const gruppiMap = {}
+              for (const a of impostazioni.aggiunteRapide) {
+                if (!gruppiMap[a.costo]) gruppiMap[a.costo] = new Set()
+                gruppiMap[a.costo].add(a.nome)
+              }
+              const tiers = Object.entries(gruppiMap).map(([costo, st]) => ({ costo: parseInt(costo), items: [...st] })).sort((a,b) => a.costo - b.costo)
+              return (
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>AGGIUNTE RAPIDE</div>
+                  {tiers.map(({ costo, items }) => (
+                    <div key={costo}>
+                      <div style={{ fontSize:'0.82rem', color:'#ffb830', marginBottom:4 }}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                        {items.map(item => {
+                          const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
+                          return (
+                            <button key={`${costo}-${item}`}
+                              onClick={() => setAggiunte(prev => {
+                                const esiste = prev.find(a => a.nome === item)
+                                if (esiste) return prev.filter(a => a.nome !== item)
+                                return [...prev, { nome: item, costo }]
+                              })}
+                              style={{
+                                padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
+                                border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
+                                background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
+                                color: selected ? '#00e5a0' : '#eef0f6',
+                                fontWeight: selected ? 700 : 400,
+                              }}>
+                              {item}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  {aggiunte.length > 0 && (
+                    <div style={{ fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px' }}>
+                      💰 Totale: +€{(aggiunte.reduce((t,a) => t + a.costo, 0)/100).toFixed(2).replace('.',',')} — {aggiunte.map(a => a.nome).join(', ')}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
             <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value)}
               placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi...'}
               rows={3}
               style={{background:'#1a1c24',border:'1px solid #252830',borderRadius:10,padding:12,color:'#eef0f6',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
             />
             <div style={{display:'flex',gap:10}}>
-              <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione') }}
+              <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
                 style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid #252830',color:'#eef0f6',cursor:'pointer'}}>
                 Annulla
               </button>
-              <button onClick={() => { salvaNota(notaModal, notaTesto, notaTipo, 50); setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione') }}
+              <button onClick={() => {
+                if (notaTipo === 'aggiunta' && aggiunte.length > 0) {
+                  const nomi = aggiunte.map(a => a.nome).join(', ')
+                  const testoFinale = notaTesto ? `${nomi} — ${notaTesto}` : nomi
+                  salvaNota(notaModal, testoFinale, notaTipo, aggiunte.reduce((t,a) => t + a.costo, 0))
+                } else {
+                  salvaNota(notaModal, notaTesto, notaTipo, 50)
+                }
+                setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([])
+              }}
                 style={{flex:1,padding:12,borderRadius:10,background:'#00e5a0',border:'none',color:'#08090c',fontWeight:700,cursor:'pointer'}}>
                 Salva
               </button>
