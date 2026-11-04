@@ -1008,19 +1008,50 @@ setShowConto(true)
         <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
           <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#eef0f6' }}>✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}</div>
           <div style={{ display:'flex', gap:8 }}>
-            <button onClick={() => setNotaTipo('rimozione')}
+            <button onClick={() => { if (notaTipo !== 'rimozione') setAggiunte([]); setNotaTipo('rimozione') }}
               style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
                 background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
                 color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
               − Rimozione
             </button>
-                <button onClick={() => setNotaTipo('aggiunta')}
+                <button onClick={() => { if (notaTipo !== 'aggiunta') setAggiunte([]); setNotaTipo('aggiunta') }}
                   style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
                     background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
                     color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
                   + Aggiunta
                 </button>
               </div>
+              {notaTipo === 'rimozione' && impostazioni.aggiunteRapide?.length > 0 && (() => {
+                const nomiRim = [...new Set(impostazioni.aggiunteRapide.map(a => a.nome))]
+                return (
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    <div style={{ fontSize:'0.8rem', color:'#ff4d6a', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                      {nomiRim.map(item => {
+                        const selected = aggiunte.some(a => a.nome === item)
+                        return (
+                          <button key={item}
+                            onClick={() => setAggiunte(prev => prev.some(a => a.nome === item) ? prev.filter(a => a.nome !== item) : [...prev, { nome: item, costo: 0 }])}
+                            style={{
+                              padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
+                              border: `1px solid ${selected ? '#ff4d6a' : '#252830'}`,
+                              background: selected ? 'rgba(255,77,106,0.15)' : '#1a1c24',
+                              color: selected ? '#ff4d6a' : '#eef0f6',
+                              fontWeight: selected ? 700 : 400,
+                            }}>
+                            {item}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {aggiunte.length > 0 && (
+                      <div style={{ fontSize:'0.75rem', color:'#ff4d6a', background:'rgba(255,77,106,0.1)', borderRadius:8, padding:'6px 10px' }}>
+                        Senza: {aggiunte.map(a => a.nome).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
               {notaTipo === 'aggiunta' && impostazioni.aggiunteRapide?.length > 0 && (() => {
                 const gruppiMap = {}
                 for (const a of impostazioni.aggiunteRapide) {
@@ -1077,7 +1108,11 @@ setShowConto(true)
                   Annulla
                 </button>
                 <button onClick={() => {
-                    if (notaTipo === 'aggiunta' && aggiunte.length > 0) {
+                    if (notaTipo === 'rimozione' && aggiunte.length > 0) {
+                  const nomiRim = aggiunte.map(a => `SENZA ${a.nome}`).join(', ')
+                  const testoRim = notaTesto ? `${nomiRim} — ${notaTesto}` : nomiRim
+                  salvaNota(notaModal, testoRim, notaTipo, 0)
+                } else if (notaTipo === 'aggiunta' && aggiunte.length > 0) {
                       const nomi = aggiunte.map(a => a.nome).join(', ')
                       const testoFinale = notaTesto ? `${nomi} — ${notaTesto}` : nomi
                       salvaNota(notaModal, testoFinale, notaTipo, aggiunte.reduce((s,a) => s + a.costo, 0))

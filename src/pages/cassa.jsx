@@ -1535,7 +1535,7 @@ export default function CassaPage() {
             color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
           − Rimozione
         </button>
-        <button onClick={() => setNotaTipo('aggiunta')}
+        <button onClick={() => { if (notaTipo !== 'aggiunta') setAggiunte([]); setNotaTipo('aggiunta') }}
           style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
             background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
             color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
@@ -1549,6 +1549,37 @@ export default function CassaPage() {
  {/* QUESTO MODIFICA SOLO IL CLIENTE POESIA */}
 
 
+{notaTipo === 'rimozione' && impostazioni.aggiunteRapide?.length > 0 && (() => {
+  const nomiRim = [...new Set(impostazioni.aggiunteRapide.map(a => a.nome))]
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+      <div style={{ fontSize:'0.8rem', color:'#ff4d6a', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+        {nomiRim.map(item => {
+          const selected = aggiunte.some(a => a.nome === item)
+          return (
+            <button key={item}
+              onClick={() => setAggiunte(prev => prev.some(a => a.nome === item) ? prev.filter(a => a.nome !== item) : [...prev, { nome: item, costo: 0 }])}
+              style={{
+                padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
+                border: `1px solid ${selected ? '#ff4d6a' : '#252830'}`,
+                background: selected ? 'rgba(255,77,106,0.15)' : '#1a1c24',
+                color: selected ? '#ff4d6a' : '#eef0f6',
+                fontWeight: selected ? 700 : 400,
+              }}>
+              {item}
+            </button>
+          )
+        })}
+      </div>
+      {aggiunte.length > 0 && (
+        <div style={{ fontSize:'0.75rem', color:'#ff4d6a', background:'rgba(255,77,106,0.1)', borderRadius:8, padding:'6px 10px' }}>
+          Senza: {aggiunte.map(a => a.nome).join(', ')}
+        </div>
+      )}
+    </div>
+  )
+})()}
 {notaTipo === 'aggiunta' && impostazioni.aggiunteRapide?.length > 0 && (() => {
   const gruppiMap = {}
   for (const a of impostazioni.aggiunteRapide) {
@@ -1616,7 +1647,7 @@ export default function CassaPage() {
         </button>
         <button onClick={() => {
     const tutteLeAggiunte = [
-      ...aggiunte.map(a => a.nome),
+      ...aggiunte.map(a => (notaTipo === 'rimozione' ? `SENZA ${a.nome}` : a.nome)),
       ...(notaTesto.trim() ? [notaTesto.trim()] : [])
     ]
     const costoTotale = aggiunte.length > 0
