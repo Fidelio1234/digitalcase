@@ -6,6 +6,7 @@ import { sincronizzaNegozioLocale } from '@/lib/supabase-db'
 import { getStoricoDb, getScontriniPeriodoDb, salvaChiusuraDb, getChiusureDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Storico.module.css'
+import { useSbloccoAnnullati } from '@/components/SbloccoAnnullati'
 import { totaliPerIva, riepilogoIvaMensile } from '@/lib/iva'
 
 function fmt(cents) {
@@ -30,6 +31,9 @@ export default function StoricoPage() {
   const [tab, setTab] = useState('scontrini')
   const [negozio, setNegozio] = useState({})
   const [toast, setToast] = useState('')
+  const { sbloccato, pressione, modal } = useSbloccoAnnullati()
+  // Se lo sblocco scade mentre e' selezionato il filtro Annullati, torna a Tutti
+  useEffect(() => { if (!sbloccato && filtroMetodo === 'annullati') setFiltroMetodo('tutti') }, [sbloccato, filtroMetodo])
 
   // Report IVA mensile
   const [ivaOpen, setIvaOpen] = useState(false)
@@ -255,7 +259,7 @@ async function eseguiChiusura() {
           </svg>
           Cassa
         </button>
-        <div className={styles.headerTitle}>
+        <div className={styles.headerTitle} {...pressione}>
           <span>Storico Scontrini</span>
            {/* 
           <span className={styles.headerSub}>{storico.length} scontrini totali</span>
@@ -263,6 +267,7 @@ async function eseguiChiusura() {
         </div>
       </header>
 
+      {modal}
       <div className={styles.tabs}>
         <button className={`${styles.tab} ${tab === 'scontrini' ? styles.tabActive : ''}`} onClick={() => setTab('scontrini')}>
           🧾 Scontrini ({scontriniFiltrati.length})
@@ -280,7 +285,7 @@ async function eseguiChiusura() {
             <input type="date" value={filtroData}
               onChange={e => setFiltroData(e.target.value)} className={styles.dateInput} />
             <div className={styles.metodoFiltro}>
-              {['tutti','carta','contanti', ...(user?.role === 'owner' ? ['annullati'] : [])].map(m => (
+              {['tutti','carta','contanti', ...(user?.role === 'owner' && sbloccato ? ['annullati'] : [])].map(m => (
                 <button key={m}
                   className={`${styles.metodoBtn} ${filtroMetodo === m ? styles.metodoActive : ''}`}
                   onClick={() => setFiltroMetodo(m)}>
