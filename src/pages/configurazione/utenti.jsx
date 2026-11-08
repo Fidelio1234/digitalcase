@@ -7,7 +7,7 @@ import styles from '@/styles/Utenti.module.css'
 
 const RUOLI = [
   { value: 'owner', label: 'Titolare', desc: 'Accesso completo + configurazione', colore: '#00e5a0' },
-
+  { value: 'staff', label: 'Cassiere', desc: 'Solo cassa', colore: '#6482ff' },
 ]
 
 const PIN_VUOTO = () => Array(8).fill('')
