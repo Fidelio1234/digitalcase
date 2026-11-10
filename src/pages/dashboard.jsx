@@ -298,7 +298,7 @@ export default function DashboardPage() {
           <input
             type="date"
             value={filtroData}
-            onChange={e => setFiltroData(e.target.value)}
+            onChange={e => e.target.value && setFiltroData(e.target.value)}
             style={{
               background: '#1a1c24', border: '1px solid #252830',
               borderRadius: 8, padding: '6px 10px',
