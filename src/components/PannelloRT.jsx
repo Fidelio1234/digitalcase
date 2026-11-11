@@ -266,13 +266,14 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
   }
 
   const btnStyle = (color) => {
-    const c = color || 'var(--dc-border)'
+    const m = /^var\(--dc-([a-z0-9-]+)\)$/.exec(color || '')
+    const rgb = 'var(--dc-' + (m ? m[1] : 'border') + '-rgb)'
     return {
       padding:'10px 16px', borderRadius:10,
-      border:'1px solid ' + c + '44',
+      border:'1px solid rgba(' + rgb + ', 0.267)',
       cursor: loading ? 'not-allowed' : 'pointer',
-      background: c === '#252830' ? '#1a1c24' : c + '22',
-      color: c === '#252830' ? '#eef0f6' : c,
+      background: m ? 'rgba(' + rgb + ', 0.133)' : 'var(--dc-surface2)',
+      color: m ? color : 'var(--dc-text)',
       fontSize:'0.82rem', fontFamily:"'DM Mono',monospace",
       opacity: loading ? 0.6 : 1,
       display:'flex', alignItems:'center', gap:8,
@@ -432,7 +433,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
                     placeholder="0 = tutti" style={inputStyle} />
                 </div>
               </div>
-              <button style={btnStyle('#00ff00')} onClick={ristampaDGFE} disabled={loading}>Ristampa scontrini</button>
+              <button style={btnStyle('var(--dc-lime)')} onClick={ristampaDGFE} disabled={loading}>Ristampa scontrini</button>
             </div>
             </div>
             </div>

@@ -31,7 +31,7 @@ button:focus-visible { outline: 2px solid var(--dc-verde); outline-offset: 2px; 
   --dc-viola: #c44dff;    --dc-viola-rgb: 196, 77, 255;
   --dc-giallo: #ffff00;
   --dc-rosso-vivo: #ff0000;
-  --dc-lime: #00ff00;
+  --dc-lime: #00ff00;     --dc-lime-rgb: 0, 255, 0;
   --dc-forte: #ffffff;    --dc-forte-rgb: 255, 255, 255;
   --dc-tasto: #000000;
   --dc-on-accent: #000000;
@@ -56,7 +56,7 @@ html[data-theme='light'] {
   --dc-viola: #8a24c4;    --dc-viola-rgb: 138, 36, 196;
   --dc-giallo: #856400;
   --dc-rosso-vivo: #c4122f;
-  --dc-lime: #00783a;
+  --dc-lime: #00783a;     --dc-lime-rgb: 0, 120, 58;
   --dc-forte: #14161f;    --dc-forte-rgb: 20, 22, 31;
   --dc-tasto: #e9ebf1;
   --dc-on-accent: #ffffff;
