@@ -301,7 +301,7 @@ export default function AgendaPage() {
         </div>
       </header>
 
-      <div style={{ padding: 16, maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className="dc-agenda-slots">
         {SLOTS.map(ora => {
           const occ = slotMap[ora]
 

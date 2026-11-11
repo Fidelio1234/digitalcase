@@ -65,3 +65,8 @@ html[data-theme='light'] {
 }
 
 body { background: var(--dc-bg); color: var(--dc-text); }
+
+/* Agenda: orari su due colonne (mattina a sinistra, pomeriggio a destra); una colonna su schermi stretti. */
+.dc-agenda-slots { padding: 16px; max-width: 1240px; margin: 0 auto; column-count: 2; column-gap: 16px; }
+.dc-agenda-slots > * { break-inside: avoid; margin-bottom: 6px; width: 100%; }
+@media (max-width: 860px) { .dc-agenda-slots { column-count: 1; max-width: 640px; } }
