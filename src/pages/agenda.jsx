@@ -278,7 +278,7 @@ export default function AgendaPage() {
         <link rel="manifest" href="/manifest-agenda.json" />
         <link rel="apple-touch-icon" href="/icon-agenda-192.png" />
       </Head>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: 'var(--dc-surface)', borderBottom: '1px solid var(--dc-surface2)', flexWrap: 'wrap', gap: 8 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: 'var(--dc-surface)', borderBottom: '1px solid var(--dc-surface2)', flexWrap: 'wrap', gap: 8, position: 'sticky', top: 0, zIndex: 50 }}>
         <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius: 10, color: 'var(--dc-menta)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.92rem' }}>
           ← Cassa
         </button>
