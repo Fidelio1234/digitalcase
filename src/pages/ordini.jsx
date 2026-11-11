@@ -614,7 +614,7 @@ if (notaModal !== null) {
               .reduce((s, riga) => s + riga.quantita, 0)
             return (
               <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
-                style={{ flexShrink:0, padding:'6px 14px', borderRadius:20, border:'1px solid ' + (repartoAttivo === r.id ? r.colore : '#252830'), background: repartoAttivo === r.id ? r.colore + '22' : 'transparent', color: repartoAttivo === r.id ? r.colore : '#ffb830', fontSize:'0.78rem', cursor:'pointer', whiteSpace:'nowrap', position:'relative' }}>
+                style={{ flexShrink:0, padding:'6px 14px', borderRadius:20, border:'1px solid ' + (repartoAttivo === r.id ? r.colore : 'var(--dc-border)'), background: repartoAttivo === r.id ? r.colore + '22' : 'transparent', color: repartoAttivo === r.id ? r.colore : '#ffb830', fontSize:'0.78rem', cursor:'pointer', whiteSpace:'nowrap', position:'relative' }}>
                 {qtaReparto > 0 && (
                   <div style={{
                     position:'absolute', top:-6, right:-6,

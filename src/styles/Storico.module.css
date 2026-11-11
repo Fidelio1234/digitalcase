@@ -55,7 +55,7 @@
 }
 .tab {
   flex: 1; padding: 14px; border: none; background: transparent;
-  color: #ffd06b; font-family: 'DM Mono', monospace;
+  color: var(--dc-ambra-testo); font-family: 'DM Mono', monospace;
   font-size: 1rem; cursor: pointer; transition: all 0.2s;
   border-bottom: 2px solid transparent;
 }
@@ -227,7 +227,7 @@
   font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s;
 }
-.chiudiBtn:hover { background: #ffd06b; box-shadow: 0 4px 16px rgba(var(--dc-ambra-rgb), 0.3); }
+.chiudiBtn:hover { background: var(--dc-ambra-hover); box-shadow: 0 4px 16px rgba(var(--dc-ambra-rgb), 0.3); }
 
 /* ─── TOAST ──────────────────────────────────────────────────────────────── */
 .toast {

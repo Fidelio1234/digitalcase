@@ -405,8 +405,8 @@ export default function AgendaPage() {
                   <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
                     style={{
                       flexShrink: 0, padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem',
-                      border: `1px solid ${repartoAttivo === r.id ? r.colore : '#252830'}`,
-                      background: repartoAttivo === r.id ? r.colore + '22' : 'transparent', color: '#eef0f6',
+                      border: `1px solid ${repartoAttivo === r.id ? r.colore : 'var(--dc-border)'}`,
+                      background: repartoAttivo === r.id ? r.colore + '22' : 'transparent', color: 'var(--dc-text)',
                     }}>
                     {r.nome}
                   </button>

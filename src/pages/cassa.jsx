@@ -901,7 +901,7 @@ export default function CassaPage() {
             <div style={{fontSize:'0.72rem', color:' var(--dc-verde)', letterSpacing:4, fontFamily:"'DM Mono',monospace", textTransform:'uppercase'}}>
               Benvenuto/a
             </div>
-            <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'#ffd06b', letterSpacing:'-0.5px'}}>
+            <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'var(--dc-ambra-testo)', letterSpacing:'-0.5px'}}>
               {user.name}
             </div>
             <div style={{fontSize:'0.82rem', color:' var(--dc-verde)', fontFamily:"'DM Mono',monospace"}}>
@@ -1130,7 +1130,7 @@ export default function CassaPage() {
                   }
                 }}
                 style={{width:60, height:60, background:'var(--dc-tasto)', border:'none', borderRadius:10,
-                  color:'#ffd06b', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  color:'var(--dc-ambra-testo)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
                 <span style={{fontSize:'1.4rem'}}>🧾</span>
                 <span>Fatture</span>
