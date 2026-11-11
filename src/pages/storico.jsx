@@ -311,7 +311,7 @@ async function eseguiChiusura() {
             </div>
             <div className={styles.totaleCard}>
               <div className={styles.totaleLabel}>💵 Contanti</div>
-              <div className={styles.totaleVal} style={{color:'#ff9f43'}}>€ {fmt(totaleContanti)}</div>
+              <div className={styles.totaleVal} style={{color:'var(--dc-arancio)'}}>€ {fmt(totaleContanti)}</div>
             </div>
             <div className={styles.totaleCard}>
               <div className={styles.totaleLabel}>N° scontrini</div>
@@ -424,7 +424,7 @@ async function eseguiChiusura() {
                   <div className={styles.chiusuraTotale}>€ {fmt(c.totaleGiornaliero)}</div>
                   <div className={styles.chiusuraSplit}>
                     <span style={{color:'var(--dc-blu)'}}>💳 €{fmt(c.totaleCarte)}</span>
-                    <span style={{color:'#ff9f43'}}>💵 €{fmt(c.totaleContanti)}</span>
+                    <span style={{color:'var(--dc-arancio)'}}>💵 €{fmt(c.totaleContanti)}</span>
                   </div>
                 </div>
                  {/* STAMPA SU ODF E MANDA LA MAIL

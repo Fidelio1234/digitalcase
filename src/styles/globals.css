@@ -36,7 +36,7 @@ button:focus-visible { outline: 2px solid var(--dc-verde); outline-offset: 2px; 
   --dc-tasto: #000000;
   --dc-on-accent: #000000;
   --dc-ambra-testo: #ffd06b;
-  --dc-ambra-hover: #ffd06b;
+  --dc-ambra-hover: #ffd06b;  --dc-arancio: #ff9f43;  --dc-corallo: #ff6b6b;
 }
 
 /* Tema chiaro: stesse variabili, valori chiari (contrasto >= 4,5:1 su superfici chiare). */
@@ -61,7 +61,7 @@ html[data-theme='light'] {
   --dc-tasto: #e9ebf1;
   --dc-on-accent: #ffffff;
   --dc-ambra-testo: #7a4a00;
-  --dc-ambra-hover: #a56000;
+  --dc-ambra-hover: #a56000;  --dc-arancio: #a84f00;  --dc-corallo: #c9203f;
 }
 
 body { background: var(--dc-bg); color: var(--dc-text); }

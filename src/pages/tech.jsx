@@ -776,7 +776,7 @@ function SezionePalmari({ showToast }) {
               <button onClick={() => setDaDisattivare(null)} disabled={occupato}
                 style={{ ...bottone, flex:1, background:'var(--dc-border)', color:'var(--dc-text)' }}>Annulla</button>
               <button onClick={() => disattiva(daDisattivare.id)} disabled={occupato}
-                style={{ ...bottone, flex:1, background:'#ff6b6b', color:'var(--dc-bg)' }}>Disattiva</button>
+                style={{ ...bottone, flex:1, background:'var(--dc-corallo)', color:'var(--dc-bg)' }}>Disattiva</button>
             </div>
           </div>
         </div>
@@ -824,7 +824,7 @@ function SezionePalmari({ showToast }) {
           </div>
           {p.attivo && (
             <button onClick={() => setDaDisattivare(p)} disabled={occupato}
-              style={{ ...bottone, background: 'transparent', color: '#ff6b6b', border: '1px solid #ff6b6b' }}>
+              style={{ ...bottone, background: 'transparent', color: 'var(--dc-corallo)', border: '1px solid var(--dc-corallo)' }}>
               Disattiva
             </button>
           )}

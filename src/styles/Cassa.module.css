@@ -564,7 +564,7 @@
   font-size: 0.9rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: white;
+  color: var(--dc-forte);
   border-bottom: 1px solid var(--dc-surface2);
   flex-shrink: 0;
 }

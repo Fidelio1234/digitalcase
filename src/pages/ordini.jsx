@@ -395,7 +395,7 @@ if (user && palmare === 'bloccato') {
             placeholder="CODICE" autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false}
             style={{ ...campo, textAlign:'center', letterSpacing:'0.25em', fontFamily:'monospace', fontWeight:700 }} />
           {erroreAttivazione && (
-            <div style={{ color:'#ff6b6b', fontSize:'0.8rem', marginBottom:10 }}>{erroreAttivazione}</div>
+            <div style={{ color:'var(--dc-corallo)', fontSize:'0.8rem', marginBottom:10 }}>{erroreAttivazione}</div>
           )}
           <button onClick={attivaPalmare} disabled={attivando || codicePalmare.length !== 8}
             style={{ width:'100%', padding:'13px', border:'none', borderRadius:12, background:'var(--dc-verde)', color:'var(--dc-bg)', fontWeight:700, fontSize:'0.95rem', cursor:'pointer', opacity: (attivando || codicePalmare.length !== 8) ? 0.5 : 1 }}>
