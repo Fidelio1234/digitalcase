@@ -13,7 +13,7 @@ html, body {
 }
 
 button { outline: none; }
-button:focus-visible { outline: 2px solid #00e5a0; outline-offset: 2px; }
+button:focus-visible { outline: 2px solid var(--dc-verde); outline-offset: 2px; }
 
 /* Tema: colori base (scuro). Il tema chiaro li ridefinisce. */
 :root {
@@ -30,3 +30,22 @@ button:focus-visible { outline: 2px solid #00e5a0; outline-offset: 2px; }
   --dc-blu: #6482ff;      --dc-blu-rgb: 100, 130, 255;
   --dc-viola: #c44dff;    --dc-viola-rgb: 196, 77, 255;
 }
+
+/* Tema chiaro: stesse variabili, valori chiari (contrasto >= 4,5:1 su superfici chiare). */
+html[data-theme='light'] {
+  color-scheme: light;
+  --dc-bg: #f3f4f8;       --dc-bg-rgb: 243, 244, 248;
+  --dc-surface: #ffffff;  --dc-surface-rgb: 255, 255, 255;
+  --dc-surface2: #e9ebf1; --dc-surface2-rgb: 233, 235, 241;
+  --dc-border: #d3d7e0;   --dc-border-rgb: 211, 215, 224;
+  --dc-text: #14161f;     --dc-text-rgb: 20, 22, 31;
+  --dc-muted: #5f6475;    --dc-muted-rgb: 95, 100, 117;
+  --dc-verde: #007a52;    --dc-verde-rgb: 0, 122, 82;
+  --dc-ambra: #9a5b00;    --dc-ambra-rgb: 154, 91, 0;
+  --dc-rosso: #c9203f;    --dc-rosso-rgb: 201, 32, 63;
+  --dc-menta: #00805a;    --dc-menta-rgb: 0, 128, 90;
+  --dc-blu: #3552d6;      --dc-blu-rgb: 53, 82, 214;
+  --dc-viola: #8a24c4;    --dc-viola-rgb: 138, 36, 196;
+}
+
+body { background: var(--dc-bg); color: var(--dc-text); }
