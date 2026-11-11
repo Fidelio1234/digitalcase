@@ -243,15 +243,15 @@ export default function UtentiPage() {
             onClick={testConnessione}
             disabled={testando}
             style={{
-              padding: '8px 14px', borderRadius: 10, border: '1px solid #252830',
-              background: '#1a1c24', color: testando ? '#5a5d6e' : '#eef0f6',
+              padding: '8px 14px', borderRadius: 10, border: '1px solid var(--dc-border)',
+              background: 'var(--dc-surface2)', color: testando ? 'var(--dc-muted)' : 'var(--dc-text)',
               cursor: testando ? 'not-allowed' : 'pointer', fontSize: '0.82rem',
               fontFamily: "'DM Mono',monospace", display: 'flex', alignItems: 'center', gap: 6
             }}
           >
             {testando ? '⏳' : ''}{testando ? 'Test...' : 'Test RT'}
-            {statoConnessione === 'ok' && <span style={{ color: '#00e5a0', fontSize: '2.1rem' }}>✓</span>}
-            {statoConnessione === 'errore' && <span style={{ color: '#ff4d6a', fontSize: '2.1rem' }}>✗</span>}
+            {statoConnessione === 'ok' && <span style={{ color: 'var(--dc-verde)', fontSize: '2.1rem' }}>✓</span>}
+            {statoConnessione === 'errore' && <span style={{ color: 'var(--dc-rosso)', fontSize: '2.1rem' }}>✗</span>}
           </button>
           <button className={styles.addBtn} onClick={openAdd}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

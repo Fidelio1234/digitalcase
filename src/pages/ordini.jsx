@@ -377,12 +377,12 @@ if (user && palmare === 'verifica') {
 }
 
 if (user && palmare === 'bloccato') {
-  const campo = { width:'100%', boxSizing:'border-box', background:'#252830', border:'none', borderRadius:10, color:'#eef0f6', padding:'12px', fontSize:'1rem', marginBottom:10 }
+  const campo = { width:'100%', boxSizing:'border-box', background:'var(--dc-border)', border:'none', borderRadius:10, color:'var(--dc-text)', padding:'12px', fontSize:'1rem', marginBottom:10 }
   return (
     <>
       <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
       <div style={{ minHeight:'100vh', background:'#05070d', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-        <div style={{ width:'100%', maxWidth:360, background:'#13151c', borderRadius:16, padding:24, color:'#eef0f6', textAlign:'center' }}>
+        <div style={{ width:'100%', maxWidth:360, background:'#13151c', borderRadius:16, padding:24, color:'var(--dc-text)', textAlign:'center' }}>
           <div style={{ fontSize:'2rem', marginBottom:8 }}>📱</div>
           <div style={{ fontWeight:700, fontSize:'1.1rem', marginBottom:6 }}>Attiva questo palmare</div>
           <div style={{ fontSize:'0.8rem', color:'#8a8d9e', marginBottom:16 }}>
@@ -398,7 +398,7 @@ if (user && palmare === 'bloccato') {
             <div style={{ color:'#ff6b6b', fontSize:'0.8rem', marginBottom:10 }}>{erroreAttivazione}</div>
           )}
           <button onClick={attivaPalmare} disabled={attivando || codicePalmare.length !== 8}
-            style={{ width:'100%', padding:'13px', border:'none', borderRadius:12, background:'#00e5a0', color:'#08090c', fontWeight:700, fontSize:'0.95rem', cursor:'pointer', opacity: (attivando || codicePalmare.length !== 8) ? 0.5 : 1 }}>
+            style={{ width:'100%', padding:'13px', border:'none', borderRadius:12, background:'var(--dc-verde)', color:'var(--dc-bg)', fontWeight:700, fontSize:'0.95rem', cursor:'pointer', opacity: (attivando || codicePalmare.length !== 8) ? 0.5 : 1 }}>
             {attivando ? 'Attivazione…' : 'Attiva'}
           </button>
         </div>
@@ -414,31 +414,31 @@ if (notaModal !== null) {
   return (
     <>
     <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
-    <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
 
 
 
 
 
 
-        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
-          <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#eef0f6' }}>✏️ Variante per: {riga?.nome}</div>
+        <div style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ fontSize:'0.9rem', fontWeight:700, color:'var(--dc-text)' }}>✏️ Variante per: {riga?.nome}</div>
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={() => { if (notaTipo !== 'rimozione') setAggiunte([]); setNotaTipo('rimozione') }}
-              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
-                background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
-                color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.85rem' }}>
+              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='rimozione' ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+                background: notaTipo==='rimozione' ? 'rgba(var(--dc-rosso-rgb), 0.15)' : 'transparent',
+                color: notaTipo==='rimozione' ? 'var(--dc-rosso)' : 'var(--dc-muted)', cursor:'pointer', fontWeight:700, fontSize:'0.85rem' }}>
               − Rimozione
             </button>
             <button onClick={() => { if (notaTipo !== 'aggiunta') setAggiunte([]); setNotaTipo('aggiunta') }}
-              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
-                background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
-                color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.85rem' }}>
+              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='aggiunta' ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+                background: notaTipo==='aggiunta' ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'transparent',
+                color: notaTipo==='aggiunta' ? 'var(--dc-verde)' : 'var(--dc-muted)', cursor:'pointer', fontWeight:700, fontSize:'0.85rem' }}>
               + Aggiunta
             </button>
           </div>
           {notaTipo === 'aggiunta' && aggiunte.length === 0 && (
-            <div style={{ fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px' }}>
+            <div style={{ fontSize:'0.75rem', color:'var(--dc-verde)', background:'rgba(var(--dc-verde-rgb), 0.1)', borderRadius:8, padding:'6px 10px' }}>
               💰 Verrà aggiunto +€{((impostazioni.costoAggiunta ?? 50)/100).toFixed(2).replace('.',',')} al totale
             </div>
           )}
@@ -446,7 +446,7 @@ if (notaModal !== null) {
             const nomiRim = [...new Set(impostazioni.aggiunteRapide.map(a => a.nome))]
             return (
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                <div style={{ fontSize:'0.8rem', color:'#ff4d6a', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
+                <div style={{ fontSize:'0.8rem', color:'var(--dc-rosso)', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                   {nomiRim.map(item => {
                     const selected = aggiunte.some(a => a.nome === item)
@@ -455,9 +455,9 @@ if (notaModal !== null) {
                         onClick={() => setAggiunte(prev => prev.some(a => a.nome === item) ? prev.filter(a => a.nome !== item) : [...prev, { nome: item, costo: 0 }])}
                         style={{
                           padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                          border: `1px solid ${selected ? '#ff4d6a' : '#252830'}`,
-                          background: selected ? 'rgba(255,77,106,0.15)' : '#1a1c24',
-                          color: selected ? '#ff4d6a' : '#eef0f6',
+                          border: `1px solid ${selected ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+                          background: selected ? 'rgba(var(--dc-rosso-rgb), 0.15)' : 'var(--dc-surface2)',
+                          color: selected ? 'var(--dc-rosso)' : 'var(--dc-text)',
                           fontWeight: selected ? 700 : 400,
                         }}>
                         {item}
@@ -466,7 +466,7 @@ if (notaModal !== null) {
                   })}
                 </div>
                 {aggiunte.length > 0 && (
-                  <div style={{ fontSize:'0.75rem', color:'#ff4d6a', background:'rgba(255,77,106,0.1)', borderRadius:8, padding:'6px 10px' }}>
+                  <div style={{ fontSize:'0.75rem', color:'var(--dc-rosso)', background:'rgba(var(--dc-rosso-rgb), 0.1)', borderRadius:8, padding:'6px 10px' }}>
                     Senza: {aggiunte.map(a => a.nome).join(', ')}
                   </div>
                 )}
@@ -482,10 +482,10 @@ if (notaModal !== null) {
             const tiers = Object.entries(gruppiMap).map(([costo, s]) => ({ costo: parseInt(costo), items: [...s] })).sort((a,b) => a.costo - b.costo)
             return (
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>AGGIUNTE RAPIDE</div>
+                <div style={{ fontSize:'0.8rem', color:'var(--dc-menta)', letterSpacing:1 }}>AGGIUNTE RAPIDE</div>
                 {tiers.map(({ costo, items }) => (
                   <div key={costo}>
-                    <div style={{ fontSize:'0.82rem', color:'#ffb830', marginBottom:4 }}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
+                    <div style={{ fontSize:'0.82rem', color:'var(--dc-ambra)', marginBottom:4 }}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
                     <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                       {items.map(item => {
                         const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
@@ -498,9 +498,9 @@ if (notaModal !== null) {
                             })}
                             style={{
                               padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                              border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
-                              background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
-                              color: selected ? '#00e5a0' : '#eef0f6',
+                              border: `1px solid ${selected ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+                              background: selected ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-surface2)',
+                              color: selected ? 'var(--dc-verde)' : 'var(--dc-text)',
                               fontWeight: selected ? 700 : 400,
                             }}>
                             {item}
@@ -511,7 +511,7 @@ if (notaModal !== null) {
                   </div>
                 ))}
                 {aggiunte.length > 0 && (
-                  <div style={{ fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px' }}>
+                  <div style={{ fontSize:'0.75rem', color:'var(--dc-verde)', background:'rgba(var(--dc-verde-rgb), 0.1)', borderRadius:8, padding:'6px 10px' }}>
                     💰 Totale: +€{(aggiunte.reduce((s,a) => s + a.costo, 0)/100).toFixed(2).replace('.',',')} — {aggiunte.map(a => a.nome).join(', ')}
                   </div>
                 )}
@@ -524,11 +524,11 @@ if (notaModal !== null) {
             onChange={e => setNotaTesto(e.target.value.toUpperCase())}
             placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella, ben cotto...' : 'es. con funghi, doppia porzione...'}
             rows={3}
-            style={{ background:'#1a1c24', border:'1px solid #252830', borderRadius:10, padding:12, color:'#eef0f6', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}
+            style={{ background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:10, padding:12, color:'var(--dc-text)', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}
           />
           <div style={{ display:'flex', gap:10 }}>
             <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
-              style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer', fontSize:'0.85rem' }}>
+              style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid var(--dc-border)', color:'var(--dc-text)', cursor:'pointer', fontSize:'0.85rem' }}>
               Annulla
             </button>
             <button onClick={() => {
@@ -544,7 +544,7 @@ if (notaModal !== null) {
                   salvaNota(notaModal, notaTesto, notaTipo, impostazioni.costoAggiunta ?? 50)
                 }
               }}
-              style={{ flex:1, padding:12, borderRadius:10, background:'#00e5a0', border:'none', color:'#08090c', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
+              style={{ flex:1, padding:12, borderRadius:10, background:'var(--dc-verde)', border:'none', color:'var(--dc-bg)', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
               Salva
               </button>
           </div>
@@ -559,27 +559,27 @@ if (notaModal !== null) {
     return (
       <>
       <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
-      <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:500, padding:20 }}>
+      <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:500, padding:20 }}>
 
 
 
 
 
-        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:32, width:'100%', maxWidth:320, display:'flex', flexDirection:'column', gap:20, alignItems:'center' }}>
-          <div style={{ fontSize:'1.2rem', fontWeight:700, color:'#ffb830' }}>🍽️ Tavolo {modalCoperti}</div>
-          <div style={{ fontSize:'1rem', color:'#ffb830' }}>Quante persone al tavolo?</div>
+        <div style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:20, padding:32, width:'100%', maxWidth:320, display:'flex', flexDirection:'column', gap:20, alignItems:'center' }}>
+          <div style={{ fontSize:'1.2rem', fontWeight:700, color:'var(--dc-ambra)' }}>🍽️ Tavolo {modalCoperti}</div>
+          <div style={{ fontSize:'1rem', color:'var(--dc-ambra)' }}>Quante persone al tavolo?</div>
           <div style={{ display:'flex', alignItems:'center', gap:24 }}>
             <button onClick={() => setNumCoperti(n => Math.max(1, n-1))}
-              style={{ width:52, height:52, borderRadius:14, background:'#1a1c24', border:'1px solid #252830', color:'#eef0f6', fontSize:'1.8rem', cursor:'pointer' }}>−</button>
-            <span style={{ fontSize:'3.5rem', fontWeight:700, color:'#00e5a0', fontFamily:"'DM Mono',monospace", minWidth:60, textAlign:'center' }}>{numCoperti}</span>
+              style={{ width:52, height:52, borderRadius:14, background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', color:'var(--dc-text)', fontSize:'1.8rem', cursor:'pointer' }}>−</button>
+            <span style={{ fontSize:'3.5rem', fontWeight:700, color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace", minWidth:60, textAlign:'center' }}>{numCoperti}</span>
             <button onClick={() => setNumCoperti(n => n+1)}
-              style={{ width:52, height:52, borderRadius:14, background:'#1a1c24', border:'1px solid #252830', color:'#eef0f6', fontSize:'1.8rem', cursor:'pointer' }}>+</button>
+              style={{ width:52, height:52, borderRadius:14, background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', color:'var(--dc-text)', fontSize:'1.8rem', cursor:'pointer' }}>+</button>
           </div>
           <div style={{ display:'flex', gap:12, width:'100%' }}>
             <button onClick={() => setModalCoperti(null)}
-              style={{ flex:1, padding:14, borderRadius:12, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>Annulla</button>
+              style={{ flex:1, padding:14, borderRadius:12, background:'transparent', border:'1px solid var(--dc-border)', color:'var(--dc-text)', cursor:'pointer' }}>Annulla</button>
             <button onClick={() => confermaCoperti(modalCoperti, numCoperti)}
-              style={{ flex:1, padding:14, borderRadius:12, background:'#00e5a0', border:'none', color:'#08090c', fontWeight:700, cursor:'pointer' }}>Apri tavolo</button>
+              style={{ flex:1, padding:14, borderRadius:12, background:'var(--dc-verde)', border:'none', color:'var(--dc-bg)', fontWeight:700, cursor:'pointer' }}>Apri tavolo</button>
          </div>
         </div>
       </div>
@@ -591,23 +591,23 @@ if (notaModal !== null) {
     return (
       <>
       <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
-      <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column' }}>
+      <div style={{ minHeight:'100vh', background:'var(--dc-bg)', color:'var(--dc-text)', fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column' }}>
 
 
 
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderBottom:'1px solid #1a1c24', position:'sticky', top:0, zIndex:100 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'var(--dc-surface)', borderBottom:'1px solid var(--dc-surface2)', position:'sticky', top:0, zIndex:100 }}>
           <button onClick={() => { setVista('griglia'); carica() }}
-            style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#00ffb3', padding:'8px 14px', cursor:'pointer', fontSize:'0.92rem' }}>
+            style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-menta)', padding:'8px 14px', cursor:'pointer', fontSize:'0.92rem' }}>
             ← Tavoli
           </button>
           <div style={{ fontWeight:700 }}>🍽️ Tavolo {tavoloAttivo}</div>
           <button onClick={inviaComanda} disabled={righeComanda.length === 0}
-            style={{ padding:'8px 16px', borderRadius:10, border:'none', background: righeComanda.length === 0 ? '#1a1c24' : '#00e5a0', color: righeComanda.length === 0 ? '#5a5d6e' : '#08090c', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.82rem' }}>
+            style={{ padding:'8px 16px', borderRadius:10, border:'none', background: righeComanda.length === 0 ? 'var(--dc-surface2)' : 'var(--dc-verde)', color: righeComanda.length === 0 ? 'var(--dc-muted)' : 'var(--dc-bg)', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.82rem' }}>
             {invioOk ? '✓ Inviato!' : '✓ Invia comanda'}
           </button>
         </div>
 
-        <div style={{ display:'flex', gap:8, padding:'10px 16px', overflowX:'auto', background:'#111318', borderBottom:'1px solid #1a1c24' }}>
+        <div style={{ display:'flex', gap:8, padding:'10px 16px', overflowX:'auto', background:'var(--dc-surface)', borderBottom:'1px solid var(--dc-surface2)' }}>
           {reparti.map(r => {
             const qtaReparto = righeComanda
               .filter(riga => riga.repartoId === r.id)
@@ -619,7 +619,7 @@ if (notaModal !== null) {
                   <div style={{
                     position:'absolute', top:-6, right:-6,
                     background: r.colore,
-                    color:'#08090c',
+                    color:'var(--dc-bg)',
                     borderRadius:'50%',
                     width:18, height:18,
                     display:'flex', alignItems:'center', justifyContent:'center',
@@ -653,7 +653,7 @@ if (notaModal !== null) {
                     <div style={{
                       position:'absolute', top:-8, right:-8,
                       background: repAttivo.colore,
-                      color:'#08090c',
+                      color:'var(--dc-bg)',
                       borderRadius:'50%',
                       width:22, height:22,
                       display:'flex', alignItems:'center', justifyContent:'center',
@@ -666,7 +666,7 @@ if (notaModal !== null) {
                     </div>
                   )}
                   {(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) && <div style={{ width:'100%', aspectRatio:'1 / 1', flexShrink:0, borderRadius:8, marginBottom:4, backgroundImage:'url("' + sr.immagine + '")', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }} />}
-<div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500, textAlign:'center', lineHeight:1.2, ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : {}) }}>{sr.nome}</div>
+<div style={{ fontSize:'0.78rem', color:'var(--dc-text)', fontWeight:500, textAlign:'center', lineHeight:1.2, ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : {}) }}>{sr.nome}</div>
                 </button>
               )
             })}
@@ -680,30 +680,30 @@ if (notaModal !== null) {
 
 
         {righeComanda.length > 0 && (
-          <div style={{ marginTop:'auto', background:'#111318', borderTop:'1px solid #1a1c24', padding:'12px 16px', maxHeight:'40vh', overflowY:'auto' }}>
-            <div style={{ fontSize:'0.65rem', color:'#5a5d6e', letterSpacing:2, marginBottom:8 }}>COMANDA</div>
+          <div style={{ marginTop:'auto', background:'var(--dc-surface)', borderTop:'1px solid var(--dc-surface2)', padding:'12px 16px', maxHeight:'40vh', overflowY:'auto' }}>
+            <div style={{ fontSize:'0.65rem', color:'var(--dc-muted)', letterSpacing:2, marginBottom:8 }}>COMANDA</div>
             {righeComanda.map(r => (
-              <div key={r.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', borderBottom:'1px solid #1a1c2440' }}>
+              <div key={r.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', borderBottom:'1px solid rgba(var(--dc-surface2-rgb), 0.25)' }}>
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:'0.85rem', display:'flex', alignItems:'center', gap:6 }}>
                     {r.nome}
                     {r.quantita > 1 && <span style={{ color:'#ffffff', fontSize:'0.85rem', fontWeight:600 }}>×{r.quantita}</span>}
                     {r.id !== 'coperto' && (
                       <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/, '') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
-                        style={{ background:'transparent', border:'none', cursor:'pointer', fontSize:'0.8rem', color: r.nota ? '#ffb830' : '#5a5d6e', padding:'0 4px' }}
+                        style={{ background:'transparent', border:'none', cursor:'pointer', fontSize:'0.8rem', color: r.nota ? 'var(--dc-ambra)' : 'var(--dc-muted)', padding:'0 4px' }}
                         title="Aggiungi nota">
                         ✏️
                       </button>
                     )}
 
                   </div>
-                  {r.nota && <div style={{ fontSize:'0.7rem', color:'#ffb830', marginTop:2 }}>📝 {r.nota}</div>}
+                  {r.nota && <div style={{ fontSize:'0.7rem', color:'var(--dc-ambra)', marginTop:2 }}>📝 {r.nota}</div>}
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                   <button onClick={() => aggiornaQuantita(r.id, -1)}
-                    style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
+                    style={{ width:24, height:24, borderRadius:6, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
                   <button onClick={() => aggiornaQuantita(r.id, 1)}
-                    style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
+                    style={{ width:24, height:24, borderRadius:6, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
                   {r.id !== 'coperto' && <button onClick={() => eliminaRiga(r.id)}
                     style={{ background:'transparent', border:'none', color:'#ffffff', cursor:'pointer', fontSize:'1rem' }}>✕</button>}
                 </div>
@@ -716,26 +716,26 @@ if (notaModal !== null) {
 {invioOk && (
   <div style={{
     position:'fixed', inset:0, zIndex:9999,
-    background:'rgba(8,9,12,0.85)',
+    background:'rgba(var(--dc-bg-rgb), 0.85)',
     display:'flex', alignItems:'center', justifyContent:'center',
   }}>
     <div style={{
-      background:'#111318', border:'2px solid #00e5a0',
+      background:'var(--dc-surface)', border:'2px solid var(--dc-verde)',
       borderRadius:24, padding:'40px 56px',
       display:'flex', flexDirection:'column', alignItems:'center', gap:16,
-      boxShadow:'0 0 64px rgba(0,229,160,0.3)',
+      boxShadow:'0 0 64px rgba(var(--dc-verde-rgb), 0.3)',
       animation:'popIn 0.3s ease',
     }}>
       <div style={{
         width:64, height:64, borderRadius:'50%',
-        background:'rgba(0,229,160,0.15)', border:'2px solid #00e5a0',
+        background:'rgba(var(--dc-verde-rgb), 0.15)', border:'2px solid var(--dc-verde)',
         display:'flex', alignItems:'center', justifyContent:'center',
       }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="3">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--dc-verde)" strokeWidth="3">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       </div>
-      <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#00e5a0' }}>Comanda inviata!</div>
+      <div style={{ fontSize:'1.1rem', fontWeight:700, color:'var(--dc-verde)' }}>Comanda inviata!</div>
     </div>
     <style>{`@keyframes popIn { from { transform:scale(0.7); opacity:0 } to { transform:scale(1); opacity:1 } }`}</style>
   </div>
@@ -745,32 +745,32 @@ if (notaModal !== null) {
 {showErrore && (
   <div style={{
     position:'fixed', inset:0, zIndex:9999,
-    background:'rgba(8,9,12,0.9)',
+    background:'rgba(var(--dc-bg-rgb), 0.9)',
     display:'flex', alignItems:'center', justifyContent:'center',
   }} onClick={() => setShowErrore(false)}>
     <div style={{
-      background:'#111318', border:'2px solid #ff4d6a',
+      background:'var(--dc-surface)', border:'2px solid var(--dc-rosso)',
       borderRadius:24, padding:'32px 40px',
       display:'flex', flexDirection:'column', alignItems:'center', gap:16,
       maxWidth:320,
     }} onClick={e => e.stopPropagation()}>
       <div style={{
         width:64, height:64, borderRadius:'50%',
-        background:'rgba(255,77,106,0.15)', border:'2px solid #ff4d6a',
+        background:'rgba(var(--dc-rosso-rgb), 0.15)', border:'2px solid var(--dc-rosso)',
         display:'flex', alignItems:'center', justifyContent:'center',
       }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff4d6a" strokeWidth="3">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--dc-rosso)" strokeWidth="3">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </div>
-      <div style={{ fontSize:'1rem', fontWeight:700, color:'#ff4d6a', textAlign:'center' }}>
+      <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-rosso)', textAlign:'center' }}>
         Errore invio comanda
       </div>
-      <div style={{ fontSize:'0.78rem', color:'#5a5d6e', textAlign:'center' }}>
+      <div style={{ fontSize:'0.78rem', color:'var(--dc-muted)', textAlign:'center' }}>
         {erroreMsg}
       </div>
       <button onClick={() => setShowErrore(false)}
-        style={{ padding:'10px 24px', borderRadius:10, background:'#ff4d6a', border:'none', color:'white', fontWeight:700, cursor:'pointer' }}>
+        style={{ padding:'10px 24px', borderRadius:10, background:'var(--dc-rosso)', border:'none', color:'white', fontWeight:700, cursor:'pointer' }}>
         Riprova
       </button>
     </div>
@@ -783,13 +783,13 @@ if (notaModal !== null) {
     return (
       <>
       <Head><link rel="manifest" href="/manifest.json" /><link rel="apple-touch-icon" href="/icon-tavoli-192.png" /></Head>
-      <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif" }}>
+      <div style={{ minHeight:'100vh', background:'var(--dc-bg)', color:'var(--dc-text)', fontFamily:"'DM Sans',sans-serif" }}>
   
-        <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'#111318', borderBottom:'1px solid #1a1c24', position:'sticky', top:0, zIndex:100 }}>
+        <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'var(--dc-surface)', borderBottom:'1px solid var(--dc-surface2)', position:'sticky', top:0, zIndex:100 }}>
         <div style={{ fontWeight:700, fontSize:'1rem' }}>🍽️ Tavoli</div>
-        <div style={{ fontSize:'0.75rem', color:'#ffb830' }}>{user?.name}</div>
+        <div style={{ fontSize:'0.75rem', color:'var(--dc-ambra)' }}>{user?.name}</div>
         <button onClick={carica}
-          style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#ffb830', padding:'8px 14px', cursor:'pointer', fontSize:'0.82rem' }}>
+          style={{ background:'transparent', border:'1px solid var(--dc-border)', borderRadius:10, color:'var(--dc-ambra)', padding:'8px 14px', cursor:'pointer', fontSize:'0.82rem' }}>
           ↻ Aggiorna
         </button>
       </header>
@@ -808,19 +808,19 @@ if (notaModal !== null) {
               onTouchEnd={() => clearTimeout(longPressTimer.current)}
               style={{
                 padding:16, borderRadius:16, cursor:'pointer', textAlign:'left',
-                background: occupato ? 'rgba(255,77,106,0.1)' : 'rgba(0,229,160,0.05)',
-                border:'2px solid ' + (occupato ? '#ff4d6a' : '#00e5a044'),
+                background: occupato ? 'rgba(var(--dc-rosso-rgb), 0.1)' : 'rgba(var(--dc-verde-rgb), 0.05)',
+                border:'2px solid ' + (occupato ? 'var(--dc-rosso)' : 'rgba(var(--dc-verde-rgb), 0.27)'),
                 display:'flex', flexDirection:'column', gap:6,
               }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                <span style={{ fontSize:'0.7rem', color:'#ffb830', letterSpacing:2 }}>N° TAVOLO</span>
-                <div style={{ width:8, height:8, borderRadius:'50%', background: occupato ? '#ff4d6a' : '#00e5a0', boxShadow:'0 0 6px ' + (occupato ? '#ff4d6a' : '#00e5a0') }} />
+                <span style={{ fontSize:'0.7rem', color:'var(--dc-ambra)', letterSpacing:2 }}>N° TAVOLO</span>
+                <div style={{ width:8, height:8, borderRadius:'50%', background: occupato ? 'var(--dc-rosso)' : 'var(--dc-verde)', boxShadow:'0 0 6px ' + (occupato ? 'var(--dc-rosso)' : 'var(--dc-verde)') }} />
               </div>
-              <div style={{ fontSize:'2.2rem', fontWeight:700, color: occupato ? '#ff4d6a' : '#00e5a0', lineHeight:1 }}>{t.numero}</div>
+              <div style={{ fontSize:'2.2rem', fontWeight:700, color: occupato ? 'var(--dc-rosso)' : 'var(--dc-verde)', lineHeight:1 }}>{t.numero}</div>
               {occupato ? (
-                tempo && <div style={{ fontSize:'0.92rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>
+                tempo && <div style={{ fontSize:'0.92rem', color:'var(--dc-ambra)' }}>Occupato ⏱ {tempo}</div>
               ) : (
-                <div style={{ fontSize:'1rem', color:'#ffb830' }}>Libero</div>
+                <div style={{ fontSize:'1rem', color:'var(--dc-ambra)' }}>Libero</div>
               )}
             </button>
           )
@@ -830,25 +830,25 @@ if (notaModal !== null) {
 
     {/* MODAL RIEPILOGO TAVOLO — long press */}
     {riepilogoTavolo && (
-      <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.9)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+      <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.9)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
         onClick={() => setRiepilogoTavolo(null)}>
-        <div style={{ background:'#111318', border:'6px solid white', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'80vh', overflowY:'auto' }}
+        <div style={{ background:'var(--dc-surface)', border:'6px solid white', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'80vh', overflowY:'auto' }}
           onClick={e => e.stopPropagation()}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-            <div style={{ fontSize:'1rem', fontWeight:700, color:'#eef0f6' }}>🍽️ Tavolo {riepilogoTavolo.numero}</div>
+            <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-text)' }}>🍽️ Tavolo {riepilogoTavolo.numero}</div>
             <button onClick={() => setRiepilogoTavolo(null)}
               style={{ background:'transparent', border:'none', color:'red', fontSize:'1.3rem', cursor:'pointer' }}>✕</button>
           </div>
           {(riepilogoTavolo.righe || []).length === 0 ? (
-            <div style={{ color:'#5a5d6e', textAlign:'center', padding:'20px 0' }}>Nessun prodotto ordinato</div>
+            <div style={{ color:'var(--dc-muted)', textAlign:'center', padding:'20px 0' }}>Nessun prodotto ordinato</div>
           ) : (
             (riepilogoTavolo.righe || []).map((r, i) => (
-              <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid #1a1c24' }}>
+              <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid var(--dc-surface2)' }}>
                 <div>
                   <div style={{ fontSize:'1rem', color:'yellow' }}>{r.nome}</div>
-                  {r.nota && <div style={{ fontSize:'0.75rem', color:'#ffb830' }}>📝 {r.nota}</div>}
+                  {r.nota && <div style={{ fontSize:'0.75rem', color:'var(--dc-ambra)' }}>📝 {r.nota}</div>}
                 </div>
-                <div style={{ fontSize:'1rem', fontWeight:700, color:'#00e5a0', minWidth:30, textAlign:'right' }}>×{r.quantita}</div>
+                <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-verde)', minWidth:30, textAlign:'right' }}>×{r.quantita}</div>
               </div>
             ))
           )}

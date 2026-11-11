@@ -1,15 +1,15 @@
 .page {
-  --accent: #00e5a0;
-  --accent-dim: rgba(0,229,160,0.12);
-  --accent-glow: rgba(0,229,160,0.25);
-  --bg: #08090c;
-  --surface: #111318;
-  --surface2: #1a1c24;
-  --border: #252830;
-  --text: #eef0f6;
-  --muted: #5a5d6e;
-  --danger: #ff4d6a;
-  --danger-dim: rgba(255,77,106,0.12);
+  --accent: var(--dc-verde);
+  --accent-dim: rgba(var(--dc-verde-rgb), 0.12);
+  --accent-glow: rgba(var(--dc-verde-rgb), 0.25);
+  --bg: var(--dc-bg);
+  --surface: var(--dc-surface);
+  --surface2: var(--dc-surface2);
+  --border: var(--dc-border);
+  --text: var(--dc-text);
+  --muted: var(--dc-muted);
+  --danger: var(--dc-rosso);
+  --danger-dim: rgba(var(--dc-rosso-rgb), 0.12);
 
   min-height: 100vh;
   background: var(--bg);
@@ -35,7 +35,7 @@
 .headerUser { font-size: 0.95rem; color: var(--accent); margin-top: 1px; }
 .headerCenter { flex: 1; display: flex; justify-content: center; }
 .errore {
-  background: rgba(255,77,106,0.12); border: 1px solid var(--danger);
+  background: rgba(var(--dc-rosso-rgb), 0.12); border: 1px solid var(--danger);
   color: var(--danger); padding: 6px 16px; border-radius: 8px;
   font-size: 0.78rem; animation: erroreIn 0.2s ease;
 }
@@ -92,7 +92,7 @@
   border-radius: 14px; padding: 10px;
   text-align: center;
 }
-.displayLabel { font-size: 0.90rem; color:  #ffb830; letter-spacing: 6px; text-transform: uppercase; }
+.displayLabel { font-size: 0.90rem; color:  var(--dc-ambra); letter-spacing: 6px; text-transform: uppercase; }
 .displayValue {
   font-family: 'Unbounded', sans-serif;
   font-size: 1.6rem; font-weight: 700;
@@ -160,7 +160,7 @@
   margin-top: auto;
   position: sticky; bottom: 0; z-index: 5;
 }
-.chiudiBtn:hover:not(:disabled) { background: #00ffb3; box-shadow: 0 4px 20px var(--accent-glow); }
+.chiudiBtn:hover:not(:disabled) { background: var(--dc-menta); box-shadow: 0 4px 20px var(--accent-glow); }
 .chiudiBtn:disabled { opacity: 0.3; cursor: default; }
 .chiudiBadge {
   background: rgba(0,0,0,0.2); border-radius: 6px;
@@ -180,7 +180,7 @@
   flex-shrink: 0;
 }
 .displayTitle { font-family: 'Unbounded', sans-serif; font-size: 0.82rem; font-weight: 700; }
-.righeCount { font-size: 0.87rem; color:  #ffb830; }
+.righeCount { font-size: 0.87rem; color:  var(--dc-ambra); }
 
 .righeList {
   flex: 1; overflow-y: auto; padding: 12px 16px;
@@ -394,7 +394,7 @@
   font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s;
 }
-.inviaBtn:hover { background: #00ffb3; box-shadow: 0 4px 16px var(--accent-glow); }
+.inviaBtn:hover { background: var(--dc-menta); box-shadow: 0 4px 16px var(--accent-glow); }
 
 /* ─── MODAL CONFERMA ANNULLA ─────────────────────────────────────────────── */
 .confirmModal {
@@ -415,7 +415,7 @@
   font-family: 'Unbounded', sans-serif; font-size: 0.75rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s;
 }
-.confirmDangerBtn:hover { background: #ff2d4f; box-shadow: 0 4px 16px rgba(255,77,106,0.4); }
+.confirmDangerBtn:hover { background: #ff2d4f; box-shadow: 0 4px 16px rgba(var(--dc-rosso-rgb), 0.4); }
 
 /* ─── MODAL SUCCESSO ─────────────────────────────────────────────────────── */
 .successModal {
@@ -456,7 +456,7 @@
   font-family: 'Unbounded', sans-serif; font-size: 0.82rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s;
 }
-.successBtn:hover { background: #00ffb3; box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-1px); }
+.successBtn:hover { background: var(--dc-menta); box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-1px); }
 
 /* ─── X ELIMINA RIGA ─────────────────────────────────────────────────────── */
 .rigaDestra {
@@ -495,12 +495,12 @@
 /* ─── AVVISO MEZZANOTTE ──────────────────────────────────────────────────── */
 .avvisoModal {
   background: var(--surface);
-  border: 2px solid var(--warn, #ffb830);
+  border: 2px solid var(--warn, var(--dc-ambra));
   border-radius: 20px; padding: 40px 32px;
   width: 100%; max-width: 400px; text-align: center;
   display: flex; flex-direction: column; align-items: center; gap: 14px;
   animation: successPop 0.35s cubic-bezier(0.34,1.56,0.64,1);
-  box-shadow: 0 0 60px rgba(255,184,48,0.2), 0 32px 80px rgba(0,0,0,0.5);
+  box-shadow: 0 0 60px rgba(var(--dc-ambra-rgb), 0.2), 0 32px 80px rgba(0,0,0,0.5);
 }
 .avvisoIcona { font-size: 3rem; animation: tick 1s ease infinite; }
 @keyframes tick {
@@ -509,7 +509,7 @@
 }
 .avvisoTitolo {
   font-family: 'Unbounded', sans-serif; font-size: 1.1rem; font-weight: 700;
-  color: #ffb830;
+  color: var(--dc-ambra);
 }
 .avvisoSub { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
 .avvisoContatori {
@@ -518,11 +518,11 @@
 }
 .avvisoBtn {
   width: 100%; padding: 14px; border-radius: 12px;
-  border: none; background: #ffb830; color: #000;
+  border: none; background: var(--dc-ambra); color: #000;
   font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s; margin-top: 8px;
 }
-.avvisoBtn:hover { background: #ffd06b; box-shadow: 0 4px 20px rgba(255,184,48,0.4); }
+.avvisoBtn:hover { background: #ffd06b; box-shadow: 0 4px 20px rgba(var(--dc-ambra-rgb), 0.4); }
 
 
 /* ── LAYOUT COLONNA CENTRALE DIVISA ──────────────────────────────────── */
@@ -551,7 +551,7 @@
   max-height: 84vh;
   overflow: hidden;
   background: #0c0e13;
-  border: 1px solid #252830;
+  border: 1px solid var(--dc-border);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.7);
 }
@@ -565,7 +565,7 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   color: white;
-  border-bottom: 1px solid #1a1c24;
+  border-bottom: 1px solid var(--dc-surface2);
   flex-shrink: 0;
 }
 
@@ -584,8 +584,8 @@
   justify-content: center;
   gap: 4px;
   padding: 12px 8px;
-  background: #111318;
-  border: 1px solid #252830;
+  background: var(--dc-surface);
+  border: 1px solid var(--dc-border);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s;
@@ -593,7 +593,7 @@
 }
 
 .prodottoCard:hover {
-  background: #1a1c24;
+  background: var(--dc-surface2);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
@@ -604,7 +604,7 @@
 
 .prodottoNome {
   font-size: 0.78rem;
-  color: #eef0f6;
+  color: var(--dc-text);
   font-weight: 500;
   line-height: 1.2;
 }

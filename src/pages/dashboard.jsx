@@ -208,7 +208,7 @@ export default function DashboardPage() {
   if (!autenticato) {
     return (
       <div style={{
-        minHeight: '100vh', background: '#08090c',
+        minHeight: '100vh', background: 'var(--dc-bg)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: "'DM Sans', sans-serif", padding: 20,
       }}>
@@ -216,7 +216,7 @@ export default function DashboardPage() {
           <link rel="manifest" href="/manifest-dashboard.json" />
         </Head>
         <div style={{
-          background: '#111318', border: '1px solid #1e2230',
+          background: 'var(--dc-surface)', border: '1px solid #1e2230',
           borderRadius: 20, padding: '48px 40px',
           width: '100%', maxWidth: 380,
           display: 'flex', flexDirection: 'column', gap: 24,
@@ -225,8 +225,8 @@ export default function DashboardPage() {
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', marginBottom: 8 }}>📊</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#eef0f6' }}>Dashboard</div>
-            <div style={{ fontSize: '0.78rem', color: '#5a5d6e', marginTop: 4, fontFamily: "'DM Mono',monospace" }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--dc-text)' }}>Dashboard</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--dc-muted)', marginTop: 4, fontFamily: "'DM Mono',monospace" }}>
               Monitoraggio in tempo reale
             </div>
           </div>
@@ -241,22 +241,22 @@ export default function DashboardPage() {
               autoFocus
               style={{
                 width: '100%', boxSizing: 'border-box',
-                background: '#1a1c24', border: '1px solid #252830',
+                background: 'var(--dc-surface2)', border: '1px solid var(--dc-border)',
                 borderRadius: 12, padding: '14px 16px',
-                color: '#eef0f6', fontSize: '1rem',
+                color: 'var(--dc-text)', fontSize: '1rem',
                 fontFamily: "'DM Mono',monospace",
                 outline: 'none', textAlign: 'center', letterSpacing: 2,
               }}
             />
             {erroreLogin && (
-              <div style={{ color: '#ff4d6a', fontSize: '0.78rem', textAlign: 'center' }}>{erroreLogin}</div>
+              <div style={{ color: 'var(--dc-rosso)', fontSize: '0.78rem', textAlign: 'center' }}>{erroreLogin}</div>
             )}
             <button
               onClick={login}
               disabled={loading}
               style={{
                 padding: '14px', borderRadius: 12, border: 'none',
-                background: '#00e5a0', color: '#08090c',
+                background: 'var(--dc-verde)', color: 'var(--dc-bg)',
                 fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
                 fontFamily: "'DM Mono',monospace",
                 opacity: loading ? 0.7 : 1,
@@ -275,7 +275,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#08090c', color: '#eef0f6', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'var(--dc-bg)', color: 'var(--dc-text)', fontFamily: "'DM Sans', sans-serif" }}>
 
       <Head>
         <link rel="manifest" href="/manifest-dashboard.json" />
@@ -283,15 +283,15 @@ export default function DashboardPage() {
 
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 24px', background: '#111318',
-        borderBottom: '1px solid #1a1c24', position: 'sticky', top: 0, zIndex: 100,
+        padding: '16px 24px', background: 'var(--dc-surface)',
+        borderBottom: '1px solid var(--dc-surface2)', position: 'sticky', top: 0, zIndex: 100,
         flexWrap: 'wrap', gap: 12,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ fontSize: '1.4rem' }}>📊</div>
           <div>
             <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{negozioNome}</div>
-            <div style={{ fontSize: '0.7rem', color: '#00e5a0', fontFamily: "'DM Mono',monospace" }}>Dashboard · Tempo reale</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--dc-verde)', fontFamily: "'DM Mono',monospace" }}>Dashboard · Tempo reale</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -300,18 +300,18 @@ export default function DashboardPage() {
             value={filtroData}
             onChange={e => e.target.value && setFiltroData(e.target.value)}
             style={{
-              background: '#1a1c24', border: '1px solid #252830',
+              background: 'var(--dc-surface2)', border: '1px solid var(--dc-border)',
               borderRadius: 8, padding: '6px 10px',
-              color: '#eef0f6', fontSize: '0.82rem',
+              color: 'var(--dc-text)', fontSize: '0.82rem',
               fontFamily: "'DM Mono',monospace", cursor: 'pointer',
             }}
           />
           <button
             onClick={caricaDati}
             style={{
-              background: '#1a1c24', border: '1px solid #252830',
+              background: 'var(--dc-surface2)', border: '1px solid var(--dc-border)',
               borderRadius: 8, padding: '6px 12px',
-              color: '#ffb830', fontSize: '0.82rem', cursor: 'pointer',
+              color: 'var(--dc-ambra)', fontSize: '0.82rem', cursor: 'pointer',
             }}
           >
             Aggiorna
@@ -319,9 +319,9 @@ export default function DashboardPage() {
           <button
             onClick={logout}
             style={{
-              background: 'transparent', border: '1px solid #252830',
+              background: 'transparent', border: '1px solid var(--dc-border)',
               borderRadius: 8, padding: '6px 12px',
-              color: '#ff4d6a', fontSize: '0.82rem', cursor: 'pointer',
+              color: 'var(--dc-rosso)', fontSize: '0.82rem', cursor: 'pointer',
             }}
           >
             Esci
@@ -332,7 +332,7 @@ export default function DashboardPage() {
       <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
         {loadingDati && (
-          <div style={{ textAlign: 'center', color: '#5a5d6e', padding: 40, fontFamily: "'DM Mono',monospace" }}>
+          <div style={{ textAlign: 'center', color: 'var(--dc-muted)', padding: 40, fontFamily: "'DM Mono',monospace" }}>
             ⏳ Caricamento...
           </div>
         )}
@@ -362,9 +362,9 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
+        <div style={{ background: 'var(--dc-surface)', border: '1px solid var(--dc-surface2)', borderRadius: 16, padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#eef0f6' }}>
+            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: 'var(--dc-text)' }}>
               📈 Vendite
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -372,9 +372,9 @@ export default function DashboardPage() {
                 <button key={p} onClick={() => setPeriodoGrafico(p)}
                   style={{
                     padding: '5px 14px', borderRadius: 8, fontSize: '0.72rem',
-                    border: '1px solid ' + (periodoGrafico === p ? '#00e5a0' : '#252830'),
-                    background: periodoGrafico === p ? 'rgba(0,229,160,0.15)' : 'transparent',
-                    color: periodoGrafico === p ? '#00e5a0' : '#5a5d6e',
+                    border: '1px solid ' + (periodoGrafico === p ? 'var(--dc-verde)' : 'var(--dc-border)'),
+                    background: periodoGrafico === p ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'transparent',
+                    color: periodoGrafico === p ? 'var(--dc-verde)' : 'var(--dc-muted)',
                     cursor: 'pointer', fontFamily: "'DM Mono',monospace",
                     textTransform: 'capitalize', fontWeight: periodoGrafico === p ? 700 : 400,
                   }}>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
               return (
                 <div key={i} style={{ flex: '1 0 auto', minWidth: periodoGrafico === 'mese' ? 14 : periodoGrafico === 'giorno' ? 16 : 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   {item.totale > 0 && periodoGrafico !== 'mese' && (
-                    <div style={{ fontSize: '0.65rem', color: '#00e5a0', fontFamily: "'DM Mono',monospace", whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--dc-verde)', fontFamily: "'DM Mono',monospace", whiteSpace: 'nowrap' }}>
                       {item.count}
                     </div>
                   )}
@@ -398,7 +398,7 @@ export default function DashboardPage() {
                     title={item.label + ' — €' + fmt(item.totale) + ' (' + item.count + ' scontrini)'}
                     style={{
                       width: '100%', height: altezza,
-                      background: item.totale > 0 ? '#00e5a0' : '#1a1c24',
+                      background: item.totale > 0 ? 'var(--dc-verde)' : 'var(--dc-surface2)',
                       borderRadius: '4px 4px 0 0',
                       transition: 'height 0.3s ease',
                       cursor: item.totale > 0 ? 'pointer' : 'default',
@@ -418,12 +418,12 @@ export default function DashboardPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
-          <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
-            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
+          <div style={{ background: 'var(--dc-surface)', border: '1px solid var(--dc-surface2)', borderRadius: 16, padding: 24 }}>
+            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: 'var(--dc-text)', marginBottom: 16 }}>
               🏆 Top prodotti
             </div>
             {topProdotti.length === 0 ? (
-              <div style={{ color: '#5a5d6e', fontSize: '0.8rem', textAlign: 'center', padding: 20 }}>Nessun dato</div>
+              <div style={{ color: 'var(--dc-muted)', fontSize: '0.8rem', textAlign: 'center', padding: 20 }}>Nessun dato</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {topProdotti.map((p, i) => {
@@ -438,16 +438,16 @@ export default function DashboardPage() {
                             fontFamily: "'DM Mono',monospace",
                             minWidth: 16,
                           }}>#{i + 1}</span>
-                          <span style={{ fontSize: '0.82rem', color: '#eef0f6' }}>{p.nome}</span>
+                          <span style={{ fontSize: '0.82rem', color: 'var(--dc-text)' }}>{p.nome}</span>
                         </div>
                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#5a5d6e' }}>×{p.quantita}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--dc-muted)' }}>×{p.quantita}</span>
                           <span style={{ fontSize: '0.82rem', color: COLORI[i % COLORI.length], fontFamily: "'DM Mono',monospace" }}>
                             €{fmt(p.totale)}
                           </span>
                         </div>
                       </div>
-                      <div style={{ height: 3, background: '#1a1c24', borderRadius: 2 }}>
+                      <div style={{ height: 3, background: 'var(--dc-surface2)', borderRadius: 2 }}>
                         <div style={{
                           height: '100%', borderRadius: 2,
                           background: COLORI[i % COLORI.length],
@@ -462,13 +462,13 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
-            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ background: 'var(--dc-surface)', border: '1px solid var(--dc-surface2)', borderRadius: 16, padding: 24 }}>
+            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: 'var(--dc-text)', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
               <span>🍽️ Tavoli aperti ora</span>
-              <span style={{ color: '#00e5a0', fontFamily: "'DM Mono',monospace" }}>{tavoli.length}</span>
+              <span style={{ color: 'var(--dc-verde)', fontFamily: "'DM Mono',monospace" }}>{tavoli.length}</span>
             </div>
             {tavoli.length === 0 ? (
-              <div style={{ color: '#5a5d6e', fontSize: '0.8rem', textAlign: 'center', padding: 20 }}>Nessun tavolo aperto</div>
+              <div style={{ color: 'var(--dc-muted)', fontSize: '0.8rem', textAlign: 'center', padding: 20 }}>Nessun tavolo aperto</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {tavoli.map(t => {
@@ -477,28 +477,28 @@ export default function DashboardPage() {
                   return (
                     <div key={t.numero} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '10px 14px', background: '#1a1c24',
-                      borderRadius: 10, border: '1px solid #ff4d6a33',
+                      padding: '10px 14px', background: 'var(--dc-surface2)',
+                      borderRadius: 10, border: '1px solid rgba(var(--dc-rosso-rgb), 0.2)',
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{
                           width: 32, height: 32, borderRadius: 8,
-                          background: 'rgba(255,77,106,0.15)',
-                          border: '1px solid #ff4d6a44',
+                          background: 'rgba(var(--dc-rosso-rgb), 0.15)',
+                          border: '1px solid rgba(var(--dc-rosso-rgb), 0.27)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontWeight: 700, color: '#ff4d6a', fontSize: '0.85rem',
+                          fontWeight: 700, color: 'var(--dc-rosso)', fontSize: '0.85rem',
                           fontFamily: "'DM Mono',monospace",
                         }}>
                           {t.numero}
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.82rem', color: '#eef0f6' }}>
+                          <div style={{ fontSize: '0.82rem', color: 'var(--dc-text)' }}>
                             {(t.righe || []).length} prodotti
                           </div>
-                          <div style={{ fontSize: '0.7rem', color: '#5a5d6e' }}>Aperto alle {apertoAlle}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--dc-muted)' }}>Aperto alle {apertoAlle}</div>
                         </div>
                       </div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#00e5a0', fontFamily: "'DM Mono',monospace" }}>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--dc-verde)', fontFamily: "'DM Mono',monospace" }}>
                         €{fmt(totTavolo)}
                       </div>
                     </div>
@@ -509,19 +509,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ background: '#111318', border: '1px solid #1a1c24', borderRadius: 16, padding: 24 }}>
-          <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#eef0f6', marginBottom: 16 }}>
+        <div style={{ background: 'var(--dc-surface)', border: '1px solid var(--dc-surface2)', borderRadius: 16, padding: 24 }}>
+          <div style={{ fontSize: '0.99rem', fontWeight: 600, color: 'var(--dc-text)', marginBottom: 16 }}>
             🧾 Scontrini del giorno
           </div>
           {scontriniValidi.length === 0 ? (
-            <div style={{ color: '#5a5d6e', fontSize: '0.8rem', textAlign: 'center', padding: 20 }}>Nessuno scontrino</div>
+            <div style={{ color: 'var(--dc-muted)', fontSize: '0.8rem', textAlign: 'center', padding: 20 }}>Nessuno scontrino</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {[...scontriniValidi].reverse().map((sc, i) => (
                 <div key={sc.id || i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 14px', background: '#1a1c24',
-                  borderRadius: 10, border: '1px solid #252830',
+                  padding: '10px 14px', background: 'var(--dc-surface2)',
+                  borderRadius: 10, border: '1px solid var(--dc-border)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: '0.92rem', color: 'yellow', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
@@ -529,8 +529,8 @@ export default function DashboardPage() {
                     </span>
                     <span style={{
                       fontSize: '0.99rem', padding: '2px 8px', borderRadius: 6,
-                      background: sc.metodo === 'contanti' ? 'rgba(255,184,48,0.15)' : 'rgba(100,130,255,0.15)',
-                      color: sc.metodo === 'contanti' ? '#ffb830' : '#6482ff',
+                      background: sc.metodo === 'contanti' ? 'rgba(var(--dc-ambra-rgb), 0.15)' : 'rgba(var(--dc-blu-rgb), 0.15)',
+                      color: sc.metodo === 'contanti' ? 'var(--dc-ambra)' : 'var(--dc-blu)',
                       fontFamily: "'DM Mono',monospace",
                     }}>
                       {sc.metodo === 'contanti' ? '💵' : '💳'}
@@ -550,8 +550,8 @@ export default function DashboardPage() {
 
         {/* SCONTRINI ANNULLATI — sezione separata */}
         {scontriniAnnullati.length > 0 && (
-          <div style={{ background: '#111318', border: '1px solid #ff4d6a33', borderRadius: 16, padding: 24 }}>
-            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: '#ff4d6a', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ background: 'var(--dc-surface)', border: '1px solid rgba(var(--dc-rosso-rgb), 0.2)', borderRadius: 16, padding: 24 }}>
+            <div style={{ fontSize: '0.99rem', fontWeight: 600, color: 'var(--dc-rosso)', marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
               <span>🗑️ Scontrini annullati</span>
               <span style={{ fontFamily: "'DM Mono',monospace" }}>{scontriniAnnullati.length} · €{fmt(totaleAnnullati)}</span>
             </div>
@@ -559,8 +559,8 @@ export default function DashboardPage() {
               {[...scontriniAnnullati].reverse().map((sc, i) => (
                 <div key={sc.id || i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 14px', background: '#1a1c24',
-                  borderRadius: 10, border: '1px solid #ff4d6a22',
+                  padding: '10px 14px', background: 'var(--dc-surface2)',
+                  borderRadius: 10, border: '1px solid rgba(var(--dc-rosso-rgb), 0.13)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: '0.92rem', color: 'white', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
@@ -570,7 +570,7 @@ export default function DashboardPage() {
                       <span style={{ fontSize: '0.92rem', color: 'white' }}>annullato da {sc.annullato_da}</span>
                     )}
                   </div>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#ff4d6a', fontFamily: "'DM Mono',monospace", textDecoration: 'line-through' }}>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--dc-rosso)', fontFamily: "'DM Mono',monospace", textDecoration: 'line-through' }}>
                     € {fmt(sc.totale)}
                   </span>
                 </div>

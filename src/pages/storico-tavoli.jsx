@@ -49,40 +49,40 @@ export default function StoricoTavoliPage() {
   if (loading || !user) return null
 
   return (
-    <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif", padding:20 }}>
+    <div style={{ minHeight:'100vh', background:'var(--dc-bg)', color:'var(--dc-text)', fontFamily:"'DM Sans',sans-serif", padding:20 }}>
       
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
         <button onClick={() => router.back()}
-          style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#00ffb3', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
+          style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-menta)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           ← Indietro
         </button>
         <div>
           <div style={{ fontSize:'1.1rem', fontWeight:700 }}>📋 Storico Tavoli</div>
-          <div style={{ fontSize:'0.92rem', color:'#00ffb3' }}>{records.length} record trovati</div>
+          <div style={{ fontSize:'0.92rem', color:'var(--dc-menta)' }}>{records.length} record trovati</div>
         </div>
       </div>
 
       {/* Filtri */}
       <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
         <div style={{ flex:1, minWidth:150 }}>
-          <label style={{ fontSize:'0.85rem', color:'#00ffb3', letterSpacing:1, display:'block', marginBottom:4 }}>DATA</label>
+          <label style={{ fontSize:'0.85rem', color:'var(--dc-menta)', letterSpacing:1, display:'block', marginBottom:4 }}>DATA</label>
           <input type="date" value={filtroData}
             onChange={e => setFiltroData(e.target.value)}
-            style={{ width:'100%', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#ffffff', fontSize:'0.85rem', boxSizing:'border-box' }}
+            style={{ width:'100%', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'#ffffff', fontSize:'0.85rem', boxSizing:'border-box' }}
           />
         </div>
         <div style={{ width:120 }}>
-          <label style={{ fontSize:'0.85rem', color:'#00ffb3', letterSpacing:1, display:'block', marginBottom:4 }}>TAVOLO N°</label>
+          <label style={{ fontSize:'0.85rem', color:'var(--dc-menta)', letterSpacing:1, display:'block', marginBottom:4 }}>TAVOLO N°</label>
           <input type="number" value={filtroTavolo}
             onChange={e => setFiltroTavolo(e.target.value)}
             placeholder="Tutti"
-            style={{ width:'100%', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#ffb830', fontSize:'0.95rem', boxSizing:'border-box' }}
+            style={{ width:'100%', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'var(--dc-ambra)', fontSize:'0.95rem', boxSizing:'border-box' }}
           />
         </div>
         <div style={{ display:'flex', alignItems:'flex-end' }}>
           <button onClick={() => { setFiltroData(''); setFiltroTavolo('') }}
-            style={{ padding:'8px 16px', borderRadius:8, border:'1px solid #252830', background:'transparent', color:'#ffb830', cursor:'pointer', fontSize:'0.82rem' }}>
+            style={{ padding:'8px 16px', borderRadius:8, border:'1px solid var(--dc-border)', background:'transparent', color:'var(--dc-ambra)', cursor:'pointer', fontSize:'0.82rem' }}>
             Reset
           </button>
         </div>
@@ -90,9 +90,9 @@ export default function StoricoTavoliPage() {
 
       {/* Lista */}
       {caricando ? (
-        <div style={{ textAlign:'center', color:'#5a5d6e', padding:40 }}>Caricamento...</div>
+        <div style={{ textAlign:'center', color:'var(--dc-muted)', padding:40 }}>Caricamento...</div>
       ) : records.length === 0 ? (
-        <div style={{ textAlign:'center', color:'#5a5d6e', padding:40 }}>
+        <div style={{ textAlign:'center', color:'var(--dc-muted)', padding:40 }}>
           <div style={{ fontSize:'2rem', marginBottom:8 }}>📋</div>
           <div>Nessun tavolo trovato</div>
         </div>
@@ -101,35 +101,35 @@ export default function StoricoTavoliPage() {
           {records.map(r => (
             <div key={r.id}
               onClick={() => setDettaglio(dettaglio?.id === r.id ? null : r)}
-              style={{ background:'#111318', border:'1px solid #252830', borderRadius:12, padding:16, cursor:'pointer', transition:'border-color 0.2s',
-                borderColor: dettaglio?.id === r.id ? '#00e5a0' : '#252830' }}>
+              style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:12, padding:16, cursor:'pointer', transition:'border-color 0.2s',
+                borderColor: dettaglio?.id === r.id ? 'var(--dc-verde)' : 'var(--dc-border)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div style={{ display:'flex', gap:12, alignItems:'center' }}>
-                  <div style={{ background:'#1a1c24', borderRadius:8, padding:'6px 12px', fontSize:'0.85rem', fontWeight:700, color:'#00e5a0' }}>
+                  <div style={{ background:'var(--dc-surface2)', borderRadius:8, padding:'6px 12px', fontSize:'0.85rem', fontWeight:700, color:'var(--dc-verde)' }}>
                     Tavolo {r.numero_tavolo}
                   </div>
                   <div>
                     <div style={{ fontSize:'0.92rem', fontWeight:600 }}>
                       {new Date(r.chiuso_alle).toLocaleDateString('it-IT')} — {new Date(r.chiuso_alle).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'})}
                     </div>
-                    <div style={{ fontSize:'0.92rem', color:'#ffb830', marginTop:2 }}>
+                    <div style={{ fontSize:'0.92rem', color:'var(--dc-ambra)', marginTop:2 }}>
                       {r.coperti > 0 ? `👤 ${r.coperti} coperti · ` : ''}{r.righe?.length || 0} prodotti
                     </div>
                   </div>
                 </div>
-                <div style={{ fontSize:'1rem', fontWeight:700, color:'#00e5a0', fontFamily:"'DM Mono',monospace" }}>
+                <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace" }}>
                   € {fmt(r.totale)}
                 </div>
               </div>
 
               {/* Dettaglio prodotti */}
               {dettaglio?.id === r.id && (
-                <div style={{ marginTop:12, borderTop:'1px solid #252830', paddingTop:12 }}>
+                <div style={{ marginTop:12, borderTop:'1px solid var(--dc-border)', paddingTop:12 }}>
                   {r.righe?.map((riga, i) => (
                     <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0', fontSize:'0.82rem' }}>
-                      <span style={{ color:'#eef0f6' }}>
+                      <span style={{ color:'var(--dc-text)' }}>
                         {riga.quantita > 1 ? `${riga.quantita}x ` : ''}{riga.nome}
-                        {riga.nota ? <span style={{ color:'#5a5d6e' }}> — {riga.nota}</span> : ''}
+                        {riga.nota ? <span style={{ color:'var(--dc-muted)' }}> — {riga.nota}</span> : ''}
                       </span>
                       <span style={{ color:'#FFFF00', fontFamily:"'DM Mono',monospace" }}>€ {fmt(riga.totaleRiga)}</span>
                     </div>

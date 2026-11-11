@@ -273,27 +273,27 @@ export default function AgendaPage() {
   if (loading || !user) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: '#08090c', color: '#eef0f6', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'var(--dc-bg)', color: 'var(--dc-text)', fontFamily: "'DM Sans', sans-serif" }}>
       <Head>
         <link rel="manifest" href="/manifest-agenda.json" />
         <link rel="apple-touch-icon" href="/icon-agenda-192.png" />
       </Head>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: '#111318', borderBottom: '1px solid #1a1c24', flexWrap: 'wrap', gap: 8 }}>
-        <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid #ffffff44', borderRadius: 10, color: '#00ffb3', padding: '8px 16px', cursor: 'pointer', fontSize: '0.92rem' }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: 'var(--dc-surface)', borderBottom: '1px solid var(--dc-surface2)', flexWrap: 'wrap', gap: 8 }}>
+        <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid #ffffff44', borderRadius: 10, color: 'var(--dc-menta)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.92rem' }}>
           ← Cassa
         </button>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontWeight: 700, fontSize: '1rem' }}>🗓️ Agenda</div>
-          <div style={{ fontSize: '0.98rem', color: '#ffb830' }}>{totaleOggi} Prenotazion{totaleOggi === 1 ? 'e' : 'i'} · {fmtDataItaliana(data)}</div>
+          <div style={{ fontSize: '0.98rem', color: 'var(--dc-ambra)' }}>{totaleOggi} Prenotazion{totaleOggi === 1 ? 'e' : 'i'} · {fmtDataItaliana(data)}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button onClick={() => cambiaGiorno(-1)} style={{ background: 'transparent', border: '1px solid #00FF00', borderRadius: 10, color: 'red', padding: '8px 12px', cursor: 'pointer' }}>◀</button>
           <input type="date" value={data} onChange={e => e.target.value && setData(e.target.value)}
-            style={{ background: '#1a1c24', border: '1px solid #00FF00', borderRadius: 10, color: '#eef0f6', padding: '8px 10px', fontSize: '0.8rem', fontFamily: "'DM Mono',monospace", colorScheme: 'dark' }}
+            style={{ background: 'var(--dc-surface2)', border: '1px solid #00FF00', borderRadius: 10, color: 'var(--dc-text)', padding: '8px 10px', fontSize: '0.8rem', fontFamily: "'DM Mono',monospace", colorScheme: 'dark' }}
           />
           <button onClick={() => setData(oggiISO())} disabled={isOggi} style={{
             background: 'transparent', border: '1px solid #00FF00', borderRadius: 10,
-            color: '#ffb830', padding: '8px 12px', fontSize: '0.8rem',
+            color: 'var(--dc-ambra)', padding: '8px 12px', fontSize: '0.8rem',
             cursor: isOggi ? 'default' : 'pointer',
             visibility: isOggi ? 'hidden' : 'visible',
           }}>Oggi</button>
@@ -320,31 +320,31 @@ export default function AgendaPage() {
             return (
               <div key={ora} style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12,
-                background: completato ? 'rgba(0,229,160,0.05)' : 'rgba(255,184,48,0.08)',
-                border: `1px solid ${completato ? '#00e5a044' : '#ffb83066'}`,
+                background: completato ? 'rgba(var(--dc-verde-rgb), 0.05)' : 'rgba(var(--dc-ambra-rgb), 0.08)',
+                border: `1px solid ${completato ? 'rgba(var(--dc-verde-rgb), 0.27)' : 'rgba(var(--dc-ambra-rgb), 0.4)'}`,
               }}>
-                <span style={{ width: 52, fontFamily: "'DM Mono',monospace", fontSize: '0.85rem', fontWeight: 700, color: completato ? '#00e5a0' : '#ffb830' }}>{ora}</span>
+                <span style={{ width: 52, fontFamily: "'DM Mono',monospace", fontSize: '0.85rem', fontWeight: 700, color: completato ? 'var(--dc-verde)' : 'var(--dc-ambra)' }}>{ora}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{p.cliente_nome}{p.cliente_telefono ? ` · ${p.cliente_telefono}` : ''}</div>
-                  <div style={{ fontSize: '0.78rem', color: '#eef0f6aa' }}>{(p.servizi || []).map(s => s.nome).join(' + ')} · € {fmtEuro(p.totale || 0)}{p.num_slot > 1 ? ` · ${p.num_slot * STEP_MIN} min` : ''}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'rgba(var(--dc-text-rgb), 0.67)' }}>{(p.servizi || []).map(s => s.nome).join(' + ')} · € {fmtEuro(p.totale || 0)}{p.num_slot > 1 ? ` · ${p.num_slot * STEP_MIN} min` : ''}</div>
                   {p.operatore_nome && <div style={{ fontSize: '0.92rem', color: '#00FF00' }}>👤 PRENOTATO DA {p.operatore_nome}</div>}
                   {p.note && <div style={{ fontSize: '0.78rem', color: 'yellow', marginTop: 2 }}> 📝 {p.note}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {!completato && (
                     <button onClick={() => chiudiEVaiInCassa(p)} title="Chiudi e vai in cassa"
-                      style={{ padding: '8px 10px', borderRadius: 8, border: 'none', background: '#00e5a0', color: '#08090c', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
+                      style={{ padding: '8px 10px', borderRadius: 8, border: 'none', background: 'var(--dc-verde)', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
                       Cassa 💳
                     </button>
                   )}
                   {!completato && (
                     <button onClick={() => apriModifica(p)} title="Modifica"
-                      style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #252830', background: 'transparent', color: '#eef0f6', cursor: 'pointer' }}>
+                      style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--dc-border)', background: 'transparent', color: 'var(--dc-text)', cursor: 'pointer' }}>
                       ✏️
                     </button>
                   )}
                   <button onClick={() => setShowElimina(p.id)} title="Elimina"
-                    style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #ff4d6a44', background: 'transparent', color: '#ff4d6a', cursor: 'pointer' }}>
+                    style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(var(--dc-rosso-rgb), 0.27)', background: 'transparent', color: 'var(--dc-rosso)', cursor: 'pointer' }}>
                     🗑️
                   </button>
                 </div>
@@ -355,7 +355,7 @@ export default function AgendaPage() {
           return (
             <button key={ora} onClick={() => apriNuovo(ora)} style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12,
-              background: 'transparent', border: '1px dashed #252830', cursor: 'pointer', textAlign: 'left', color: '#5a5d6e',
+              background: 'transparent', border: '1px dashed var(--dc-border)', cursor: 'pointer', textAlign: 'left', color: 'var(--dc-muted)',
             }}>
               <span style={{ width: 52, fontFamily: "'DM Mono',monospace", fontSize: '0.85rem', color: 'white' }}>{ora}</span>
               <span style={{ fontSize: '1rem', color: 'white' }}>➥ Libero</span>
@@ -366,23 +366,23 @@ export default function AgendaPage() {
 
       {/* MODAL NUOVA/MODIFICA PRENOTAZIONE */}
       {modal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(8,9,12,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 600, padding: 20 }}>
-          <div style={{ background: '#111318', border: '1px solid #252830', borderRadius: 20, padding: 24, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(var(--dc-bg-rgb), 0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 600, padding: 20 }}>
+          <div style={{ background: 'var(--dc-surface)', border: '1px solid var(--dc-border)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ fontSize: '1rem', fontWeight: 700 }}>
               {modal.mode === 'nuovo' ? '📅 Nuova prenotazione' : '✏️ Modifica prenotazione'} · {modal.ora}
             </div>
 
             <div style={{ position: 'relative' }}>
-              <label style={{ fontSize: '0.75rem', color: '#5a5d6e' }}>Cliente</label>
+              <label style={{ fontSize: '0.75rem', color: 'var(--dc-muted)' }}>Cliente</label>
               <input type="text" value={ricercaCliente} onChange={e => cercaCliente(e.target.value)}
                 placeholder="Nome e cognome..."
-                style={{ width: '100%', background: '#1a1c24', border: '1px solid #252830', borderRadius: 10, padding: 12, color: '#eef0f6', fontSize: '0.9rem', boxSizing: 'border-box', marginTop: 4 }}
+                style={{ width: '100%', background: 'var(--dc-surface2)', border: '1px solid var(--dc-border)', borderRadius: 10, padding: 12, color: 'var(--dc-text)', fontSize: '0.9rem', boxSizing: 'border-box', marginTop: 4 }}
               />
               {suggerimentiCliente.length > 0 && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1c24', border: '1px solid #252830', borderRadius: 10, marginTop: 4, zIndex: 10, maxHeight: 160, overflowY: 'auto' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--dc-surface2)', border: '1px solid var(--dc-border)', borderRadius: 10, marginTop: 4, zIndex: 10, maxHeight: 160, overflowY: 'auto' }}>
                   {suggerimentiCliente.map(c => (
                     <div key={c.id} onClick={() => selezionaCliente(c)}
-                      style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #252830', fontSize: '0.85rem' }}>
+                      style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--dc-border)', fontSize: '0.85rem' }}>
                       {c.nome} {c.telefono ? `· ${c.telefono}` : ''}
                     </div>
                   ))}
@@ -391,15 +391,15 @@ export default function AgendaPage() {
             </div>
 
             <div>
-              <label style={{ fontSize: '0.75rem', color: '#5a5d6e' }}>Telefono</label>
+              <label style={{ fontSize: '0.75rem', color: 'var(--dc-muted)' }}>Telefono</label>
               <input type="tel" value={form.clienteTelefono || ''} onChange={e => setForm(f => ({ ...f, clienteTelefono: e.target.value }))}
                 placeholder="Es. 3331234567"
-                style={{ width: '100%', background: '#1a1c24', border: '1px solid #252830', borderRadius: 10, padding: 12, color: '#eef0f6', fontSize: '0.9rem', boxSizing: 'border-box', marginTop: 4 }}
+                style={{ width: '100%', background: 'var(--dc-surface2)', border: '1px solid var(--dc-border)', borderRadius: 10, padding: 12, color: 'var(--dc-text)', fontSize: '0.9rem', boxSizing: 'border-box', marginTop: 4 }}
               />
             </div>
 
             <div>
-              <label style={{ fontSize: '0.85rem', color: '#00e5a0' }}>Servizi (puoi selezionarne più di uno)</label>
+              <label style={{ fontSize: '0.85rem', color: 'var(--dc-verde)' }}>Servizi (puoi selezionarne più di uno)</label>
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '6px 0' }}>
                 {reparti.map(r => (
                   <button key={r.id} onClick={() => setRepartoAttivo(r.id)}
@@ -420,23 +420,23 @@ export default function AgendaPage() {
                       style={{
                         padding: '8px', borderRadius: 10, cursor: 'pointer', textAlign: 'center',
                         border: `1px solid ${selezionato ? '#00e5a0' : repAttivo.colore + '44'}`,
-                        background: selezionato ? 'rgba(0,229,160,0.15)' : '#1a1c24',
+                        background: selezionato ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-surface2)',
                       }}>
                       <div style={{ fontSize: '0.80rem', fontWeight: 600, color:'white' }}>{selezionato ? '✓ ' : ''}{sr.nome}</div>
-                      <div style={{ fontSize: '0.79rem', color: '#00e5a0' }}>€ {fmtEuro(sr.prezzoFisso)}</div>
+                      <div style={{ fontSize: '0.79rem', color: 'var(--dc-verde)' }}>€ {fmtEuro(sr.prezzoFisso)}</div>
                     </button>
                   )
                 })}
               </div>
               {form.servizi?.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, padding: '8px 10px', background: '#1a1c24', borderRadius: 10 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, padding: '8px 10px', background: 'var(--dc-surface2)', borderRadius: 10 }}>
                   {form.servizi.map(s => (
                     <span key={s.servizioId} onClick={() => rimuoviServizio(s.servizioId)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 8, background: 'rgba(0,229,160,0.15)', color: '#00e5a0', fontSize: '0.75rem', cursor: 'pointer' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 8, background: 'rgba(var(--dc-verde-rgb), 0.15)', color: 'var(--dc-verde)', fontSize: '0.75rem', cursor: 'pointer' }}>
                       {s.nome} · €{fmtEuro(s.prezzo)} ✕
                     </span>
                   ))}
-                  <span style={{ marginLeft: 'auto', fontSize: '0.8rem', fontWeight: 700, color: '#eef0f6' }}>
+                  <span style={{ marginLeft: 'auto', fontSize: '0.8rem', fontWeight: 700, color: 'var(--dc-text)' }}>
                     Totale € {fmtEuro(form.servizi.reduce((s, x) => s + x.prezzo, 0))}
                   </span>
                 </div>
@@ -444,14 +444,14 @@ export default function AgendaPage() {
             </div>
 
             <div>
-              <label style={{ fontSize: '0.8rem', color: '#00e5a0' }}>Durata</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--dc-verde)' }}>Durata</label>
               <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                 {DURATE.map(d => (
                   <button key={d.slot} onClick={() => setForm(f => ({ ...f, numSlot: d.slot }))}
                     style={{
                       flex: 1, padding: '8px', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem',
-                      border: `1px solid ${form.numSlot === d.slot ? '#00e5a0' : '#252830'}`,
-                      background: form.numSlot === d.slot ? 'rgba(0,229,160,0.15)' : 'transparent', color: '#eef0f6',
+                      border: `1px solid ${form.numSlot === d.slot ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+                      background: form.numSlot === d.slot ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'transparent', color: 'var(--dc-text)',
                     }}>
                     {d.label}
                   </button>
@@ -460,17 +460,17 @@ export default function AgendaPage() {
             </div>
 
             <div>
-              <label style={{ fontSize: '0.8rem', color: '#00e5a0' }}>Note (opzionale)</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--dc-verde)' }}>Note (opzionale)</label>
               <textarea value={form.note || ''} onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
                 placeholder="Es. cliente allergico alla crema di cocco..."
                 rows={2}
-                style={{ width: '100%', background: '#1a1c24', border: '1px solid #252830', borderRadius: 10, padding: 12, color: '#eef0f6', fontSize: '0.85rem', resize: 'none', boxSizing: 'border-box', marginTop: 4, fontFamily: "'DM Sans',sans-serif" }}
+                style={{ width: '100%', background: 'var(--dc-surface2)', border: '1px solid var(--dc-border)', borderRadius: 10, padding: 12, color: 'var(--dc-text)', fontSize: '0.85rem', resize: 'none', boxSizing: 'border-box', marginTop: 4, fontFamily: "'DM Sans',sans-serif" }}
               />
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-              <button onClick={() => setModal(null)} style={{ flex: 1, padding: 12, borderRadius: 10, background: 'transparent', border: '1px solid #252830', color: 'red', cursor: 'pointer' }}>Annulla</button>
-              <button onClick={salvaPrenotazione} style={{ flex: 1, padding: 12, borderRadius: 10, background: '#00e5a0', border: 'none', color: '#08090c', fontWeight: 700, cursor: 'pointer' }}>✓ Salva</button>
+              <button onClick={() => setModal(null)} style={{ flex: 1, padding: 12, borderRadius: 10, background: 'transparent', border: '1px solid var(--dc-border)', color: 'red', cursor: 'pointer' }}>Annulla</button>
+              <button onClick={salvaPrenotazione} style={{ flex: 1, padding: 12, borderRadius: 10, background: 'var(--dc-verde)', border: 'none', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer' }}>✓ Salva</button>
             </div>
           </div>
         </div>
@@ -479,19 +479,19 @@ export default function AgendaPage() {
       {/* MODAL ELIMINA */}
       {showElimina && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#111318', border: '2px solid #ff4d6a', borderRadius: 16, padding: 28, width: 320 }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ff4d6a', marginBottom: 8 }}>🗑️ Eliminare la prenotazione?</div>
-            <div style={{ fontSize: '0.85rem', color: '#ffb830', marginBottom: 20 }}>Questa operazione non può essere annullata.</div>
+          <div style={{ background: 'var(--dc-surface)', border: '2px solid var(--dc-rosso)', borderRadius: 16, padding: 28, width: 320 }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--dc-rosso)', marginBottom: 8 }}>🗑️ Eliminare la prenotazione?</div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--dc-ambra)', marginBottom: 20 }}>Questa operazione non può essere annullata.</div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowElimina(null)} style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #252830', background: 'transparent', color: '#eef0f6', cursor: 'pointer' }}>Annulla</button>
-              <button onClick={confermaElimina} style={{ flex: 1, padding: '12px', borderRadius: 10, border: 'none', background: '#ff4d6a', color: 'white', cursor: 'pointer', fontWeight: 700 }}>Elimina</button>
+              <button onClick={() => setShowElimina(null)} style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid var(--dc-border)', background: 'transparent', color: 'var(--dc-text)', cursor: 'pointer' }}>Annulla</button>
+              <button onClick={confermaElimina} style={{ flex: 1, padding: '12px', borderRadius: 10, border: 'none', background: 'var(--dc-rosso)', color: 'white', cursor: 'pointer', fontWeight: 700 }}>Elimina</button>
             </div>
           </div>
         </div>
       )}
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: '#1a1c24', border: '1px solid #00e5a0', borderRadius: 10, padding: '10px 20px', color: '#00e5a0', fontSize: '0.85rem', zIndex: 9999 }}>
+        <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: 'var(--dc-surface2)', border: '1px solid var(--dc-verde)', borderRadius: 10, padding: '10px 20px', color: 'var(--dc-verde)', fontSize: '0.85rem', zIndex: 9999 }}>
           {toast}
         </div>
       )}

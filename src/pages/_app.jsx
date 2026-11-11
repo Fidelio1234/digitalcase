@@ -40,12 +40,12 @@ function AuthProviderWrapper({ children }) {
     return (
       <div style={{
         display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-        height:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Mono',monospace",
+        height:'100vh', background:'var(--dc-bg)', color:'var(--dc-text)', fontFamily:"'DM Mono',monospace",
         gap:16
       }}>
         <div style={{fontSize:'3rem'}}>🚫</div>
-        <div style={{fontSize:'1.2rem', color:'#ff4d6a'}}>Negozio non trovato</div>
-        <div style={{fontSize:'0.8rem', color:'#5a5d6e'}}>Questo indirizzo non è associato a nessun negozio attivo.</div>
+        <div style={{fontSize:'1.2rem', color:'var(--dc-rosso)'}}>Negozio non trovato</div>
+        <div style={{fontSize:'0.8rem', color:'var(--dc-muted)'}}>Questo indirizzo non è associato a nessun negozio attivo.</div>
       </div>
     )
   }
@@ -63,9 +63,9 @@ function AuthProviderWrapper({ children }) {
 <AuthProvider negozioSlug={negozio?.slug || 'dmi'}>
       {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
         <div style={{
-          background:'#ffb83022', borderBottom:'2px solid #ffb830',
+          background:'rgba(var(--dc-ambra-rgb), 0.13)', borderBottom:'2px solid var(--dc-ambra)',
           padding:'8px 16px', textAlign:'center',
-          fontSize:'0.82rem', color:'#ffb830',
+          fontSize:'0.82rem', color:'var(--dc-ambra)',
           fontFamily:"'DM Mono',monospace"
         }}>
           ⚠️ Licenza in scadenza tra <strong>{negozio.giorniRimanenti} giorni</strong> — contatta il tuo rivenditore

@@ -172,19 +172,19 @@ router.replace(redirect)
         <div className={styles.bgGrid} />
         <div className={styles.bgGlow} />
         <div className={styles.logoWrap}>
-          <div className={styles.logoMark} style={{borderColor:'rgba(255,184,48,0.4)',background:'rgba(255,184,48,0.1)',boxShadow:'0 0 32px rgba(255,184,48,0.2)'}}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#ffb830" strokeWidth="2">
+          <div className={styles.logoMark} style={{borderColor:'rgba(var(--dc-ambra-rgb), 0.4)',background:'rgba(var(--dc-ambra-rgb), 0.1)',boxShadow:'0 0 32px rgba(var(--dc-ambra-rgb), 0.2)'}}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--dc-ambra)" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
           <div>
-            <div className={styles.logoName} style={{color:'#ffb830'}}>Accesso <span style={{color:'#ffb830'}}>Tecnico</span></div>
+            <div className={styles.logoName} style={{color:'var(--dc-ambra)'}}>Accesso <span style={{color:'var(--dc-ambra)'}}>Tecnico</span></div>
             <div className={styles.logoSub}>Area riservata</div>
           </div>
         </div>
         <div className={styles.pinPanel}>
           <div style={{display:'flex', flexDirection:'column', gap:16, width:'100%', maxWidth:320}}>
-            <div style={{fontSize:'0.75rem', color:'#5a5d6e', letterSpacing:2, textAlign:'center', fontFamily:"'DM Mono',monospace"}}>
+            <div style={{fontSize:'0.75rem', color:'var(--dc-muted)', letterSpacing:2, textAlign:'center', fontFamily:"'DM Mono',monospace"}}>
               PASSWORD TECNICO
             </div>
             <input
@@ -202,28 +202,28 @@ router.replace(redirect)
               autoFocus
               placeholder="Inserisci password..."
               style={{
-                background:'#111318', border:`1px solid ${techError ? '#ff4d6a' : '#252830'}`,
-                borderRadius:10, padding:'14px 16px', color:'#ffb830',
+                background:'var(--dc-surface)', border:`1px solid ${techError ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+                borderRadius:10, padding:'14px 16px', color:'var(--dc-ambra)',
                 fontSize:'1rem', fontFamily:"'DM Mono',monospace",
                 outline:'none', textAlign:'center', letterSpacing:4,
                 width:'100%', boxSizing:'border-box'
               }}
             />
-            {techError && <div style={{color:'#ff4d6a', fontSize:'0.8rem', textAlign:'center'}}>{techError}</div>}
+            {techError && <div style={{color:'var(--dc-rosso)', fontSize:'0.8rem', textAlign:'center'}}>{techError}</div>}
 
 
 
             <button onClick={() => checkTechPwd(techPin)}
-              style={{background:'#ffb830', border:'none', borderRadius:10, padding:'12px',
-                color:'#08090c', fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:700, cursor:'pointer'}}>
+              style={{background:'var(--dc-ambra)', border:'none', borderRadius:10, padding:'12px',
+                color:'var(--dc-bg)', fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:700, cursor:'pointer'}}>
               Entra
             </button>
 
 
 
             <button onClick={() => { setTechMode(false); setTechPin(''); setTechError('') }}
-              style={{background:'transparent', border:'1px solid #252830', borderRadius:10, padding:'10px',
-                color:'#eef0f6', fontFamily:"'DM Mono',monospace", fontSize:'0.8rem', cursor:'pointer'}}>
+              style={{background:'transparent', border:'1px solid var(--dc-border)', borderRadius:10, padding:'10px',
+                color:'var(--dc-text)', fontFamily:"'DM Mono',monospace", fontSize:'0.8rem', cursor:'pointer'}}>
               ← Torna al login
             </button>
           </div>
@@ -252,7 +252,7 @@ router.replace(redirect)
           onMouseLeave={handleLogoEnd} onTouchStart={handleLogoStart} onTouchEnd={handleLogoEnd}
           style={{cursor:'pointer', transition:'all 0.3s',
             transform: logoPressed ? 'scale(0.92)' : 'scale(1)',
-            boxShadow: logoPressed ? '0 0 32px rgba(0,229,160,0.5)' : '0 0 32px rgba(0,229,160,0.25)'
+            boxShadow: logoPressed ? '0 0 32px rgba(var(--dc-verde-rgb), 0.5)' : '0 0 32px rgba(var(--dc-verde-rgb), 0.25)'
           }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -272,9 +272,9 @@ router.replace(redirect)
       {logoPressed && (
         <div style={{
           position:'fixed', top:20, left:'50%', transform:'translateX(-50%)',
-          background:'rgba(255,184,48,0.15)', border:'1px solid #ffb830',
+          background:'rgba(var(--dc-ambra-rgb), 0.15)', border:'1px solid var(--dc-ambra)',
           borderRadius:10, padding:'8px 20px',
-          color:'#ffb830', fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", zIndex:100
+          color:'var(--dc-ambra)', fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", zIndex:100
         }}>
           ⏳ Tieni premuto ancora…
         </div>
@@ -282,7 +282,7 @@ router.replace(redirect)
 
       <div className={styles.userSelector}>
         {utenti.length === 0 && (
-          <div style={{color:'#5a5d6e', fontSize:'0.8rem', fontFamily:'monospace', padding:'10px'}}>
+          <div style={{color:'var(--dc-muted)', fontSize:'0.8rem', fontFamily:'monospace', padding:'10px'}}>
             ⏳ Connessione...
           </div>
         )}

@@ -33,7 +33,7 @@ function Timer({ apertoAlle }) {
   }, [apertoAlle])
   const m = Math.floor(elapsed / 60)
   const s = elapsed % 60
-  const color = elapsed > 1800 ? '#ff4d6a' : elapsed > 900 ? '#ffb830' : '#00e5a0'
+  const color = elapsed > 1800 ? 'var(--dc-rosso)' : elapsed > 900 ? 'var(--dc-ambra)' : 'var(--dc-verde)'
   return <span style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.75rem', color }}>{m}:{String(s).padStart(2,'0')}</span>
 }
 
@@ -243,20 +243,20 @@ export default function AsportoPage() {
 
 
   return (
-    <div style={{ height:'100vh', overflow:'hidden', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column' }}>
+    <div style={{ height:'100vh', overflow:'hidden', background:'var(--dc-bg)', color:'var(--dc-text)', fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column' }}>
 
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', borderBottom:'1px solid #1a1c24' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px', borderBottom:'1px solid var(--dc-surface2)' }}>
         <button onClick={() => { if (asportoAttivo) salvaAsportoDb(NEGOZIO_ID, asportoAttivo, righeComanda); router.replace('/cassa') }}
-          style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#00ffb3', padding:'12px 19px', cursor:'pointer', fontSize:'1rem' }}>
+          style={{ background:'transparent', border:'1px solid var(--dc-border)', borderRadius:10, color:'var(--dc-menta)', padding:'12px 19px', cursor:'pointer', fontSize:'1rem' }}>
           ← Cassa
         </button>
         <div style={{ flex:1 ,textAlign:'center'}}>
           <div style={{ fontSize:'1.5rem', fontWeight:700, }}>🛵 Asporto</div>
-          <div style={{ fontSize:'1.5rem', color:'#ffb830' }}>{asporti.length === 1 ? '1 ordine aperto' : `${asporti.length} ordini aperti`}</div>
+          <div style={{ fontSize:'1.5rem', color:'var(--dc-ambra)' }}>{asporti.length === 1 ? '1 ordine aperto' : `${asporti.length} ordini aperti`}</div>
         </div>
         <button onClick={() => setShowNuovoAsporto(true)}
-          style={{ background:'#00e5a0', border:'none', borderRadius:10, color:'#08090c', padding:'10px 20px', cursor:'pointer', fontSize:'0.82rem', fontWeight:700 }}>
+          style={{ background:'var(--dc-verde)', border:'none', borderRadius:10, color:'var(--dc-bg)', padding:'10px 20px', cursor:'pointer', fontSize:'0.82rem', fontWeight:700 }}>
           + Nuovo cliente
         </button>
       </div>
@@ -264,9 +264,9 @@ export default function AsportoPage() {
       <div style={{ display:'flex', flex:1, overflow:'hidden', minHeight:0 }}>
 
         {/* Lista asporti sx */}
-        <div style={{ width:220, borderRight:'1px solid #1a1c24', overflowY:'auto', padding:8, minHeight:0 }}>
+        <div style={{ width:220, borderRight:'1px solid var(--dc-surface2)', overflowY:'auto', padding:8, minHeight:0 }}>
           {asporti.length === 0 && (
-            <div style={{ textAlign:'center', color:'#ffb830', padding:20, fontSize:'0.8rem' }}>
+            <div style={{ textAlign:'center', color:'var(--dc-ambra)', padding:20, fontSize:'0.8rem' }}>
               <div style={{ fontSize:'2rem' }}>🛵</div>
               Nessun asporto aperto
             </div>
@@ -281,15 +281,15 @@ export default function AsportoPage() {
               onTouchEnd={() => clearTimeout(longPressTimer.current)}
               style={{
                 padding:'10px 12px', borderRadius:10, marginBottom:6, cursor:'pointer',
-                background: asportoAttivo === a.id ? '#1a2a1a' : '#111318',
-                border: `1px solid ${asportoAttivo === a.id ? '#00e5a0' : '#252830'}`,
+                background: asportoAttivo === a.id ? '#1a2a1a' : 'var(--dc-surface)',
+                border: `1px solid ${asportoAttivo === a.id ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
               }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <span style={{ fontSize:'0.72rem', color:'#ffb830' }}>#{a.numero}</span>
+                <span style={{ fontSize:'0.72rem', color:'var(--dc-ambra)' }}>#{a.numero}</span>
                 <Timer apertoAlle={a.aperto_alle} />
               </div>
               <div style={{ fontWeight:700, fontSize:'1.2rem', marginTop:2 }}>{a.nome_cliente}</div>
-              <div style={{ fontSize:'0.9rem', color:'#ffb830', marginTop:2 }}>
+              <div style={{ fontSize:'0.9rem', color:'var(--dc-ambra)', marginTop:2 }}>
               {fmtOra(a.aperto_alle)} · {(a.righe || []).length === 1 ? '1 prodotto' : `${(a.righe || []).length} prodotti`}
               </div>
             </div>
@@ -301,28 +301,28 @@ export default function AsportoPage() {
 
           {/* Header asporto attivo */}
           {asportoCorrente ? (
-            <div style={{ padding:'10px 16px', borderBottom:'1px solid #1a1c24', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--dc-surface2)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
                 <div style={{ fontWeight:700 }}>#{asportoCorrente.numero} — {asportoCorrente.nome_cliente}</div>
-                <div style={{ fontSize:'0.92rem', color:'#ffb830' }}>Chiamato alle {fmtOra(asportoCorrente.aperto_alle)}</div>
+                <div style={{ fontSize:'0.92rem', color:'var(--dc-ambra)' }}>Chiamato alle {fmtOra(asportoCorrente.aperto_alle)}</div>
               </div>
               <div style={{ display:'flex', gap:8 }}>
                 <button onClick={preconto}
-                  style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #252830', background:'transparent', color:'#ffb830', cursor:'pointer', fontSize:'0.98rem' }}>
+                  style={{ padding:'8px 12px', borderRadius:8, border:'1px solid var(--dc-border)', background:'transparent', color:'var(--dc-ambra)', cursor:'pointer', fontSize:'0.98rem' }}>
                   🖨️ Preconto
                 </button>
                 <button onClick={salvaComanda}
-                  style={{ padding:'8px 12px', borderRadius:8, border:'none', background:'#1a2a1a', color:'#00e5a0', cursor:'pointer', fontSize:'0.98rem' }}>
+                  style={{ padding:'8px 12px', borderRadius:8, border:'none', background:'#1a2a1a', color:'var(--dc-verde)', cursor:'pointer', fontSize:'0.98rem' }}>
                   💾 Salva
                 </button>
                 <button onClick={chiudiAsporto}
-                  style={{ padding:'8px 16px', borderRadius:8, border:'none', background:'#00e5a0', color:'#08090c', cursor:'pointer', fontSize:'0.92rem', fontWeight:700 }}>
+                  style={{ padding:'8px 16px', borderRadius:8, border:'none', background:'var(--dc-verde)', color:'var(--dc-bg)', cursor:'pointer', fontSize:'0.92rem', fontWeight:700 }}>
                   Cassa →
                 </button>
               </div>
             </div>
           ) : (
-            <div style={{ padding:20, textAlign:'center', color:'#ffb830', fontSize:'0.95rem' }}>
+            <div style={{ padding:20, textAlign:'center', color:'var(--dc-ambra)', fontSize:'0.95rem' }}>
               Seleziona un asporto o creane uno nuovo
             </div>
           )}
@@ -330,25 +330,25 @@ export default function AsportoPage() {
           {/* Lista righe */}
           <div style={{ flex:1, overflowY:'auto', padding:12, minHeight:0 }}>
             {righeComanda.length === 0 && asportoCorrente && (
-              <div style={{ textAlign:'center', color:'#ffb830', padding:40, fontSize:'0.85rem' }}>
+              <div style={{ textAlign:'center', color:'var(--dc-ambra)', padding:40, fontSize:'0.85rem' }}>
                 <div style={{ fontSize:'2rem' }}>🛵</div>
                 Aggiungi prodotti dall'ordine
               </div>
             )}
             {righeComanda.map((r, i) => (
-              <div key={r.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:'#111318', borderRadius:10, marginBottom:6, border:'1px solid #252830' }}>
+              <div key={r.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:'var(--dc-surface)', borderRadius:10, marginBottom:6, border:'1px solid var(--dc-border)' }}>
                 <div style={{ display:'flex', gap:10, alignItems:'center' }}>
                   <div style={{ width:32, height:32, borderRadius:8, background:r.colore+'22', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem' }}>
                     {ICONE[r.icona]||'📦'}
                   </div>
                   <div>
-                    <div style={{ fontSize:'0.85rem', fontWeight:600 }}>{r.nome} {r.quantita > 1 && <span style={{ color:'#00e5a0' }}>×{r.quantita}</span>}</div>
+                    <div style={{ fontSize:'0.85rem', fontWeight:600 }}>{r.nome} {r.quantita > 1 && <span style={{ color:'var(--dc-verde)' }}>×{r.quantita}</span>}</div>
                     {r.nota && (
                       <div style={{fontSize:'0.85rem', color: r.nota.startsWith('+') ? 'yellow' : 'red', marginTop:2}}>
                         📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                       </div>
                     )}
-                    <div style={{ fontSize:'0.72rem', color:'#5a5d6e' }}>€ {fmt(r.importo)} cad.</div>
+                    <div style={{ fontSize:'0.72rem', color:'var(--dc-muted)' }}>€ {fmt(r.importo)} cad.</div>
                   </div>
                 </div>
                 <div style={{ display:'flex', gap:8, alignItems:'center' }}>
@@ -362,9 +362,9 @@ export default function AsportoPage() {
                     }
                     return prev.filter(x => x.id !== r.id)
                   })}
-                    style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem' }}>×</button>
+                    style={{ background:'transparent', border:'none', color:'var(--dc-rosso)', cursor:'pointer', fontSize:'1rem' }}>×</button>
                   <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/, '') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
-                    style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px' }}>✏️</button>
+                    style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? 'var(--dc-ambra)' : 'var(--dc-muted)', fontSize:'0.9rem', padding:'2px' }}>✏️</button>
                 </div>
               </div>
             ))}
@@ -372,15 +372,15 @@ export default function AsportoPage() {
 
           {/* Totale */}
           {righeComanda.length > 0 && (
-            <div style={{ padding:'10px 16px', borderTop:'1px solid #1a1c24', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ color:'#5a5d6e', fontSize:'0.85rem' }}>TOTALE</span>
-              <span style={{ fontSize:'1.1rem', fontWeight:700, color:'#00e5a0', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totale)}</span>
+            <div style={{ padding:'10px 16px', borderTop:'1px solid var(--dc-surface2)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span style={{ color:'var(--dc-muted)', fontSize:'0.85rem' }}>TOTALE</span>
+              <span style={{ fontSize:'1.1rem', fontWeight:700, color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totale)}</span>
             </div>
           )}
 
           {/* Griglia prodotti */}
           {repartoAttivo && (
-            <div style={{ borderTop:'1px solid #1a1c24', padding:12, overflowY:'auto', maxHeight:220 }}>
+            <div style={{ borderTop:'1px solid var(--dc-surface2)', padding:12, overflowY:'auto', maxHeight:220 }}>
               {(() => {
                 const rep = reparti.find(r => r.id === repartoAttivo)
                 const prodotti = rep?.sottoreparti?.filter(s => s.abilitato) || []
@@ -394,7 +394,7 @@ export default function AsportoPage() {
                           {conteggio > 0 && (
                             <div style={{
                               position:'absolute', top:-8, right:-8,
-                              background: rep.colore, color:'#08090c',
+                              background: rep.colore, color:'var(--dc-bg)',
                               borderRadius:'50%', width:22, height:22,
                               display:'flex', alignItems:'center', justifyContent:'center',
                               fontSize:'0.72rem', fontWeight:700,
@@ -406,7 +406,7 @@ export default function AsportoPage() {
                             </div>
                           )}
                           {(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) && <div style={{ width:'100%', aspectRatio:'1 / 1', flexShrink:0, borderRadius:8, marginBottom:4, backgroundImage:'url("' + sr.immagine + '")', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }} />}
-<div style={{ fontSize:'0.82rem', fontWeight:600, color:'#eef0f6', ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : {}) }}>{sr.nome}</div>
+<div style={{ fontSize:'0.82rem', fontWeight:600, color:'var(--dc-text)', ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : {}) }}>{sr.nome}</div>
                           <div style={{ fontSize:'0.75rem', color:rep.colore, marginTop:4, ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'1.05rem', fontWeight:700 } : {}) }}>€ {fmt(sr.prezzoFisso)}</div>
                         </button>
                       )
@@ -419,8 +419,8 @@ export default function AsportoPage() {
         </div>
 
         {/* Reparti dx */}
-        <div style={{ width:160, borderLeft:'1px solid #1a1c24', overflowY:'auto', padding:8, minHeight:0 }}>
-          <div style={{ fontSize:'1.25rem', color:'#ffb830', letterSpacing:2, padding:'4px 8px', marginBottom:4 }}>REPARTI</div>
+        <div style={{ width:160, borderLeft:'1px solid var(--dc-surface2)', overflowY:'auto', padding:8, minHeight:0 }}>
+          <div style={{ fontSize:'1.25rem', color:'var(--dc-ambra)', letterSpacing:2, padding:'4px 8px', marginBottom:4 }}>REPARTI</div>
           {reparti.map(r => {
             const conteggio = contaOrdiniPerReparto(r.id)
             return (
@@ -429,13 +429,13 @@ export default function AsportoPage() {
                   width:'100%', padding:'10px 8px', marginBottom:4, borderRadius:8, cursor:'pointer', textAlign:'left',
                   border:`1px solid ${repartoAttivo === r.id ? r.colore : 'transparent'}`,
                   background: repartoAttivo === r.id ? r.colore+'15' : 'transparent',
-                  color:'#eef0f6', fontSize:'0.82rem', display:'flex', alignItems:'center', gap:6,
+                  color:'var(--dc-text)', fontSize:'0.82rem', display:'flex', alignItems:'center', gap:6,
                   position:'relative',
                 }}>
                 {conteggio > 0 && (
                   <div style={{
                     position:'absolute', top:-6, right:-6,
-                    background: r.colore, color:'#08090c',
+                    background: r.colore, color:'var(--dc-bg)',
                     borderRadius:'50%', width:20, height:20,
                     display:'flex', alignItems:'center', justifyContent:'center',
                     fontSize:'0.68rem', fontWeight:700,
@@ -464,21 +464,21 @@ export default function AsportoPage() {
       {/* MODAL NOTA */}
       {notaModal !== null && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:360,maxHeight:'90vh',overflowY:'auto',display:'flex',flexDirection:'column',gap:16}}>
-            <div style={{fontSize:'0.9rem',fontWeight:700,color:'#eef0f6'}}>
+          <div style={{background:'var(--dc-surface)',border:'1px solid var(--dc-border)',borderRadius:20,padding:24,width:360,maxHeight:'90vh',overflowY:'auto',display:'flex',flexDirection:'column',gap:16}}>
+            <div style={{fontSize:'0.9rem',fontWeight:700,color:'var(--dc-text)'}}>
               ✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}
             </div>
             <div style={{display:'flex',gap:8}}>
               <button onClick={() => { if (notaTipo !== 'rimozione') setAggiunte([]); setNotaTipo('rimozione') }}
-                style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
-                  background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
-                  color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700}}>
+                style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='rimozione' ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+                  background: notaTipo==='rimozione' ? 'rgba(var(--dc-rosso-rgb), 0.15)' : 'transparent',
+                  color: notaTipo==='rimozione' ? 'var(--dc-rosso)' : 'var(--dc-muted)', cursor:'pointer', fontWeight:700}}>
                 − Rimozione
               </button>
               <button onClick={() => { if (notaTipo !== 'aggiunta') setAggiunte([]); setNotaTipo('aggiunta') }}
-                style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
-                  background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
-                  color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700}}>
+                style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='aggiunta' ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+                  background: notaTipo==='aggiunta' ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'transparent',
+                  color: notaTipo==='aggiunta' ? 'var(--dc-verde)' : 'var(--dc-muted)', cursor:'pointer', fontWeight:700}}>
                 + Aggiunta
               </button>
             </div>
@@ -486,7 +486,7 @@ export default function AsportoPage() {
               const nomiRim = [...new Set(impostazioni.aggiunteRapide.map(a => a.nome))]
               return (
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  <div style={{ fontSize:'0.8rem', color:'#ff4d6a', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
+                  <div style={{ fontSize:'0.8rem', color:'var(--dc-rosso)', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
                   <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                     {nomiRim.map(item => {
                       const selected = aggiunte.some(a => a.nome === item)
@@ -495,9 +495,9 @@ export default function AsportoPage() {
                           onClick={() => setAggiunte(prev => prev.some(a => a.nome === item) ? prev.filter(a => a.nome !== item) : [...prev, { nome: item, costo: 0 }])}
                           style={{
                             padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                            border: `1px solid ${selected ? '#ff4d6a' : '#252830'}`,
-                            background: selected ? 'rgba(255,77,106,0.15)' : '#1a1c24',
-                            color: selected ? '#ff4d6a' : '#eef0f6',
+                            border: `1px solid ${selected ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+                            background: selected ? 'rgba(var(--dc-rosso-rgb), 0.15)' : 'var(--dc-surface2)',
+                            color: selected ? 'var(--dc-rosso)' : 'var(--dc-text)',
                             fontWeight: selected ? 700 : 400,
                           }}>
                           {item}
@@ -506,7 +506,7 @@ export default function AsportoPage() {
                     })}
                   </div>
                   {aggiunte.length > 0 && (
-                    <div style={{ fontSize:'0.75rem', color:'#ff4d6a', background:'rgba(255,77,106,0.1)', borderRadius:8, padding:'6px 10px' }}>
+                    <div style={{ fontSize:'0.75rem', color:'var(--dc-rosso)', background:'rgba(var(--dc-rosso-rgb), 0.1)', borderRadius:8, padding:'6px 10px' }}>
                       Senza: {aggiunte.map(a => a.nome).join(', ')}
                     </div>
                   )}
@@ -522,10 +522,10 @@ export default function AsportoPage() {
               const tiers = Object.entries(gruppiMap).map(([costo, st]) => ({ costo: parseInt(costo), items: [...st] })).sort((a,b) => a.costo - b.costo)
               return (
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>AGGIUNTE RAPIDE</div>
+                  <div style={{ fontSize:'0.8rem', color:'var(--dc-menta)', letterSpacing:1 }}>AGGIUNTE RAPIDE</div>
                   {tiers.map(({ costo, items }) => (
                     <div key={costo}>
-                      <div style={{ fontSize:'0.82rem', color:'#ffb830', marginBottom:4 }}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
+                      <div style={{ fontSize:'0.82rem', color:'var(--dc-ambra)', marginBottom:4 }}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
                       <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                         {items.map(item => {
                           const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
@@ -538,9 +538,9 @@ export default function AsportoPage() {
                               })}
                               style={{
                                 padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                                border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
-                                background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
-                                color: selected ? '#00e5a0' : '#eef0f6',
+                                border: `1px solid ${selected ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+                                background: selected ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-surface2)',
+                                color: selected ? 'var(--dc-verde)' : 'var(--dc-text)',
                                 fontWeight: selected ? 700 : 400,
                               }}>
                               {item}
@@ -551,7 +551,7 @@ export default function AsportoPage() {
                     </div>
                   ))}
                   {aggiunte.length > 0 && (
-                    <div style={{ fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px' }}>
+                    <div style={{ fontSize:'0.75rem', color:'var(--dc-verde)', background:'rgba(var(--dc-verde-rgb), 0.1)', borderRadius:8, padding:'6px 10px' }}>
                       💰 Totale: +€{(aggiunte.reduce((t,a) => t + a.costo, 0)/100).toFixed(2).replace('.',',')} — {aggiunte.map(a => a.nome).join(', ')}
                     </div>
                   )}
@@ -561,11 +561,11 @@ export default function AsportoPage() {
             <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value)}
               placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi...'}
               rows={3}
-              style={{background:'#1a1c24',border:'1px solid #252830',borderRadius:10,padding:12,color:'#eef0f6',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
+              style={{background:'var(--dc-surface2)',border:'1px solid var(--dc-border)',borderRadius:10,padding:12,color:'var(--dc-text)',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
             />
             <div style={{display:'flex',gap:10}}>
               <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
-                style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid #252830',color:'#eef0f6',cursor:'pointer'}}>
+                style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid var(--dc-border)',color:'var(--dc-text)',cursor:'pointer'}}>
                 Annulla
               </button>
               <button onClick={() => {
@@ -582,7 +582,7 @@ export default function AsportoPage() {
                 }
                 setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([])
               }}
-                style={{flex:1,padding:12,borderRadius:10,background:'#00e5a0',border:'none',color:'#08090c',fontWeight:700,cursor:'pointer'}}>
+                style={{flex:1,padding:12,borderRadius:10,background:'var(--dc-verde)',border:'none',color:'var(--dc-bg)',fontWeight:700,cursor:'pointer'}}>
                 Salva
               </button>
             </div>
@@ -591,8 +591,8 @@ export default function AsportoPage() {
       )}
       {showNuovoAsporto && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ background:'#111318', border:'2px solid #00e5a0', borderRadius:16, padding:28, width:340 }}>
-            <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#00e5a0', marginBottom:16 }}>🛵 Nuovo Asporto</div>
+          <div style={{ background:'var(--dc-surface)', border:'2px solid var(--dc-verde)', borderRadius:16, padding:28, width:340 }}>
+            <div style={{ fontSize:'1.1rem', fontWeight:700, color:'var(--dc-verde)', marginBottom:16 }}>🛵 Nuovo Asporto</div>
             <input
               type="text"
               value={nomeCliente}
@@ -600,15 +600,15 @@ export default function AsportoPage() {
               onKeyDown={e => e.key === 'Enter' && creaNuovoAsporto()}
               placeholder="Cognome e Nome cliente..."
               autoFocus
-              style={{ width:'100%', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, padding:'12px', color:'#eef0f6', fontSize:'1rem', boxSizing:'border-box', outline:'none', marginBottom:16 }}
+              style={{ width:'100%', background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:10, padding:'12px', color:'var(--dc-text)', fontSize:'1rem', boxSizing:'border-box', outline:'none', marginBottom:16 }}
             />
             <div style={{ display:'flex', gap:12 }}>
               <button onClick={() => { setShowNuovoAsporto(false); setNomeCliente('') }}
-                style={{ flex:1, padding:'12px', borderRadius:10, border:'1px solid #252830', background:'transparent', color:'#eef0f6', cursor:'pointer' }}>
+                style={{ flex:1, padding:'12px', borderRadius:10, border:'1px solid var(--dc-border)', background:'transparent', color:'var(--dc-text)', cursor:'pointer' }}>
                 Annulla
               </button>
               <button onClick={creaNuovoAsporto}
-                style={{ flex:1, padding:'12px', borderRadius:10, border:'none', background:'#00e5a0', color:'#08090c', cursor:'pointer', fontWeight:700 }}>
+                style={{ flex:1, padding:'12px', borderRadius:10, border:'none', background:'var(--dc-verde)', color:'var(--dc-bg)', cursor:'pointer', fontWeight:700 }}>
                 ✓ Crea
               </button>
             </div>
@@ -619,16 +619,16 @@ export default function AsportoPage() {
       {/* MODAL ELIMINA */}
       {showElimina && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ background:'#111318', border:'2px solid #ff4d6a', borderRadius:16, padding:28, width:320 }}>
-            <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#ff4d6a', marginBottom:8 }}>🗑️ Elimina asporto?</div>
-            <div style={{ fontSize:'0.85rem', color:'#ffb830', marginBottom:20 }}>L'ordine verrà eliminato definitivamente.</div>
+          <div style={{ background:'var(--dc-surface)', border:'2px solid var(--dc-rosso)', borderRadius:16, padding:28, width:320 }}>
+            <div style={{ fontSize:'1.1rem', fontWeight:700, color:'var(--dc-rosso)', marginBottom:8 }}>🗑️ Elimina asporto?</div>
+            <div style={{ fontSize:'0.85rem', color:'var(--dc-ambra)', marginBottom:20 }}>L'ordine verrà eliminato definitivamente.</div>
             <div style={{ display:'flex', gap:12 }}>
               <button onClick={() => setShowElimina(null)}
-                style={{ flex:1, padding:'12px', borderRadius:10, border:'1px solid #252830', background:'transparent', color:'#eef0f6', cursor:'pointer' }}>
+                style={{ flex:1, padding:'12px', borderRadius:10, border:'1px solid var(--dc-border)', background:'transparent', color:'var(--dc-text)', cursor:'pointer' }}>
                 Annulla
               </button>
               <button onClick={confermaElimina}
-                style={{ flex:1, padding:'12px', borderRadius:10, border:'none', background:'#ff4d6a', color:'white', cursor:'pointer', fontWeight:700 }}>
+                style={{ flex:1, padding:'12px', borderRadius:10, border:'none', background:'var(--dc-rosso)', color:'white', cursor:'pointer', fontWeight:700 }}>
                 Elimina
               </button>
             </div>
@@ -637,7 +637,7 @@ export default function AsportoPage() {
       )}
 
 {toast && (
-        <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%, -50%)', background:'#1a1c24', border:'1px solid #00e5a0', borderRadius:10, padding:'50px 60px', color:'#00e5a0', fontSize:'1.5rem', zIndex:9999 }}>
+        <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%, -50%)', background:'var(--dc-surface2)', border:'1px solid var(--dc-verde)', borderRadius:10, padding:'50px 60px', color:'var(--dc-verde)', fontSize:'1.5rem', zIndex:9999 }}>
           {toast}
         </div>
       )}

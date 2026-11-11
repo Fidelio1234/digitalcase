@@ -216,7 +216,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
   const fmt = (cents) => cents ? (cents / 100).toFixed(2).replace('.', ',') : '0,00'
 
   if (loading) return (
-    <div style={{minHeight:'100vh',background:'#08090c',display:'flex',alignItems:'center',justifyContent:'center',color:'#ffb830',fontFamily:'monospace'}}>
+    <div style={{minHeight:'100vh',background:'var(--dc-bg)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--dc-ambra)',fontFamily:'monospace'}}>
       ⏳ Caricamento dati...
     </div>
   )
@@ -304,8 +304,8 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                     {u.ruolo === 'owner' ? '👑' : '👤'} {u.nome}
                     <span style={{
                       marginLeft:8, fontSize:'0.65rem', padding:'2px 8px',
-                      borderRadius:6, background: u.abilitato ? 'rgba(0,229,160,0.15)' : 'rgba(255,77,106,0.15)',
-                      color: u.abilitato ? '#00e5a0' : '#ff4d6a'
+                      borderRadius:6, background: u.abilitato ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'rgba(var(--dc-rosso-rgb), 0.15)',
+                      color: u.abilitato ? 'var(--dc-verde)' : 'var(--dc-rosso)'
                     }}>
                       {u.abilitato ? 'ATTIVO' : 'DISABILITATO'}
                     </span>
@@ -320,7 +320,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                   {/* PIN display/edit */}
                   {editingPin === u.id ? (
                     <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8}}>
-                      <span style={{fontSize:'0.75rem',color:'#5a5d6e'}}>Nuovo PIN (8 cifre):</span>
+                      <span style={{fontSize:'0.75rem',color:'var(--dc-muted)'}}>Nuovo PIN (8 cifre):</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -339,8 +339,8 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                       <span style={{fontSize:'0.75rem',color:'white'}}>PIN:</span>
                       <span style={{
                         fontFamily:'monospace', fontSize:'0.9rem',
-                        color:'#ffb830', letterSpacing:3,
-                        background:'rgba(255,184,48,0.1)',
+                        color:'var(--dc-ambra)', letterSpacing:3,
+                        background:'rgba(var(--dc-ambra-rgb), 0.1)',
                         padding:'2px 10px', borderRadius:6,
                       }}>
                         {'●'.repeat(8)}
@@ -373,13 +373,13 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
 <div className={styles.section}>
   <div className={styles.sectionTitle}>📊 Dashboard Titolare</div>
   <div style={{display:'flex', flexDirection:'column', gap:16}}>
-    <div style={{fontSize:'0.78rem', color:'#5a5d6e'}}>
+    <div style={{fontSize:'0.78rem', color:'var(--dc-muted)'}}>
       Password per accedere alla dashboard di monitoraggio remoto.<br/>
-      Il titolare la usa su <strong style={{color:'#00e5a0'}}>dmi.digitalcase.it/dashboard</strong>
+      Il titolare la usa su <strong style={{color:'var(--dc-verde)'}}>dmi.digitalcase.it/dashboard</strong>
     </div>
     <div style={{display:'flex', alignItems:'flex-end', gap:10}}>
       <div style={{flex:1}}>
-        <div style={{fontSize:'0.85rem', fontWeight:600, color:'#eef0f6', marginBottom:6}}>
+        <div style={{fontSize:'0.85rem', fontWeight:600, color:'var(--dc-text)', marginBottom:6}}>
           Password dashboard
         </div>
         <div style={{position:'relative'}}>
@@ -389,9 +389,9 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
             onChange={e => setDashboardPassword(e.target.value)}
             placeholder="Es. Ristorante2026!"
             style={{
-              width:'100%', background:'#1a1c24', border:'1px solid #252830',
+              width:'100%', background:'var(--dc-surface2)', border:'1px solid var(--dc-border)',
               borderRadius:10, padding:'10px 40px 10px 12px',
-              color:'#00e5a0', fontFamily:"'DM Mono',monospace",
+              color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace",
               fontSize:'1rem', letterSpacing:2, boxSizing:'border-box',
             }}
           />
@@ -400,7 +400,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
             style={{
               position:'absolute', right:10, top:'50%', transform:'translateY(-50%)',
               background:'none', border:'none', cursor:'pointer',
-              color:'#5a5d6e', fontSize:'0.85rem',
+              color:'var(--dc-muted)', fontSize:'0.85rem',
             }}
           >
             {showDashboardPassword ? '🙈' : '👁'}
@@ -411,7 +411,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
         onClick={saveDashboardPassword}
         style={{
           padding:'10px 16px', borderRadius:10, border:'none',
-          background:'#00e5a0', color:'#08090c',
+          background:'var(--dc-verde)', color:'var(--dc-bg)',
           fontWeight:700, cursor:'pointer', marginBottom:0,
           whiteSpace:'nowrap',
         }}
@@ -423,8 +423,8 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
       onClick={() => window.open('/dashboard', '_blank')}
       style={{
         padding:'10px 16px', borderRadius:10,
-        border:'1px solid #00e5a044', background:'rgba(0,229,160,0.08)',
-        color:'#00e5a0', cursor:'pointer', fontSize:'0.82rem',
+        border:'1px solid rgba(var(--dc-verde-rgb), 0.27)', background:'rgba(var(--dc-verde-rgb), 0.08)',
+        color:'var(--dc-verde)', cursor:'pointer', fontSize:'0.82rem',
         fontFamily:"'DM Mono',monospace", textAlign:'left',
       }}
     >
@@ -445,7 +445,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             {reparti.map(r => (
               <div key={r.id} style={{
-                background:'#1a1c24', borderRadius:12,
+                background:'var(--dc-surface2)', borderRadius:12,
                 border:`1px solid ${r.abilitato ? r.colore + '44' : '#252830'}`,
                 overflow:'hidden'
               }}>
@@ -463,7 +463,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                   </div>
                   <div style={{flex:1}}>
                     <div style={{fontSize:'0.9rem',fontWeight:500}}>{r.nome}</div>
-                    <div style={{fontSize:'0.72rem',color:'#00e5a0',marginTop:2}}>
+                    <div style={{fontSize:'0.72rem',color:'var(--dc-verde)',marginTop:2}}>
                       IVA {r.iva}% · max €{fmt(r.massimoImporto)} · {r.sottoreparti?.length || 0} prodotti
                     </div>
                   </div>
@@ -473,21 +473,21 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                       style={{
                         padding:'3px 10px',borderRadius:6,border:'none',cursor:'pointer',
                         fontSize:'0.65rem',fontWeight:500,letterSpacing:1,
-                        background: r.abilitato ? 'rgba(0,229,160,0.15)' : '#252830',
-                        color: r.abilitato ? '#00e5a0' : '#5a5d6e',
+                        background: r.abilitato ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-border)',
+                        color: r.abilitato ? 'var(--dc-verde)' : 'var(--dc-muted)',
                       }}
                     >
                       {r.abilitato ? 'ON' : 'OFF'}
                     </button>
                     <button
                       onClick={() => setExpandedReparto(expandedReparto === r.id ? null : r.id)}
-                      style={{background:'transparent',border:'1px solid #252830',borderRadius:8,padding:'4px 8px',cursor:'pointer',color:'#5a5d6e',fontSize:'0.75rem'}}
+                      style={{background:'transparent',border:'1px solid var(--dc-border)',borderRadius:8,padding:'4px 8px',cursor:'pointer',color:'var(--dc-muted)',fontSize:'0.75rem'}}
                     >
                       {expandedReparto === r.id ? '▲' : '▼'}
                     </button>
                     <button
                       onClick={() => deleteReparto(r)}
-                      style={{background:'transparent',border:'1px solid #252830',borderRadius:8,padding:'4px 8px',cursor:'pointer',color:'#ff4d6a',fontSize:'0.75rem'}}
+                      style={{background:'transparent',border:'1px solid var(--dc-border)',borderRadius:8,padding:'4px 8px',cursor:'pointer',color:'var(--dc-rosso)',fontSize:'0.75rem'}}
                     >
                       🗑️
                     </button>
@@ -496,18 +496,18 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
 
                 {/* Sottoreparti */}
                 {expandedReparto === r.id && r.sottoreparti?.length > 0 && (
-                  <div style={{borderTop:'1px solid #252830',padding:'8px 12px',display:'flex',flexDirection:'column',gap:6}}>
+                  <div style={{borderTop:'1px solid var(--dc-border)',padding:'8px 12px',display:'flex',flexDirection:'column',gap:6}}>
                     {r.sottoreparti.map(p => (
                       <div key={p.id} style={{
                         display:'flex',alignItems:'center',gap:10,
-                        padding:'8px 12px',background:'#111318',borderRadius:8,
+                        padding:'8px 12px',background:'var(--dc-surface)',borderRadius:8,
                         opacity: p.abilitato ? 1 : 0.5,
                         border:`1px solid ${r.colore}33`
                       }}>
                         <div style={{width:8,height:8,borderRadius:'50%',background:r.colore,flexShrink:0}} />
                         <div style={{flex:1}}>
                           <div style={{fontSize:'0.85rem'}}>{p.nome}</div>
-                          <div style={{fontSize:'0.7rem',color:'#5a5d6e'}}>
+                          <div style={{fontSize:'0.7rem',color:'var(--dc-muted)'}}>
                             €{fmt(p.prezzo_fisso || p.prezzoFisso)} · IVA {p.iva_override ?? r.iva}%
                           </div>
                         </div>
@@ -516,15 +516,15 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                           style={{
                             padding:'2px 8px',borderRadius:5,border:'none',cursor:'pointer',
                             fontSize:'0.62rem',
-                            background: p.abilitato ? 'rgba(0,229,160,0.15)' : '#252830',
-                            color: p.abilitato ? '#00e5a0' : '#5a5d6e',
+                            background: p.abilitato ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-border)',
+                            color: p.abilitato ? 'var(--dc-verde)' : 'var(--dc-muted)',
                           }}
                         >
                           {p.abilitato ? 'ON' : 'OFF'}
                         </button>
                         <button
                           onClick={() => deleteProdotto(r.id, p)}
-                          style={{background:'transparent',border:'none',cursor:'pointer',color:'#ff4d6a',fontSize:'0.8rem'}}
+                          style={{background:'transparent',border:'none',cursor:'pointer',color:'var(--dc-rosso)',fontSize:'0.8rem'}}
                         >
                           🗑️
                         </button>
@@ -534,7 +534,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                 )}
 
                 {expandedReparto === r.id && (!r.sottoreparti || r.sottoreparti.length === 0) && (
-                  <div style={{borderTop:'1px solid #252830',padding:'12px 16px',color:'#5a5d6e',fontSize:'0.8rem',textAlign:'center'}}>
+                  <div style={{borderTop:'1px solid var(--dc-border)',padding:'12px 16px',color:'var(--dc-muted)',fontSize:'0.8rem',textAlign:'center'}}>
                     Nessun prodotto
                   </div>
                 )}
@@ -584,8 +584,8 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
         </div>
 
         {/* ── RESET ── */}
-        <div className={styles.section} style={{borderColor:'rgba(255,77,106,0.3)'}}>
-          <div className={styles.sectionTitle} style={{color:'#ff4d6a'}}>⚠️ Reset Sistema</div>
+        <div className={styles.section} style={{borderColor:'rgba(var(--dc-rosso-rgb), 0.3)'}}>
+          <div className={styles.sectionTitle} style={{color:'var(--dc-rosso)'}}>⚠️ Reset Sistema</div>
           <p className={styles.resetDesc}>
             Pulisce i dati locali del browser (cache, localStorage).<br/>
             I dati su Supabase non vengono eliminati.
@@ -654,14 +654,14 @@ function SezioneNonRiscosso({ negozioId, showToast }) {
   return (
     <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12}}>
       <div style={{fontSize:'0.82rem', color:'white'}}>
-        Mostra il pulsante <strong style={{color:'#00e5a0'}}>🛵 Non riscosso (Glovo)</strong> in cassa alla chiusura.<br/>
+        Mostra il pulsante <strong style={{color:'var(--dc-verde)'}}>🛵 Non riscosso (Glovo)</strong> in cassa alla chiusura.<br/>
         Funziona solo con registratore 3i.
       </div>
       <button onClick={toggle} disabled={!loaded}
         style={{padding:'6px 14px', borderRadius:8, border:'none', cursor:'pointer',
           fontSize:'0.7rem', fontWeight:700, letterSpacing:1,
-          background: attivo ? 'rgba(0,229,160,0.15)' : '#252830',
-          color: attivo ? '#00e5a0' : '#5a5d6e'}}>
+          background: attivo ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-border)',
+          color: attivo ? 'var(--dc-verde)' : 'var(--dc-muted)'}}>
         {attivo ? 'ON' : 'OFF'}
       </button>
     </div>
@@ -689,17 +689,17 @@ function SezioneFatturazione({ negozioId, showToast }) {
     showToast(nuovo ? '✓ Fatturazione attivata' : '✓ Fatturazione disattivata')
   }
 
-  if (!loaded) return <div style={{ color: '#5a5d6e' }}>Caricamento…</div>
+  if (!loaded) return <div style={{ color: 'var(--dc-muted)' }}>Caricamento…</div>
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <div>
-        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#eef0f6' }}>Modulo Fatturazione</div>
-        <div style={{ fontSize: '0.72rem', color: '#5a5d6e', marginTop: 2 }}>Abilita l'emissione di fatture elettroniche (pagina /fatture)</div>
+        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--dc-text)' }}>Modulo Fatturazione</div>
+        <div style={{ fontSize: '0.72rem', color: 'var(--dc-muted)', marginTop: 2 }}>Abilita l'emissione di fatture elettroniche (pagina /fatture)</div>
       </div>
       <div onClick={toggle}
         style={{ width: 44, height: 24, borderRadius: 12, cursor: 'pointer',
-          background: attivo ? '#00e5a0' : '#252830', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+          background: attivo ? 'var(--dc-verde)' : 'var(--dc-border)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
         <div style={{ position: 'absolute', top: 2, left: attivo ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left 0.2s' }} />
       </div>
     </div>
@@ -757,26 +757,26 @@ function SezionePalmari({ showToast }) {
     ? new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
     : '—'
 
-  if (!dati) return <div style={{ color: '#5a5d6e' }}>Caricamento…</div>
+  if (!dati) return <div style={{ color: 'var(--dc-muted)' }}>Caricamento…</div>
   const attivi = dati.palmari.filter(p => p.attivo).length
-  const campo = { background: '#252830', border: 'none', borderRadius: 8, color: '#eef0f6', padding: '8px 10px', fontSize: '0.9rem' }
+  const campo = { background: 'var(--dc-border)', border: 'none', borderRadius: 8, color: 'var(--dc-text)', padding: '8px 10px', fontSize: '0.9rem' }
   const bottone = { border: 'none', borderRadius: 8, padding: '8px 14px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {daDisattivare && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
+        <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
           <div style={{ width:'100%', maxWidth:340, background:'#13151c', borderRadius:16, padding:22, textAlign:'center' }}>
             <div style={{ fontSize:'1.6rem', marginBottom:6 }}>📱</div>
-            <div style={{ fontWeight:700, color:'#eef0f6', marginBottom:6 }}>Disattivare il palmare?</div>
+            <div style={{ fontWeight:700, color:'var(--dc-text)', marginBottom:6 }}>Disattivare il palmare?</div>
             <div style={{ fontSize:'0.8rem', color:'#8a8d9e', marginBottom:16 }}>
               «{daDisattivare.nome || 'Palmare senza nome'}» smetterà di funzionare entro un minuto. Per riattivarlo servirà un nuovo codice.
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <button onClick={() => setDaDisattivare(null)} disabled={occupato}
-                style={{ ...bottone, flex:1, background:'#252830', color:'#eef0f6' }}>Annulla</button>
+                style={{ ...bottone, flex:1, background:'var(--dc-border)', color:'var(--dc-text)' }}>Annulla</button>
               <button onClick={() => disattiva(daDisattivare.id)} disabled={occupato}
-                style={{ ...bottone, flex:1, background:'#ff6b6b', color:'#08090c' }}>Disattiva</button>
+                style={{ ...bottone, flex:1, background:'#ff6b6b', color:'var(--dc-bg)' }}>Disattiva</button>
             </div>
           </div>
         </div>
@@ -792,27 +792,27 @@ function SezionePalmari({ showToast }) {
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <input type="number" min="0" max="20" value={maxInput} onChange={e => setMaxInput(e.target.value)}
           style={{ ...campo, width: 80 }} />
-        <button onClick={salvaMax} disabled={occupato} style={{ ...bottone, background: '#252830', color: '#eef0f6' }}>
+        <button onClick={salvaMax} disabled={occupato} style={{ ...bottone, background: 'var(--dc-border)', color: 'var(--dc-text)' }}>
           Salva massimo
         </button>
-        <button onClick={genera} disabled={occupato} style={{ ...bottone, background: '#00e5a0', color: '#08090c' }}>
+        <button onClick={genera} disabled={occupato} style={{ ...bottone, background: 'var(--dc-verde)', color: 'var(--dc-bg)' }}>
           Genera codice
         </button>
       </div>
 
       {codice && (
-        <div style={{ background: '#252830', borderRadius: 10, padding: 14, textAlign: 'center' }}>
-          <div style={{ fontSize: '1.8rem', letterSpacing: '0.25em', fontWeight: 700, color: '#00e5a0', fontFamily: 'monospace' }}>
+        <div style={{ background: 'var(--dc-border)', borderRadius: 10, padding: 14, textAlign: 'center' }}>
+          <div style={{ fontSize: '1.8rem', letterSpacing: '0.25em', fontWeight: 700, color: 'var(--dc-verde)', fontFamily: 'monospace' }}>
             {codice.codice}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#5a5d6e', marginTop: 6 }}>
+          <div style={{ fontSize: '0.72rem', color: 'var(--dc-muted)', marginTop: 6 }}>
             Inseriscilo sul telefono entro le {new Date(codice.scade_il).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}. Si usa una sola volta.
           </div>
         </div>
       )}
 
       {dati.palmari.length === 0 && (
-        <div style={{ fontSize: '0.78rem', color: '#5a5d6e' }}>Nessun telefono attivato.</div>
+        <div style={{ fontSize: '0.78rem', color: 'var(--dc-muted)' }}>Nessun telefono attivato.</div>
       )}
       {dati.palmari.map(p => (
         <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, opacity: p.attivo ? 1 : 0.45 }}>

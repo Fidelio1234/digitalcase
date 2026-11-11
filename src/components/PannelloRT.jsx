@@ -266,7 +266,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
   }
 
   const btnStyle = (color) => {
-    const c = color || '#252830'
+    const c = color || 'var(--dc-border)'
     return {
       padding:'10px 16px', borderRadius:10,
       border:'1px solid ' + c + '44',
@@ -281,7 +281,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
 
   const inputStyle = {
     width:'100%', boxSizing:'border-box',
-    background:'#1a1c24', border:'1px solid #252830',
+    background:'var(--dc-surface2)', border:'1px solid var(--dc-border)',
     borderRadius:6, padding:'4px 8px',
     color:'#00ff00', fontSize:'1.1rem', textAlign:'center',
     fontFamily:"'DM Mono',monospace"
@@ -298,17 +298,17 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
         <div onClick={() => setPannelloAperto(!pannelloAperto)} style={{
           padding:'8px 14px', cursor:'pointer',
           display:'flex', alignItems:'center', gap:8,
-          background:'#1a1c24', borderRadius:10, border:'1px solid #252830',
+          background:'var(--dc-surface2)', borderRadius:10, border:'1px solid var(--dc-border)',
         }}>
           <div style={{
             width:8, height:8, borderRadius:'50%',
-            background: rtConfig.attivo ? '#00e5a0' : '#5a5d6e',
-            boxShadow: rtConfig.attivo ? '0 0 8px #00e5a0' : 'none'
+            background: rtConfig.attivo ? 'var(--dc-verde)' : 'var(--dc-muted)',
+            boxShadow: rtConfig.attivo ? '0 0 8px var(--dc-verde)' : 'none'
           }} />
           <span style={{fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", color:'yellow'}}>
             MENU RT {rtConfig.marca?.toUpperCase()}
           </span>
-          <span style={{color:'#5a5d6e', fontSize:'0.75rem'}}>{pannelloAperto ? '▼' : '▲'}</span>
+          <span style={{color:'var(--dc-muted)', fontSize:'0.75rem'}}>{pannelloAperto ? '▼' : '▲'}</span>
         </div>
         {rtConfig.attivo && rtConfig.ip && (
           <button
@@ -316,8 +316,8 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
             title="Apri cassetto"
             style={{
               padding:'8px 12px', cursor:'pointer',
-              background:'#1a1c24', borderRadius:10, border:'1px solid #ffb830',
-              color:'#ffb830', fontSize:'0.78rem', fontWeight:700, marginLeft:50,
+              background:'var(--dc-surface2)', borderRadius:10, border:'1px solid var(--dc-ambra)',
+              color:'var(--dc-ambra)', fontSize:'0.78rem', fontWeight:700, marginLeft:50,
               fontFamily:"'DM Mono',monospace",
             }}>
             🗃️ Apri Cassetto 
@@ -331,11 +331,11 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
       {pannelloAperto && (
         <div style={{
           position:'fixed', inset:0, zIndex:500,
-          background:'rgba(8,9,12,0.85)',
+          background:'rgba(var(--dc-bg-rgb), 0.85)',
           display:'flex', alignItems:'center', justifyContent:'center',
         }} onClick={() => setPannelloAperto(false)}>
           <div style={{
-            background:'#111318', border:'1px solid #252830',
+            background:'var(--dc-surface)', border:'1px solid var(--dc-border)',
             borderRadius:20, padding:24,
             width:880, maxWidth:'95vw', maxHeight:'90vh', overflowY:'auto',
             boxShadow:'0 24px 64px rgba(0,0,0,0.7)',
@@ -351,26 +351,26 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
             {scontrino && (
               <div>
                 <div style={{fontSize:'0.7rem', color:'#ffffff', letterSpacing:1, marginBottom:8}}>SCONTRINO CORRENTE</div>
-                <button style={btnStyle('#00e5a0')} onClick={stampaScontrino} disabled={loading}>Stampa su RT</button>
+                <button style={btnStyle('var(--dc-verde)')} onClick={stampaScontrino} disabled={loading}>Stampa su RT</button>
               </div>
             )}
 
             <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(360px, 1fr))', gap:28, alignItems:'start'}}>
             <div>
               <div style={{display:'flex', flexDirection:'column', gap:6}}>
-                <div style={{width:'100%', color:'#ffb830'}}>CHIUSURE FISCALI</div>
-                <button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(1)} disabled={loading}>Chiusura fiscale Z (semplice)</button>
-<button style={btnStyle('#ffb830')} onClick={() => chiusuraFiscale(2)} disabled={loading}>Chiusura fiscale Z (con report reparti+IVA)</button>
+                <div style={{width:'100%', color:'var(--dc-ambra)'}}>CHIUSURE FISCALI</div>
+                <button style={btnStyle('var(--dc-ambra)')} onClick={() => chiusuraFiscale(1)} disabled={loading}>Chiusura fiscale Z (semplice)</button>
+<button style={btnStyle('var(--dc-ambra)')} onClick={() => chiusuraFiscale(2)} disabled={loading}>Chiusura fiscale Z (con report reparti+IVA)</button>
                 <br/>
 
 
-                <div style={{width:'100%', color:'#ffb830'}}>LETTURA PARZIALE</div>
-                <button style={btnStyle('#ffb830')} onClick={() => letturaX(2)} disabled={loading}>Lettura X (parziale)</button>
+                <div style={{width:'100%', color:'var(--dc-ambra)'}}>LETTURA PARZIALE</div>
+                <button style={btnStyle('var(--dc-ambra)')} onClick={() => letturaX(2)} disabled={loading}>Lettura X (parziale)</button>
                 <br/>
-                <div style={{width:'100%', color:'#ffb830'}}>RISTAMPA SCONTRINI (dal DGFE)</div>
-                <button style={btnStyle('#00e5a0')} onClick={() => chiamaRT('raw', { cmd: '91F' })} disabled={loading}>Ristampa ultimo scontrino</button>
-                <button style={btnStyle('#00e5a0')} onClick={() => chiamaRT('raw', { cmd: '92F' })} disabled={loading}>Ristampa penultimo</button>
-                <button style={btnStyle('#00e5a0')} onClick={() => chiamaRT('raw', { cmd: '93F' })} disabled={loading}>Ristampa terzultimo</button>
+                <div style={{width:'100%', color:'var(--dc-ambra)'}}>RISTAMPA SCONTRINI (dal DGFE)</div>
+                <button style={btnStyle('var(--dc-verde)')} onClick={() => chiamaRT('raw', { cmd: '91F' })} disabled={loading}>Ristampa ultimo scontrino</button>
+                <button style={btnStyle('var(--dc-verde)')} onClick={() => chiamaRT('raw', { cmd: '92F' })} disabled={loading}>Ristampa penultimo</button>
+                <button style={btnStyle('var(--dc-verde)')} onClick={() => chiamaRT('raw', { cmd: '93F' })} disabled={loading}>Ristampa terzultimo</button>
 
 
 
@@ -380,28 +380,28 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
 
             <div style={{display:'flex', flexDirection:'column', gap:24}}>
             <div>
-              <div style={{width:'100%', color:'#ff4d6a'}}>ANNULLO SCONTRINO RT</div>
+              <div style={{width:'100%', color:'var(--dc-rosso)'}}>ANNULLO SCONTRINO RT</div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, marginBottom:6}}>
                 <div>
-                  <label style={{fontSize:'12px', color:'#ff4d6a'}}>N° CHIUSURA</label>
+                  <label style={{fontSize:'12px', color:'var(--dc-rosso)'}}>N° CHIUSURA</label>
                   <input type="number" value={annulloData.nazz}
                     onChange={e => setAnnulloData(d => ({...d, nazz: e.target.value}))}
                     placeholder="0001" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={{fontSize:'12px', color:'#ff4d6a'}}>N° DOCUMENTO</label>
+                  <label style={{fontSize:'12px', color:'var(--dc-rosso)'}}>N° DOCUMENTO</label>
                   <input type="number" value={annulloData.ndoc}
                     onChange={e => setAnnulloData(d => ({...d, ndoc: e.target.value}))}
                     placeholder="0001" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={{fontSize:'12px', color:'#ff4d6a'}}>DATA (DDMMYY)</label>
+                  <label style={{fontSize:'12px', color:'var(--dc-rosso)'}}>DATA (DDMMYY)</label>
                   <input type="text" value={annulloData.data}
                     onChange={e => setAnnulloData(d => ({...d, data: e.target.value}))}
                     placeholder="010126" maxLength={6} style={inputStyle} />
                 </div>
               </div>
-              <button style={btnStyle('#ff4d6a')} onClick={annulloScontrino} disabled={loading}>Annulla scontrino RT</button>
+              <button style={btnStyle('var(--dc-rosso)')} onClick={annulloScontrino} disabled={loading}>Annulla scontrino RT</button>
             </div>
 
             <div>
@@ -438,15 +438,15 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
             </div>
 
             {loading && (
-              <div style={{textAlign:'center', color:'#5a5d6e', fontSize:'0.8rem'}}>⏳ Comunicazione con la cassa...</div>
+              <div style={{textAlign:'center', color:'var(--dc-muted)', fontSize:'0.8rem'}}>⏳ Comunicazione con la cassa...</div>
             )}
             {risultato && (
               <div style={{
                 padding:'10px 12px', borderRadius:8,
-                background: risultato.ok ? 'rgba(0,229,160,0.1)' : 'rgba(255,77,106,0.1)',
-                border: '1px solid ' + (risultato.ok ? '#00e5a040' : '#ff4d6a40'),
+                background: risultato.ok ? 'rgba(var(--dc-verde-rgb), 0.1)' : 'rgba(var(--dc-rosso-rgb), 0.1)',
+                border: '1px solid ' + (risultato.ok ? 'rgba(var(--dc-verde-rgb), 0.25)' : 'rgba(var(--dc-rosso-rgb), 0.25)'),
                 fontSize:'0.75rem', fontFamily:"'DM Mono',monospace",
-                color: risultato.ok ? '#00e5a0' : '#ff4d6a',
+                color: risultato.ok ? 'var(--dc-verde)' : 'var(--dc-rosso)',
               }}>
                 {risultato.ok ? '✓ ' : '✗ '}{risultato.risposta || risultato.error || 'OK'}
               </div>
@@ -458,7 +458,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
       {conferma && (
         <div style={{
           position:'fixed', inset:0, zIndex:600,
-          background:'rgba(8,9,12,0.92)',
+          background:'rgba(var(--dc-bg-rgb), 0.92)',
           display:'flex', alignItems:'center', justifyContent:'center',
         }}>
           <div style={{
@@ -466,19 +466,19 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
             borderRadius:20, padding:28, width:380, maxWidth:'90vw',
             display:'flex', flexDirection:'column', gap:16,
           }}>
-            <div style={{fontSize:'1rem', fontWeight:700, color:'#eef0f6'}}>{conferma.titolo}</div>
+            <div style={{fontSize:'1rem', fontWeight:700, color:'var(--dc-text)'}}>{conferma.titolo}</div>
             <div style={{fontSize:'0.82rem', color:'#aeb0bc', lineHeight:1.6}}>{conferma.messaggio}</div>
             <div style={{display:'flex', gap:10}}>
               <button onClick={() => setConferma(null)} style={{
                 flex:1, padding:'10px', borderRadius:10,
-                border:'1px solid #252830', background:'transparent',
-                color:'#eef0f6', cursor:'pointer', fontSize:'0.85rem'
+                border:'1px solid var(--dc-border)', background:'transparent',
+                color:'var(--dc-text)', cursor:'pointer', fontSize:'0.85rem'
               }}>Annulla</button>
               {conferma.onConferma && (
                 <button onClick={() => { setConferma(null); conferma.onConferma() }} style={{
                   flex:1, padding:'10px', borderRadius:10,
                   border:'none', background:conferma.colore,
-                  color:'#08090c', cursor:'pointer', fontSize:'0.85rem', fontWeight:700
+                  color:'var(--dc-bg)', cursor:'pointer', fontSize:'0.85rem', fontWeight:700
                 }}>Conferma</button>
               )}
             </div>

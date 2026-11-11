@@ -603,14 +603,14 @@ async function inviaComandaInterna() {
   
   if (vista === 'comanda') {
     return (
-      <div style={{ display:'flex', height:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans', sans-serif" }}>
+      <div style={{ display:'flex', height:'100vh', background:'var(--dc-bg)', color:'var(--dc-text)', fontFamily:"'DM Sans', sans-serif" }}>
 
         {/* SINISTRA — tastiera */}
-        <div style={{ width:240, background:'#111318', borderRight:'1px solid #1a1c24', display:'flex', flexDirection:'column', padding:16, gap:8, flexShrink:0 }}>
-        <button onClick={() => { setVista('griglia'); setTavoloAttivo(null); setRigheComanda([]); setInputCents(0) }} style={{ background:'transparent', border:'1px solid #252830', borderRadius:10, color:'#00e5a0', padding:'8px', cursor:'pointer', fontSize:'1.2rem', marginBottom:8 }}>
+        <div style={{ width:240, background:'var(--dc-surface)', borderRight:'1px solid var(--dc-surface2)', display:'flex', flexDirection:'column', padding:16, gap:8, flexShrink:0 }}>
+        <button onClick={() => { setVista('griglia'); setTavoloAttivo(null); setRigheComanda([]); setInputCents(0) }} style={{ background:'transparent', border:'1px solid var(--dc-border)', borderRadius:10, color:'var(--dc-verde)', padding:'8px', cursor:'pointer', fontSize:'1.2rem', marginBottom:8 }}>
             ← Tavoli
           </button>
-          <div style={{ textAlign:'center', padding:'12px', background:'#1a1c24', borderRadius:12, marginBottom:8 }}>
+          <div style={{ textAlign:'center', padding:'12px', background:'var(--dc-surface2)', borderRadius:12, marginBottom:8 }}>
             <div style={{ fontSize:'0.9rem', color:'yellow', letterSpacing:2 }}>TAVOLO</div>
             <div style={{ fontSize:'2rem', fontWeight:700, color:'white' }}>{tavoloAttivo}</div>
             {impostazioni.copertoAbilitato && copertiAttuali > 0 && (
@@ -620,9 +620,9 @@ async function inviaComandaInterna() {
             )}
           </div>
 
-          <div style={{ background:'#1a1c24', borderRadius:12, padding:'12px 16px', textAlign:'center', marginBottom:4 }}>
+          <div style={{ background:'var(--dc-surface2)', borderRadius:12, padding:'12px 16px', textAlign:'center', marginBottom:4 }}>
             <div style={{ fontSize:'0.85rem', color:'yellow', letterSpacing:2 }}>IMPORTO</div>
-            <div style={{ fontSize:'1.8rem', fontWeight:700, color:'#00e5a0', fontFamily:"'DM Mono',monospace" }}>
+            <div style={{ fontSize:'1.8rem', fontWeight:700, color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace" }}>
               € {fmt(inputCents)}
             </div>
           </div>
@@ -630,10 +630,10 @@ async function inviaComandaInterna() {
 
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
             {[7,8,9,4,5,6,1,2,3].map(n => (
-              <button key={n} onClick={() => pressDigit(n)} style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>{n}</button>
+              <button key={n} onClick={() => pressDigit(n)} style={{ padding:'14px', background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:10, color:'var(--dc-text)', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>{n}</button>
             ))}
-            <button onClick={pressClear} style={{ padding:'14px', background:'#1a1c24', border:'1px solid #ff4d6a44', borderRadius:10, color:'#ff4d6a', fontSize:'0.8rem', cursor:'pointer' }}>C</button>
-            <button onClick={() => pressDigit(0)} style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>0</button>
+            <button onClick={pressClear} style={{ padding:'14px', background:'var(--dc-surface2)', border:'1px solid rgba(var(--dc-rosso-rgb), 0.27)', borderRadius:10, color:'var(--dc-rosso)', fontSize:'0.8rem', cursor:'pointer' }}>C</button>
+            <button onClick={() => pressDigit(0)} style={{ padding:'14px', background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:10, color:'var(--dc-text)', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>0</button>
             <button onClick={() => setInputCents(prev => parseInt(String(prev) + '00'))} style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'0.9rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>00</button>
           </div>
 
@@ -647,7 +647,7 @@ async function inviaComandaInterna() {
                    <div style={{ marginTop:'auto', display:'flex', flexDirection:'column', gap:8 }}>
                    {totale > 0 && (
               <>
-                <button onClick={stampaPreconto} style={{ padding:'12px', background:'#ffb830', border:'none', borderRadius:12, color:'#08090c', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
+                <button onClick={stampaPreconto} style={{ padding:'12px', background:'var(--dc-ambra)', border:'none', borderRadius:12, color:'var(--dc-bg)', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
                   🧾 Preconto su comanda
                 </button>
                 <button
@@ -659,17 +659,17 @@ const rCop = righeComanda.find(r => r.id === 'coperto') || tv?.righe?.find(r => 
 setRomanaPersone(Math.max(2, rCop?.quantita || tv?.coperti || 2))
 setShowConto(true)
                   }}
-                  style={{ padding:'12px', background:'#ff4d6a', border:'none', borderRadius:12, color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
+                  style={{ padding:'12px', background:'var(--dc-rosso)', border:'none', borderRadius:12, color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
                   💳 Chiudi Conto
                 </button>
               </>
             )}
 
-            <button onClick={inviaComanda} disabled={righeComanda.length === 0 || inviando} style={{ padding:'12px', background: righeComanda.length === 0 ? '#1a1c24' : '#00e5a0', border:'none', borderRadius:12, color: righeComanda.length === 0 ? '#5a5d6e' : '#08090c', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.85rem' }}>
+            <button onClick={inviaComanda} disabled={righeComanda.length === 0 || inviando} style={{ padding:'12px', background: righeComanda.length === 0 ? 'var(--dc-surface2)' : 'var(--dc-verde)', border:'none', borderRadius:12, color: righeComanda.length === 0 ? 'var(--dc-muted)' : 'var(--dc-bg)', fontWeight:700, cursor: righeComanda.length === 0 ? 'not-allowed' : 'pointer', fontSize:'0.85rem' }}>
               ✓ Invia comanda
             </button>
 
-            <button onClick={annullaComanda} style={{ padding:'12px', background:'transparent', border:'1px solid #ff4d6a', borderRadius:12, color:'#ff4d6a', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
+            <button onClick={annullaComanda} style={{ padding:'12px', background:'transparent', border:'1px solid var(--dc-rosso)', borderRadius:12, color:'var(--dc-rosso)', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
               ✕ Annulla comanda
             </button>
           </div>
@@ -680,7 +680,7 @@ setShowConto(true)
         {/* CENTRO — scontrino + prodotti */}
         <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
-          <div style={{ flex:'0 0 50%', borderBottom:'1px solid #1a1c24', overflow:'auto', padding:16 }}>
+          <div style={{ flex:'0 0 50%', borderBottom:'1px solid var(--dc-surface2)', overflow:'auto', padding:16 }}>
             <div style={{ fontSize:'0.72rem', color:'#ffffff', letterSpacing:2, marginBottom:12 }}>COMANDA TAVOLO {tavoloAttivo}</div>
             {righeComanda.length === 0 ? (
               <div style={{ textAlign:'center', color:'#ffffff', padding:40 }}>
@@ -694,7 +694,7 @@ setShowConto(true)
 
 
                 {righeComanda.map(r => (
-                  <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid #1a1c2440' }}>
+                  <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid rgba(var(--dc-surface2-rgb), 0.25)' }}>
                     <div style={{ width:32, height:32, borderRadius:8, background:r.colore+'22', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>{ICONE[r.icona]||'📦'}</div>
                     <div style={{ flex:1 }}>
                       <div style={{ fontSize:'0.85rem' }}>{r.nome}{r.quantita > 1 ? <span style={{ color:'#ffffff', marginLeft:6 }}>×{r.quantita}</span> : ''}</div>
@@ -708,13 +708,13 @@ setShowConto(true)
                     )}
                       <div style={{ display:'flex', alignItems:'center', gap:4 }}>
                       <button onClick={() => aggiornaQuantita(r.id, -1)}
-                        style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
+                        style={{ width:24, height:24, borderRadius:6, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', cursor:'pointer', fontSize:'0.9rem' }}>−</button>
                       <button onClick={() => aggiornaQuantita(r.id, 1)}
-                        style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
+                        style={{ width:24, height:24, borderRadius:6, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
                       <button disabled={r.id === 'coperto'} onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/,'') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
-                        style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'0.9rem', padding:'2px', marginLeft:28, visibility: r.id === 'coperto' ? 'hidden' : 'visible' }}>✏️</button>
+                        style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? 'var(--dc-ambra)' : 'var(--dc-muted)', fontSize:'0.9rem', padding:'2px', marginLeft:28, visibility: r.id === 'coperto' ? 'hidden' : 'visible' }}>✏️</button>
                       <button disabled={r.id === 'coperto'} onClick={() => eliminaRiga(r.id)}
-                        style={{ background:'transparent', border:'none', color:'#ff4d6a', cursor:'pointer', fontSize:'1rem', visibility: r.id === 'coperto' ? 'hidden' : 'visible' }}>✕</button>
+                        style={{ background:'transparent', border:'none', color:'var(--dc-rosso)', cursor:'pointer', fontSize:'1rem', visibility: r.id === 'coperto' ? 'hidden' : 'visible' }}>✕</button>
                     </div>
 
 
@@ -726,10 +726,10 @@ setShowConto(true)
 
                 <div style={{ display:'flex', justifyContent:'space-between', padding:'12px 0', fontWeight:700, fontSize:'0.9rem' }}>
                   <span style={{ color:'#ffffff' }}>TOTALE</span>
-                  <span style={{ color:'#00e5a0', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totale)}</span>
+                  <span style={{ color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totale)}</span>
                 </div>
                  {romanaPagato > 0 && (
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8rem', color:'#ffb830' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8rem', color:'var(--dc-ambra)' }}>
                     <span>Pagato alla romana ({romanaQuotePagate}/{romanaPersoneTot})</span>
                     <span>residuo € {fmt(romanaResiduo)}</span>
                   </div>
@@ -756,7 +756,7 @@ setShowConto(true)
                         <div style={{
                           position:'absolute', top:-8, right:-8,
                           background: repAttivo.colore,
-                          color:'#08090c',
+                          color:'var(--dc-bg)',
                           borderRadius:'50%',
                           width:22, height:22,
                           display:'flex', alignItems:'center', justifyContent:'center',
@@ -769,7 +769,7 @@ setShowConto(true)
                         </div>
                       )}
                       {(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) && <div style={{ width:'100%', aspectRatio:'1 / 1', flexShrink:0, borderRadius:8, marginBottom:4, backgroundImage:'url("' + sr.immagine + '")', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }} />}
-<div style={{ fontSize:'0.78rem', color:'#eef0f6', fontWeight:500, ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : {}) }}>{sr.nome}</div>
+<div style={{ fontSize:'0.78rem', color:'var(--dc-text)', fontWeight:500, ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'0.95rem', fontWeight:700 } : {}) }}>{sr.nome}</div>
                       <div style={{ fontSize:'0.85rem', fontWeight:700, color:repAttivo.colore, fontFamily:"'DM Mono',monospace", ...((sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine)) ? { fontSize:'1.05rem', fontWeight:700 } : {}) }}>€ {fmt(sr.prezzoFisso)}</div>
                     </button>
                   )
@@ -789,8 +789,8 @@ setShowConto(true)
 
 
         {/* DESTRA — reparti */}
-        <div style={{ width:180, background:'#111318', borderLeft:'1px solid #1a1c24', overflow:'auto', padding:12, flexShrink:0 }}>
-          <div style={{ fontSize:'0.9rem', color:'#00e5a0', letterSpacing:2, marginBottom:12 }}>REPARTI</div>
+        <div style={{ width:180, background:'var(--dc-surface)', borderLeft:'1px solid var(--dc-surface2)', overflow:'auto', padding:12, flexShrink:0 }}>
+          <div style={{ fontSize:'0.9rem', color:'var(--dc-verde)', letterSpacing:2, marginBottom:12 }}>REPARTI</div>
           {reparti.map(r => {
             const qtaReparto = righeComanda
               .filter(riga => riga.repartoId === r.id)
@@ -802,7 +802,7 @@ setShowConto(true)
                   width:'100%', textAlign:'left', padding:'10px 12px', marginBottom:6,
                   background: repartoAttivo === r.id ? r.colore + '22' : 'transparent',
                   border: '1px solid ' + (repartoAttivo === r.id ? r.colore : 'transparent'),
-                  borderRadius:10, cursor:'pointer', color:'#eef0f6', fontSize:'0.82rem',
+                  borderRadius:10, cursor:'pointer', color:'var(--dc-text)', fontSize:'0.82rem',
                   display:'flex', alignItems:'center', gap:8,
                 }}>
                 <span>{ICONE[r.icona]||'📦'}</span>
@@ -811,7 +811,7 @@ setShowConto(true)
                   <span style={{
                     marginLeft:'auto',
                     background: r.colore,
-                    color:'#08090c',
+                    color:'var(--dc-bg)',
                     borderRadius:'50%',
                     width:20, height:20,
                     display:'flex', alignItems:'center', justifyContent:'center',
@@ -830,26 +830,26 @@ setShowConto(true)
 {invioOk && (
           <div style={{
             position:'fixed', inset:0, zIndex:9999,
-            background:'rgba(8,9,12,0.85)',
+            background:'rgba(var(--dc-bg-rgb), 0.85)',
             display:'flex', alignItems:'center', justifyContent:'center',
           }}>
             <div style={{
-              background:'#111318', border:'2px solid #00e5a0',
+              background:'var(--dc-surface)', border:'2px solid var(--dc-verde)',
               borderRadius:24, padding:'40px 56px',
               display:'flex', flexDirection:'column', alignItems:'center', gap:16,
-              boxShadow:'0 0 64px rgba(0,229,160,0.3)',
+              boxShadow:'0 0 64px rgba(var(--dc-verde-rgb), 0.3)',
               animation:'popIn 0.3s ease',
             }}>
               <div style={{
                 width:64, height:64, borderRadius:'50%',
-                background:'rgba(0,229,160,0.15)', border:'2px solid #00e5a0',
+                background:'rgba(var(--dc-verde-rgb), 0.15)', border:'2px solid var(--dc-verde)',
                 display:'flex', alignItems:'center', justifyContent:'center',
               }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="3">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--dc-verde)" strokeWidth="3">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
-              <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#00e5a0' }}>Comanda inviata!</div>
+              <div style={{ fontSize:'1.1rem', fontWeight:700, color:'var(--dc-verde)' }}>Comanda inviata!</div>
             </div>
             <style>{`@keyframes popIn { from { transform:scale(0.7); opacity:0 } to { transform:scale(1); opacity:1 } }`}</style>
           </div>
@@ -858,40 +858,40 @@ setShowConto(true)
 
 
 {showConto && (
-  <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700, padding:20 }}>
-    <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:640, maxHeight:'90vh', display:'flex', flexDirection:'column', gap:14, overflowY:'auto' }}>
-      <div style={{ fontSize:'1rem', fontWeight:700, color:'#eef0f6' }}>
+  <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700, padding:20 }}>
+    <div style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:20, padding:24, width:'100%', maxWidth:640, maxHeight:'90vh', display:'flex', flexDirection:'column', gap:14, overflowY:'auto' }}>
+      <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-text)' }}>
         💳 Conto tavolo {tavoloAttivo} — € {fmt(divisioneCorrente ? romanaResiduo : totale)}
       </div>
 
       {!comandaSincronizzata && (
-        <div style={{ fontSize:'0.8rem', color:'#ffb830', background:'rgba(255,184,48,0.1)', borderRadius:8, padding:'8px 10px' }}>
+        <div style={{ fontSize:'0.8rem', color:'var(--dc-ambra)', background:'rgba(var(--dc-ambra-rgb), 0.1)', borderRadius:8, padding:'8px 10px' }}>
           Ci sono modifiche non inviate: premi "Invia comanda" prima di pagare per prodotti o alla romana.
         </div>
       )}
 
       {!divisioneCorrente && (
         <button onClick={() => { setShowConto(false); chiudiTavolo() }}
-          style={{ padding:14, borderRadius:12, background:'#ff4d6a', border:'none', color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.95rem' }}>
+          style={{ padding:14, borderRadius:12, background:'var(--dc-rosso)', border:'none', color:'white', fontWeight:700, cursor:'pointer', fontSize:'0.95rem' }}>
           Paga tutto € {fmt(totale)}
         </button>
       )}
 
       {/* ALLA ROMANA */}
-      <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>ALLA ROMANA</div>
-      <div style={{ background:'#1a1c24', borderRadius:12, padding:14, display:'flex', flexDirection:'column', gap:12,
+      <div style={{ fontSize:'0.8rem', color:'var(--dc-menta)', letterSpacing:1 }}>ALLA ROMANA</div>
+      <div style={{ background:'var(--dc-surface2)', borderRadius:12, padding:14, display:'flex', flexDirection:'column', gap:12,
         opacity: comandaSincronizzata ? 1 : 0.4, pointerEvents: comandaSincronizzata ? 'auto' : 'none' }}>
         {divisioneCorrente ? (
-          <div style={{ fontSize:'0.82rem', color:'#ffb830' }}>
+          <div style={{ fontSize:'0.82rem', color:'var(--dc-ambra)' }}>
             Pagato € {fmt(romanaPagato)} · Residuo € {fmt(romanaResiduo)}
           </div>
         ) : (
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
             <span style={{ fontSize:'0.88rem' }}>Persone a tavola</span>
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <button onClick={() => setRomanaPersone(p => Math.max(2, p - 1))} style={{ width:32, height:32, borderRadius:8, background:'#252830', border:'none', color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer' }}>−</button>
+              <button onClick={() => setRomanaPersone(p => Math.max(2, p - 1))} style={{ width:32, height:32, borderRadius:8, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', fontSize:'1.1rem', cursor:'pointer' }}>−</button>
               <span style={{ minWidth:24, textAlign:'center', fontFamily:"'DM Mono',monospace", fontSize:'1.1rem' }}>{romanaPersone}</span>
-              <button onClick={() => setRomanaPersone(p => Math.min(50, p + 1))} style={{ width:32, height:32, borderRadius:8, background:'#252830', border:'none', color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer' }}>+</button>
+              <button onClick={() => setRomanaPersone(p => Math.min(50, p + 1))} style={{ width:32, height:32, borderRadius:8, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', fontSize:'1.1rem', cursor:'pointer' }}>+</button>
             </div>
           </div>
         )}
@@ -900,8 +900,8 @@ setShowConto(true)
             const pagato = i < romanaQuotePagate
             return (
               <button key={i} disabled={pagato} onClick={pagaAllaRomana}
-                style={{ padding:'14px 8px', borderRadius:12, border:'1px solid ' + (pagato ? '#252830' : '#00e5a0'),
-                  background: pagato ? '#111318' : 'rgba(0,229,160,0.12)', color: pagato ? '#5a5d6e' : '#eef0f6',
+                style={{ padding:'14px 8px', borderRadius:12, border:'1px solid ' + (pagato ? 'var(--dc-border)' : 'var(--dc-verde)'),
+                  background: pagato ? 'var(--dc-surface)' : 'rgba(var(--dc-verde-rgb), 0.12)', color: pagato ? 'var(--dc-muted)' : 'var(--dc-text)',
                   cursor: pagato ? 'default' : 'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
                 <span style={{ fontSize:'0.72rem', letterSpacing:1 }}>PERSONA {i + 1}</span>
                 <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700 }}>
@@ -912,7 +912,7 @@ setShowConto(true)
           })}
           {romanaQuotePagate >= romanaPersoneTot && romanaResiduo > 0 && (
             <button onClick={pagaAllaRomana}
-              style={{ padding:'14px 8px', borderRadius:12, border:'1px solid #ffb830', background:'rgba(255,184,48,0.12)', color:'#eef0f6', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+              style={{ padding:'14px 8px', borderRadius:12, border:'1px solid var(--dc-ambra)', background:'rgba(var(--dc-ambra-rgb), 0.12)', color:'var(--dc-text)', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
               <span style={{ fontSize:'0.72rem', letterSpacing:1 }}>RESIDUO</span>
               <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700 }}>€ {fmt(romanaResiduo)}</span>
             </button>
@@ -923,10 +923,10 @@ setShowConto(true)
       {/* PER PRODOTTI (nascosto se la divisione alla romana è in corso) */}
       {!divisioneCorrente && (
         <>
-          <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>OPPURE SCEGLI I PRODOTTI DA PAGARE</div>
+          <div style={{ fontSize:'0.8rem', color:'var(--dc-menta)', letterSpacing:1 }}>OPPURE SCEGLI I PRODOTTI DA PAGARE</div>
           <div style={{ overflowY:'auto', flex:1, opacity: comandaSincronizzata ? 1 : 0.4, pointerEvents: comandaSincronizzata ? 'auto' : 'none' }}>
             {righeComanda.map(r => (
-              <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid #1a1c2440' }}>
+              <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid rgba(var(--dc-surface2-rgb), 0.25)' }}>
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:'0.88rem' }}>{r.nome} <span style={{ color:'#ffffff99' }}>× {r.quantita}</span></div>
                   {r.nota && <div style={{ fontSize:'0.75rem', color: r.nota.startsWith('+') ? 'yellow' : 'red' }}>📝 {r.nota}</div>}
@@ -934,11 +934,11 @@ setShowConto(true)
                 </div>
 
                 {r.id === 'coperto' ? <span style={{ width:32 }} /> : (
-                  <button onClick={() => cambiaSelezione(r.id, -1, r.quantita)} style={{ width:32, height:32, borderRadius:8, background:'#252830', border:'none', color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer' }}>−</button>
+                  <button onClick={() => cambiaSelezione(r.id, -1, r.quantita)} style={{ width:32, height:32, borderRadius:8, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', fontSize:'1.1rem', cursor:'pointer' }}>−</button>
                 )}
-                <span style={{ minWidth:20, textAlign:'center', fontFamily:"'DM Mono',monospace", color: (selezione[r.id] || 0) > 0 ? '#00e5a0' : '#eef0f6' }}>{selezione[r.id] || 0}</span>
+                <span style={{ minWidth:20, textAlign:'center', fontFamily:"'DM Mono',monospace", color: (selezione[r.id] || 0) > 0 ? 'var(--dc-verde)' : 'var(--dc-text)' }}>{selezione[r.id] || 0}</span>
                 {r.id === 'coperto' ? <span style={{ width:32 }} /> : (
-                  <button onClick={() => cambiaSelezione(r.id, 1, r.quantita)} style={{ width:32, height:32, borderRadius:8, background:'#252830', border:'none', color:'#eef0f6', fontSize:'1.1rem', cursor:'pointer' }}>+</button>
+                  <button onClick={() => cambiaSelezione(r.id, 1, r.quantita)} style={{ width:32, height:32, borderRadius:8, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', fontSize:'1.1rem', cursor:'pointer' }}>+</button>
                 )}
               </div>
               
@@ -949,14 +949,14 @@ setShowConto(true)
 
       <div style={{ display:'flex', gap:10 }}>
         <button onClick={() => setShowConto(false)}
-          style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>
+          style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid var(--dc-border)', color:'var(--dc-text)', cursor:'pointer' }}>
           Indietro
         </button>
         {!divisioneCorrente && (
           <button onClick={pagaSelezionati} disabled={!comandaSincronizzata || totaleSelezionato === 0}
             style={{ flex:1.4, padding:12, borderRadius:10, border:'none', fontWeight:700,
-              background: (!comandaSincronizzata || totaleSelezionato === 0) ? '#1a1c24' : '#00e5a0',
-              color: (!comandaSincronizzata || totaleSelezionato === 0) ? '#5a5d6e' : '#08090c',
+              background: (!comandaSincronizzata || totaleSelezionato === 0) ? 'var(--dc-surface2)' : 'var(--dc-verde)',
+              color: (!comandaSincronizzata || totaleSelezionato === 0) ? 'var(--dc-muted)' : 'var(--dc-bg)',
               cursor: (!comandaSincronizzata || totaleSelezionato === 0) ? 'not-allowed' : 'pointer' }}>
             Paga selezionati € {fmt(totaleSelezionato)}
           </button>
@@ -970,9 +970,9 @@ setShowConto(true)
 
 
 {modalAnnulla && (
-          <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700 }}>
-            <div style={{ background:'#111318', border:'1px solid #ff4d6a44', borderRadius:20, padding:28, width:340, display:'flex', flexDirection:'column', gap:18, alignItems:'center' }}>
-              <div style={{ fontSize:'1rem', fontWeight:700, color:'#ff4d6a' }}>🗑️ Annulla comanda</div>
+          <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700 }}>
+            <div style={{ background:'var(--dc-surface)', border:'1px solid rgba(var(--dc-rosso-rgb), 0.27)', borderRadius:20, padding:28, width:340, display:'flex', flexDirection:'column', gap:18, alignItems:'center' }}>
+              <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-rosso)' }}>🗑️ Annulla comanda</div>
               <div style={{ fontSize:'0.85rem', color:'#ffffff', textAlign:'center' }}>
                 {infoAnnulla ? (
                   <>
@@ -986,11 +986,11 @@ setShowConto(true)
               </div>
               <div style={{ display:'flex', gap:12, width:'100%' }}>
                 <button onClick={() => { setModalAnnulla(false); setInfoAnnulla(null) }}
-                  style={{ flex:1, padding:12, borderRadius:12, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>
+                  style={{ flex:1, padding:12, borderRadius:12, background:'transparent', border:'1px solid var(--dc-border)', color:'var(--dc-text)', cursor:'pointer' }}>
                   No, torna indietro
                 </button>
                 <button onClick={confermaAnnullaComanda}
-                  style={{ flex:1, padding:12, borderRadius:12, background:'#ff4d6a', border:'none', color:'white', fontWeight:700, cursor:'pointer' }}>
+                  style={{ flex:1, padding:12, borderRadius:12, background:'var(--dc-rosso)', border:'none', color:'white', fontWeight:700, cursor:'pointer' }}>
                   Sì, annulla
                 </button>
               </div>
@@ -1004,20 +1004,20 @@ setShowConto(true)
 
         {/* MODAL NOTA - inline nella vista comanda */}
         {notaModal !== null && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
-        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
-          <div style={{ fontSize:'0.9rem', fontWeight:700, color:'#eef0f6' }}>✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}</div>
+        <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
+        <div style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
+          <div style={{ fontSize:'0.9rem', fontWeight:700, color:'var(--dc-text)' }}>✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}</div>
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={() => { if (notaTipo !== 'rimozione') setAggiunte([]); setNotaTipo('rimozione') }}
-              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
-                background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
-                color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
+              style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='rimozione' ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+                background: notaTipo==='rimozione' ? 'rgba(var(--dc-rosso-rgb), 0.15)' : 'transparent',
+                color: notaTipo==='rimozione' ? 'var(--dc-rosso)' : 'var(--dc-muted)', cursor:'pointer', fontWeight:700 }}>
               − Rimozione
             </button>
                 <button onClick={() => { if (notaTipo !== 'aggiunta') setAggiunte([]); setNotaTipo('aggiunta') }}
-                  style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
-                    background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
-                    color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700 }}>
+                  style={{ flex:1, padding:'10px', borderRadius:10, border:`2px solid ${notaTipo==='aggiunta' ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+                    background: notaTipo==='aggiunta' ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'transparent',
+                    color: notaTipo==='aggiunta' ? 'var(--dc-verde)' : 'var(--dc-muted)', cursor:'pointer', fontWeight:700 }}>
                   + Aggiunta
                 </button>
               </div>
@@ -1025,7 +1025,7 @@ setShowConto(true)
                 const nomiRim = [...new Set(impostazioni.aggiunteRapide.map(a => a.nome))]
                 return (
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    <div style={{ fontSize:'0.8rem', color:'#ff4d6a', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
+                    <div style={{ fontSize:'0.8rem', color:'var(--dc-rosso)', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
                     <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                       {nomiRim.map(item => {
                         const selected = aggiunte.some(a => a.nome === item)
@@ -1034,9 +1034,9 @@ setShowConto(true)
                             onClick={() => setAggiunte(prev => prev.some(a => a.nome === item) ? prev.filter(a => a.nome !== item) : [...prev, { nome: item, costo: 0 }])}
                             style={{
                               padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                              border: `1px solid ${selected ? '#ff4d6a' : '#252830'}`,
-                              background: selected ? 'rgba(255,77,106,0.15)' : '#1a1c24',
-                              color: selected ? '#ff4d6a' : '#eef0f6',
+                              border: `1px solid ${selected ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+                              background: selected ? 'rgba(var(--dc-rosso-rgb), 0.15)' : 'var(--dc-surface2)',
+                              color: selected ? 'var(--dc-rosso)' : 'var(--dc-text)',
                               fontWeight: selected ? 700 : 400,
                             }}>
                             {item}
@@ -1045,7 +1045,7 @@ setShowConto(true)
                       })}
                     </div>
                     {aggiunte.length > 0 && (
-                      <div style={{ fontSize:'0.75rem', color:'#ff4d6a', background:'rgba(255,77,106,0.1)', borderRadius:8, padding:'6px 10px' }}>
+                      <div style={{ fontSize:'0.75rem', color:'var(--dc-rosso)', background:'rgba(var(--dc-rosso-rgb), 0.1)', borderRadius:8, padding:'6px 10px' }}>
                         Senza: {aggiunte.map(a => a.nome).join(', ')}
                       </div>
                     )}
@@ -1061,10 +1061,10 @@ setShowConto(true)
                 const tiers = Object.entries(gruppiMap).map(([costo, s]) => ({ costo: parseInt(costo), items: [...s] })).sort((a,b) => a.costo - b.costo)
                 return (
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    <div style={{ fontSize:'0.8rem', color:'#00ffb3', letterSpacing:1 }}>AGGIUNTE RAPIDE</div>
+                    <div style={{ fontSize:'0.8rem', color:'var(--dc-menta)', letterSpacing:1 }}>AGGIUNTE RAPIDE</div>
                     {tiers.map(({ costo, items }) => (
                       <div key={costo}>
-                        <div style={{ fontSize:'0.82rem', color:'#ffb830', marginBottom:4 }}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
+                        <div style={{ fontSize:'0.82rem', color:'var(--dc-ambra)', marginBottom:4 }}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
                         <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                           {items.map(item => {
                             const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
@@ -1077,9 +1077,9 @@ setShowConto(true)
                                 })}
                                 style={{
                                   padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                                  border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
-                                  background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
-                                  color: selected ? '#00e5a0' : '#eef0f6',
+                                  border: `1px solid ${selected ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+                                  background: selected ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-surface2)',
+                                  color: selected ? 'var(--dc-verde)' : 'var(--dc-text)',
                                   fontWeight: selected ? 700 : 400,
                                 }}>
                                 {item}
@@ -1090,7 +1090,7 @@ setShowConto(true)
                       </div>
                     ))}
                     {aggiunte.length > 0 && (
-                      <div style={{ fontSize:'0.75rem', color:'#00e5a0', background:'rgba(0,229,160,0.1)', borderRadius:8, padding:'6px 10px' }}>
+                      <div style={{ fontSize:'0.75rem', color:'var(--dc-verde)', background:'rgba(var(--dc-verde-rgb), 0.1)', borderRadius:8, padding:'6px 10px' }}>
                         💰 Totale: +€{(aggiunte.reduce((s,a) => s + a.costo, 0)/100).toFixed(2).replace('.',',')} — {aggiunte.map(a => a.nome).join(', ')}
                       </div>
                     )}
@@ -1100,11 +1100,11 @@ setShowConto(true)
               <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value.toUpperCase())}
                 placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi...'}
                 rows={3}
-                style={{ background:'#1a1c24', border:'1px solid #252830', borderRadius:10, padding:12, color:'#eef0f6', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}
+                style={{ background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:10, padding:12, color:'var(--dc-text)', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}
               />
               <div style={{ display:'flex', gap:10 }}>
                 <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
-                  style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer' }}>
+                  style={{ flex:1, padding:12, borderRadius:10, background:'transparent', border:'1px solid var(--dc-border)', color:'var(--dc-text)', cursor:'pointer' }}>
                   Annulla
                 </button>
                 <button onClick={() => {
@@ -1121,7 +1121,7 @@ setShowConto(true)
                     }
                     setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([])
                   }}
-                  style={{ flex:1, padding:12, borderRadius:10, background:'#00e5a0', border:'none', color:'#08090c', fontWeight:700, cursor:'pointer' }}>
+                  style={{ flex:1, padding:12, borderRadius:10, background:'var(--dc-verde)', border:'none', color:'var(--dc-bg)', fontWeight:700, cursor:'pointer' }}>
                   Salva
                 </button>
               </div>
@@ -1135,25 +1135,25 @@ setShowConto(true)
   // ── MODAL COPERTI ────────────────────────────────────────────────────────
   if (modalCoperti !== null) {
     return (
-      <div style={{ position:'fixed', inset:0, background:'rgba(8,9,12,0.92)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:500 }}>
-        <div style={{ background:'#111318', border:'1px solid #252830', borderRadius:20, padding:32, width:320, display:'flex', flexDirection:'column', gap:20, alignItems:'center' }}>
+      <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.92)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:500 }}>
+        <div style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:20, padding:32, width:320, display:'flex', flexDirection:'column', gap:20, alignItems:'center' }}>
           <div style={{fontSize:'1rem', fontWeight:700}}>🍽️ Tavolo {modalCoperti}</div>
           <div style={{fontSize:'0.82rem', color:'#ffffff'}}>Quante persone al tavolo?</div>
           <div style={{display:'flex', alignItems:'center', gap:20}}>
             <button onClick={() => setNumCoperti(n => Math.max(1, n-1))}
-              style={{width:44, height:44, borderRadius:12, background:'#1a1c24', border:'1px solid #252830', color:'#eef0f6', fontSize:'1.5rem', cursor:'pointer'}}>−</button>
-            <span style={{fontSize:'3rem', fontWeight:700, color:'#00e5a0', fontFamily:"'DM Mono',monospace", minWidth:60, textAlign:'center'}}>{numCoperti}</span>
+              style={{width:44, height:44, borderRadius:12, background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', color:'var(--dc-text)', fontSize:'1.5rem', cursor:'pointer'}}>−</button>
+            <span style={{fontSize:'3rem', fontWeight:700, color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace", minWidth:60, textAlign:'center'}}>{numCoperti}</span>
             <button onClick={() => setNumCoperti(n => n+1)}
-              style={{width:44, height:44, borderRadius:12, background:'#1a1c24', border:'1px solid #252830', color:'#eef0f6', fontSize:'1.5rem', cursor:'pointer'}}>+</button>
+              style={{width:44, height:44, borderRadius:12, background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', color:'var(--dc-text)', fontSize:'1.5rem', cursor:'pointer'}}>+</button>
           </div>
           <div style={{fontSize:'0.78rem', color:'#ffffff'}}>
             Coperto: € {((impostazioni.copertoImporto * numCoperti) / 100).toFixed(2)} totale
           </div>
           <div style={{display:'flex', gap:12, width:'100%'}}>
             <button onClick={() => setModalCoperti(null)}
-              style={{flex:1, padding:12, borderRadius:12, background:'transparent', border:'1px solid #252830', color:'#eef0f6', cursor:'pointer'}}>Annulla</button>
+              style={{flex:1, padding:12, borderRadius:12, background:'transparent', border:'1px solid var(--dc-border)', color:'var(--dc-text)', cursor:'pointer'}}>Annulla</button>
             <button onClick={() => confermaCoperti(modalCoperti, numCoperti)}
-              style={{flex:1, padding:12, borderRadius:12, background:'#00e5a0', border:'none', color:'#08090c', fontWeight:700, cursor:'pointer'}}>Apri tavolo</button>
+              style={{flex:1, padding:12, borderRadius:12, background:'var(--dc-verde)', border:'none', color:'var(--dc-bg)', fontWeight:700, cursor:'pointer'}}>Apri tavolo</button>
           </div>
         </div>
       </div>
@@ -1166,16 +1166,16 @@ setShowConto(true)
 
   // ── VISTA GRIGLIA TAVOLI ─────────────────────────────────────────────────
   return (
-    <div style={{ minHeight:'100vh', background:'#08090c', color:'#eef0f6', fontFamily:"'DM Sans', sans-serif" }}>
-      <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 20px', background:'#111318', borderBottom:'1px solid #1a1c24' }}>
-        <button onClick={() => router.replace('/cassa')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#00ffb3', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
+    <div style={{ minHeight:'100vh', background:'var(--dc-bg)', color:'var(--dc-text)', fontFamily:"'DM Sans', sans-serif" }}>
+      <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 20px', background:'var(--dc-surface)', borderBottom:'1px solid var(--dc-surface2)' }}>
+        <button onClick={() => router.replace('/cassa')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-menta)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           ← Cassa
         </button>
         <button onClick={() => router.replace('/storico-tavoli')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'yellow', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           📋 Storico
         </button>
         <div style={{ fontWeight:700, fontSize:'1rem' }}>🍽️ Tavoli</div>
-        <button onClick={carica} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffb830', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
+        <button onClick={carica} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-ambra)', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
           ↻ Aggiorna
         </button>
       </header>
@@ -1191,24 +1191,24 @@ setShowConto(true)
                 onClick={() => apriTavolo(t)}
                 style={{
                   padding:16, borderRadius:16, cursor:'pointer', textAlign:'left',
-                  background: occupato ? 'rgba(255,77,106,0.1)' : 'rgba(0,229,160,0.05)',
-                  border: '2px solid ' + (occupato ? '#ff4d6a' : '#00e5a044'),
+                  background: occupato ? 'rgba(var(--dc-rosso-rgb), 0.1)' : 'rgba(var(--dc-verde-rgb), 0.05)',
+                  border: '2px solid ' + (occupato ? 'var(--dc-rosso)' : 'rgba(var(--dc-verde-rgb), 0.27)'),
                   display:'flex', flexDirection:'column', gap:8,
                   transition:'all 0.15s',
                 }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                  <span style={{ fontSize:'0.95rem', color:'#00ffb3', letterSpacing:2 }}>TAVOLO</span>
-                  <div style={{ width:10, height:10, borderRadius:'50%', background: occupato ? '#ff4d6a' : '#00e5a0', boxShadow: '0 0 8px ' + (occupato ? '#ff4d6a' : '#00e5a0') }} />
+                  <span style={{ fontSize:'0.95rem', color:'var(--dc-menta)', letterSpacing:2 }}>TAVOLO</span>
+                  <div style={{ width:10, height:10, borderRadius:'50%', background: occupato ? 'var(--dc-rosso)' : 'var(--dc-verde)', boxShadow: '0 0 8px ' + (occupato ? 'var(--dc-rosso)' : 'var(--dc-verde)') }} />
                 </div>
-                <div style={{ fontSize:'2.5rem', fontWeight:700, color: occupato ? '#ff4d6a' : '#00e5a0', lineHeight:1 }}>{t.numero}</div>
+                <div style={{ fontSize:'2.5rem', fontWeight:700, color: occupato ? 'var(--dc-rosso)' : 'var(--dc-verde)', lineHeight:1 }}>{t.numero}</div>
                 {occupato ? (
                   <>
-                    <div style={{ fontSize:'0.98rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(Math.max(0, totTavolo - (t.divisione?.importoPagato || 0)))}</div>
-                    {t.divisione && <div style={{ fontSize:'0.8rem', color:'#ffb830' }}>alla romana {t.divisione.quotePagate}/{t.divisione.persone}</div>}
-                    <div style={{ fontSize:'0.88rem', color:'#00ffb3' }}>{(() => { const n = t.righe?.filter(r => r.id !== 'coperto').length || 0; return n === 1 ? '1 prodotto' : `${n} prodotti` })()}</div>
-                    {tempo && <div style={{ fontSize:'0.8rem', color:'#ffb830', whiteSpace:'nowrap' }}>Occupato ⏱ {tempo}</div>}
+                    <div style={{ fontSize:'0.98rem', fontWeight:600, color:'var(--dc-text)', fontFamily:"'DM Mono',monospace" }}>€ {fmt(Math.max(0, totTavolo - (t.divisione?.importoPagato || 0)))}</div>
+                    {t.divisione && <div style={{ fontSize:'0.8rem', color:'var(--dc-ambra)' }}>alla romana {t.divisione.quotePagate}/{t.divisione.persone}</div>}
+                    <div style={{ fontSize:'0.88rem', color:'var(--dc-menta)' }}>{(() => { const n = t.righe?.filter(r => r.id !== 'coperto').length || 0; return n === 1 ? '1 prodotto' : `${n} prodotti` })()}</div>
+                    {tempo && <div style={{ fontSize:'0.8rem', color:'var(--dc-ambra)', whiteSpace:'nowrap' }}>Occupato ⏱ {tempo}</div>}
                     {impostazioni.copertoAbilitato && t.coperti > 0 && (
-                      <div style={{ fontSize:'0.95rem', color:'#00ffb3' }}>👤 {t.coperti} coperti</div>
+                      <div style={{ fontSize:'0.95rem', color:'var(--dc-menta)' }}>👤 {t.coperti} coperti</div>
                     )}
                     {/* PRECONTO_SOTTO_COPERTI */}
                     {cassa3i && (t.righe?.length || 0) > 0 && (
@@ -1219,18 +1219,18 @@ setShowConto(true)
                           onMouseUp={(e) => e.stopPropagation()}
                           onTouchStart={(e) => e.stopPropagation()}
                           onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); stampaPrecontoDaGriglia(t) }}
-                          style={{ padding:'6px 14px', border:'1px solid #ffb830', borderRadius:8, color:'#ffb830', fontWeight:700, fontSize:'0.85rem', cursor: precontoRtInCorso ? 'wait' : 'pointer', userSelect:'none' }}>
+                          style={{ padding:'6px 14px', border:'1px solid var(--dc-ambra)', borderRadius:8, color:'var(--dc-ambra)', fontWeight:700, fontSize:'0.85rem', cursor: precontoRtInCorso ? 'wait' : 'pointer', userSelect:'none' }}>
                           Preconto
                         </span>
                         {(() => {
                           const s = statoPrecontoGriglia(t)
-                          return s ? <div style={{ fontSize:'0.74rem', color: s.ok ? '#00e5a0' : '#ff4d6a', whiteSpace: s.ok ? 'nowrap' : 'normal' }}>{s.testo}</div> : null
+                          return s ? <div style={{ fontSize:'0.74rem', color: s.ok ? 'var(--dc-verde)' : 'var(--dc-rosso)', whiteSpace: s.ok ? 'nowrap' : 'normal' }}>{s.testo}</div> : null
                         })()}
                       </div>
                     )}
                   </>
                 ) : (
-                  <div style={{ fontSize:'1.3rem', color:'#00ffb3' }}>Libero</div>
+                  <div style={{ fontSize:'1.3rem', color:'var(--dc-menta)' }}>Libero</div>
                 )}
               </button>
             )

@@ -97,13 +97,13 @@ export default function CardClienteFidelity() {
   }
 
   const pageStyle = {
-    minHeight: '100vh', background: '#08090c', color: '#eef0f6',
+    minHeight: '100vh', background: 'var(--dc-bg)', color: 'var(--dc-text)',
     fontFamily: "'DM Mono',monospace", display: 'flex', alignItems: 'center',
     justifyContent: 'center', padding: 20
   }
   const inputStyle = {
-    background: '#111318', border: '1px solid #252830', borderRadius: 8,
-    padding: '12px 14px', color: '#eef0f6', fontSize: '1rem',
+    background: 'var(--dc-surface)', border: '1px solid var(--dc-border)', borderRadius: 8,
+    padding: '12px 14px', color: 'var(--dc-text)', fontSize: '1rem',
     fontFamily: "'DM Mono',monospace", width: '100%', boxSizing: 'border-box',
     textAlign: 'center', letterSpacing: 1
   }
@@ -134,12 +134,12 @@ if (!negozioId) return (
       <Head><link rel="manifest" href="/manifest-card.json" /></Head>
       <div style={pageStyle}>
         <div style={{ width: '100%', maxWidth: 380, textAlign: 'center' }}>
-          <div style={{ fontSize: '0.95rem', color: '#00e5a0', marginBottom: 4 }}>{negozioNome}</div>
+          <div style={{ fontSize: '0.95rem', color: 'var(--dc-verde)', marginBottom: 4 }}>{negozioNome}</div>
           <div style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: 24 }}>
             Ciao, {cliente.nome}! 👋
           </div>
 
-          <div style={{ background: '#111318', borderRadius: 20, padding: 28, border: '1px solid #252830' }}>
+          <div style={{ background: 'var(--dc-surface)', borderRadius: 20, padding: 28, border: '1px solid var(--dc-border)' }}>
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${cliente.qr_token}&bgcolor=17-19-24&color=0-229-160`}
               alt="QR Code fidelity"
@@ -148,7 +148,7 @@ if (!negozioId) return (
             <div style={{ marginTop: 20, fontSize: '0.75rem', color: 'white', letterSpacing: 1 }}>
               I TUOI PUNTI
             </div>
-            <div style={{ fontSize: '2.4rem', fontWeight: 700, color: '#00e5a0', marginTop: 4 }}>
+            <div style={{ fontSize: '2.4rem', fontWeight: 700, color: 'var(--dc-verde)', marginTop: 4 }}>
               {cliente.punti}
             </div>
           </div>
@@ -162,17 +162,17 @@ if (!negozioId) return (
 
 
           {puntiMancanti > 0 && (
-            <div style={{ marginTop: 20, background: '#ffb83022', border: '2px solid #ffb830', borderRadius: 14, padding: '18px 16px', textAlign: 'center' }}>
+            <div style={{ marginTop: 20, background: 'rgba(var(--dc-ambra-rgb), 0.13)', border: '2px solid var(--dc-ambra)', borderRadius: 14, padding: '18px 16px', textAlign: 'center' }}>
               <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>🎯</div>
-              <div style={{ fontWeight: 700, color: '#ffb830', fontSize: '0.95rem', marginBottom: 6 }}>Ci sei quasi!</div>
-              <div style={{ fontSize: '0.82rem', color: '#eef0f6', lineHeight: 1.6 }}>
-                Ti mancano solo <strong style={{ color: '#ffb830' }}>{puntiMancanti} {puntiMancanti === 1 ? 'punto' : 'punti'}</strong><br/>per ottenere il tuo omaggio 🎁
+              <div style={{ fontWeight: 700, color: 'var(--dc-ambra)', fontSize: '0.95rem', marginBottom: 6 }}>Ci sei quasi!</div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--dc-text)', lineHeight: 1.6 }}>
+                Ti mancano solo <strong style={{ color: 'var(--dc-ambra)' }}>{puntiMancanti} {puntiMancanti === 1 ? 'punto' : 'punti'}</strong><br/>per ottenere il tuo omaggio 🎁
               </div>
             </div>
           )}
 
           <button onClick={logout} style={{
-            marginTop: 24, padding: '10px 20px', borderRadius: 10, border: '1px solid #252830',
+            marginTop: 24, padding: '10px 20px', borderRadius: 10, border: '1px solid var(--dc-border)',
             background: 'transparent', color: 'red', cursor: 'pointer', fontSize: '0.8rem'
           }}>
             Esci
@@ -194,12 +194,12 @@ if (!negozioId) return (
     <div style={pageStyle}>
       <div style={{ width: '100%', maxWidth: 340 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: '0.8rem', color: '#5a5d6e', marginBottom: 4 }}>{negozioNome}</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--dc-muted)', marginBottom: 4 }}>{negozioNome}</div>
           <div style={{ fontSize: '1.4rem', fontWeight: 700 }}>💳 Fidelity</div>
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: '0.72rem', color: '#00e5a0', letterSpacing: 1, display: 'block', marginBottom: 6 }}>CODICE CLIENTE</label>
+          <label style={{ fontSize: '0.72rem', color: 'var(--dc-verde)', letterSpacing: 1, display: 'block', marginBottom: 6 }}>CODICE CLIENTE</label>
           <input
             type="text" autoFocus value={form.codice}
             onChange={e => setForm(f => ({ ...f, codice: e.target.value }))}
@@ -208,7 +208,7 @@ if (!negozioId) return (
           />
         </div>
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: '0.72rem', color: '#00e5a0', letterSpacing: 1, display: 'block', marginBottom: 6 }}>PASSWORD</label>
+          <label style={{ fontSize: '0.72rem', color: 'var(--dc-verde)', letterSpacing: 1, display: 'block', marginBottom: 6 }}>PASSWORD</label>
           <input
             type="text" value={form.password}
             onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
@@ -217,16 +217,16 @@ if (!negozioId) return (
           />
         </div>
 
-        {errore && <div style={{ color: '#ff4d6a', fontSize: '0.8rem', marginBottom: 14, textAlign: 'center' }}>{errore}</div>}
+        {errore && <div style={{ color: 'var(--dc-rosso)', fontSize: '0.8rem', marginBottom: 14, textAlign: 'center' }}>{errore}</div>}
 
         <button onClick={login} disabled={loadingLogin} style={{
           width: '100%', padding: '12px', borderRadius: 10, border: 'none', cursor: 'pointer',
-          background: '#00e5a0', color: '#08090c', fontWeight: 700, fontSize: '0.9rem'
+          background: 'var(--dc-verde)', color: 'var(--dc-bg)', fontWeight: 700, fontSize: '0.9rem'
         }}>
           {loadingLogin ? '...' : 'Accedi'}
         </button>
 
-        <div style={{ fontSize: '0.72rem', color: '#5a5d6e', textAlign: 'center', marginTop: 16 }}>
+        <div style={{ fontSize: '0.72rem', color: 'var(--dc-muted)', textAlign: 'center', marginTop: 16 }}>
           Codice e password ti sono stati dati dal negozio.
         </div>
       </div>

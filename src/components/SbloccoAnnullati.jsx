@@ -72,7 +72,7 @@ export function useSbloccoAnnullati() {
 
   const modal = aperto ? (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#1a1c24', border: '1px solid #333', borderRadius: 16, padding: 24, width: '100%', maxWidth: 340, color: 'white' }}>
+      <div style={{ background: 'var(--dc-surface2)', border: '1px solid #333', borderRadius: 16, padding: 24, width: '100%', maxWidth: 340, color: 'white' }}>
         <div style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: 14 }}>PIN del titolare</div>
         <input
           type="password" inputMode="numeric" autoFocus maxLength={8}
@@ -80,16 +80,16 @@ export function useSbloccoAnnullati() {
           onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
           onKeyDown={e => { if (e.key === 'Enter' && pin.length === 8) conferma() }}
           placeholder="8 cifre"
-          style={{ width: '100%', padding: 12, fontSize: '1.2rem', borderRadius: 10, border: '1px solid #444', background: '#111318', color: 'white', textAlign: 'center', letterSpacing: 6, boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: 12, fontSize: '1.2rem', borderRadius: 10, border: '1px solid #444', background: 'var(--dc-surface)', color: 'white', textAlign: 'center', letterSpacing: 6, boxSizing: 'border-box' }}
         />
-        {errore && <div style={{ color: '#ff4d6a', marginTop: 10, fontSize: '0.9rem' }}>{errore}</div>}
+        {errore && <div style={{ color: 'var(--dc-rosso)', marginTop: 10, fontSize: '0.9rem' }}>{errore}</div>}
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button onClick={() => { setAperto(false); setPin(''); setErrore('') }}
             style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid #444', background: 'transparent', color: 'white' }}>
             Annulla
           </button>
           <button onClick={conferma} disabled={invio || pin.length !== 8}
-            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: '#ffb830', color: '#111', fontWeight: 700, opacity: (invio || pin.length !== 8) ? 0.5 : 1 }}>
+            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'var(--dc-ambra)', color: '#111', fontWeight: 700, opacity: (invio || pin.length !== 8) ? 0.5 : 1 }}>
             {invio ? '...' : 'Conferma'}
           </button>
         </div>

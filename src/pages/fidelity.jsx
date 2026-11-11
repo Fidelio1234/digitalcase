@@ -178,27 +178,27 @@ export default function FidelityPage() {
   })
 
   const inputStyle = {
-    background: '#111318', border: '1px solid #252830', borderRadius: 8,
-    padding: '10px 12px', color: '#eef0f6', fontSize: '0.9rem',
+    background: 'var(--dc-surface)', border: '1px solid var(--dc-border)', borderRadius: 8,
+    padding: '10px 12px', color: 'var(--dc-text)', fontSize: '0.9rem',
     fontFamily: "'DM Mono',monospace", width: '100%', boxSizing: 'border-box'
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#08090c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00e5a0', fontFamily: 'monospace' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--dc-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--dc-verde)', fontFamily: 'monospace' }}>
       ⏳ Caricamento...
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#08090c', color: '#eef0f6', fontFamily: "'DM Mono',monospace", padding: 24 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--dc-bg)', color: 'var(--dc-text)', fontFamily: "'DM Mono',monospace", padding: 24 }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid #ffffff44', borderRadius: 10, color: '#00e5a0', padding: '8px 16px', cursor: 'pointer', fontSize: '0.85rem' }}>
+        <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid #ffffff44', borderRadius: 10, color: 'var(--dc-verde)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.85rem' }}>
           ← Cassa
         </button>
         <div>
           <div style={{ fontSize: '1.3rem', fontWeight: 700 }}>💳 Fidelity</div>
-          <div style={{ fontSize: '0.8rem', color: '#5a5d6e', marginTop: 2 }}>{clienti.length} clienti registrati</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--dc-muted)', marginTop: 2 }}>{clienti.length} clienti registrati</div>
         </div>
 
 
@@ -206,20 +206,20 @@ export default function FidelityPage() {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setShowQrNegozio(true)} style={{
-            padding: '10px 20px', borderRadius: 12, border: '1px solid #ffb830', cursor: 'pointer',
-            background: 'transparent', color: '#ffb830', fontSize: '0.85rem', fontWeight: 700
+            padding: '10px 20px', borderRadius: 12, border: '1px solid var(--dc-ambra)', cursor: 'pointer',
+            background: 'transparent', color: 'var(--dc-ambra)', fontSize: '0.85rem', fontWeight: 700
           }}>
             📲 QR Registrazione
           </button>
           <button onClick={() => setShowScanner(true)} style={{
-            padding: '10px 20px', borderRadius: 12, border: '1px solid #00e5a0', cursor: 'pointer',
-            background: 'transparent', color: '#00e5a0', fontSize: '0.85rem', fontWeight: 700
+            padding: '10px 20px', borderRadius: 12, border: '1px solid var(--dc-verde)', cursor: 'pointer',
+            background: 'transparent', color: 'var(--dc-verde)', fontSize: '0.85rem', fontWeight: 700
           }}>
             🔌 Scansiona cliente
           </button>
           <button onClick={openAdd} style={{
             padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
-            background: '#00e5a0', color: '#08090c', fontSize: '0.85rem', fontWeight: 700
+            background: 'var(--dc-verde)', color: 'var(--dc-bg)', fontSize: '0.85rem', fontWeight: 700
           }}>
             + Nuovo cliente
           </button>
@@ -239,9 +239,9 @@ export default function FidelityPage() {
 
       {/* Configurazione avviso punti */}
       {impostazioniFidelity && (
-        <div style={{ maxWidth: 400, marginBottom: 20, background: '#111318', borderRadius: 12, padding: '12px 16px', border: '1px solid #252830', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ maxWidth: 400, marginBottom: 20, background: 'var(--dc-surface)', borderRadius: 12, padding: '12px 16px', border: '1px solid var(--dc-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.72rem', color: '#00e5a0', letterSpacing: 1, marginBottom: 4 }}>AVVISA CLIENTE QUANDO MANCANO (PUNTI)</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--dc-verde)', letterSpacing: 1, marginBottom: 4 }}>AVVISA CLIENTE QUANDO MANCANO (PUNTI)</div>
             <input
               type="number" min="0"
               defaultValue={impostazioniFidelity.fidelityAvvisoPunti ?? 0}
@@ -270,18 +270,18 @@ export default function FidelityPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {clientiFiltrati.length === 0 && (
-          <div style={{ color: '#5a5d6e', textAlign: 'center', padding: 40 }}>Nessun cliente trovato</div>
+          <div style={{ color: 'var(--dc-muted)', textAlign: 'center', padding: 40 }}>Nessun cliente trovato</div>
         )}
         {clientiFiltrati.map(c => (
           <div key={c.id} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-            padding: '14px 18px', background: '#111318', borderRadius: 12,
-            border: `1px solid ${c.attivo ? '#252830' : '#ff4d6a44'}`, opacity: c.attivo ? 1 : 0.6, flexWrap: 'wrap'
+            padding: '14px 18px', background: 'var(--dc-surface)', borderRadius: 12,
+            border: `1px solid ${c.attivo ? 'var(--dc-border)' : 'rgba(var(--dc-rosso-rgb), 0.27)'}`, opacity: c.attivo ? 1 : 0.6, flexWrap: 'wrap'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{
-                width: 44, height: 44, borderRadius: '50%', background: '#00e5a022', border: '1px solid #00e5a0',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#00e5a0', flexShrink: 0
+                width: 44, height: 44, borderRadius: '50%', background: 'rgba(var(--dc-verde-rgb), 0.13)', border: '1px solid var(--dc-verde)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--dc-verde)', flexShrink: 0
               }}>
                 {c.nome.charAt(0).toUpperCase()}
               </div>
@@ -293,10 +293,10 @@ export default function FidelityPage() {
 
 
                 <div style={{ fontSize: '0.80rem', color: 'white', marginTop: 2, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span>Codice: <strong style={{ color: '#00e5a0' }}>{c.codice_cliente}</strong></span>
+                  <span>Codice: <strong style={{ color: 'var(--dc-verde)' }}>{c.codice_cliente}</strong></span>
                   <span>·</span>
                   <span onClick={() => setShowPwd(s => ({ ...s, [c.id]: !s[c.id] }))} style={{ cursor: 'pointer' }}>
-                    Password: <strong style={{ color: '#00e5a0' }}>{showPwd[c.id] ? c.password : '••••••'}</strong> {showPwd[c.id] ? '🙈' : '👁'}
+                    Password: <strong style={{ color: 'var(--dc-verde)' }}>{showPwd[c.id] ? c.password : '••••••'}</strong> {showPwd[c.id] ? '🙈' : '👁'}
                   </span>
                   <span>·</span>
                   <span>🎯 {c.punti} punti</span>
@@ -304,7 +304,7 @@ export default function FidelityPage() {
                     impostazioniFidelity?.fidelitySogliaPunti > 0 &&
                     (impostazioniFidelity.fidelitySogliaPunti - c.punti) > 0 &&
                     (impostazioniFidelity.fidelitySogliaPunti - c.punti) <= impostazioniFidelity.fidelityAvvisoPunti && (
-                    <span style={{ background: '#ffb83033', color: '#ffb830', border: '1px solid #ffb83088', borderRadius: 6, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700 }}>
+                    <span style={{ background: 'rgba(var(--dc-ambra-rgb), 0.2)', color: 'var(--dc-ambra)', border: '1px solid rgba(var(--dc-ambra-rgb), 0.53)', borderRadius: 6, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700 }}>
                       🎯 mancano {impostazioniFidelity.fidelitySogliaPunti - c.punti} punti
                     </span>
                   )}
@@ -318,12 +318,12 @@ export default function FidelityPage() {
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button onClick={() => toggleAttivo(c)} style={{
                 padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
-                background: c.attivo ? 'rgba(0,229,160,0.15)' : 'rgba(255,77,106,0.15)',
-                color: c.attivo ? '#00e5a0' : '#ff4d6a'
+                background: c.attivo ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'rgba(var(--dc-rosso-rgb), 0.15)',
+                color: c.attivo ? 'var(--dc-verde)' : 'var(--dc-rosso)'
               }}>
                 {c.attivo ? 'ATTIVO' : 'DISABILITATO'}
               </button>
-              <button onClick={() => setConfirmElimina(c)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ff4d6a', padding: 4, display: 'flex', alignItems: 'center' }}>
+              <button onClick={() => setConfirmElimina(c)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--dc-rosso)', padding: 4, display: 'flex', alignItems: 'center' }}>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="3 6 5 6 21 6"/>
                   <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -340,15 +340,15 @@ export default function FidelityPage() {
       {/* MODAL: form nuovo cliente */}
       {modal === 'add' && (
         <div onClick={closeModal} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#111318', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400, border: '1px solid #252830' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--dc-surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400, border: '1px solid var(--dc-border)' }}>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 18 }}>+ Nuovo cliente fidelity</div>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: '0.72rem', color: '#00e5a0', letterSpacing: 1, display: 'block', marginBottom: 4 }}>NOME</label>
+              <label style={{ fontSize: '0.72rem', color: 'var(--dc-verde)', letterSpacing: 1, display: 'block', marginBottom: 4 }}>NOME</label>
               <input type="text" autoFocus value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: '0.72rem', color: '#00e5a0', letterSpacing: 1, display: 'block', marginBottom: 4 }}>COGNOME</label>
+              <label style={{ fontSize: '0.72rem', color: 'var(--dc-verde)', letterSpacing: 1, display: 'block', marginBottom: 4 }}>COGNOME</label>
               <input type="text" value={form.cognome} onChange={e => setForm(f => ({ ...f, cognome: e.target.value }))} style={inputStyle} />
             </div>
             <div style={{ marginBottom: 18 }}>
@@ -356,11 +356,11 @@ export default function FidelityPage() {
               <input type="date" value={form.data_nascita} onChange={e => setForm(f => ({ ...f, data_nascita: e.target.value }))} style={inputStyle} />
             </div>
 
-            {errore && <div style={{ color: '#ff4d6a', fontSize: '0.8rem', marginBottom: 14 }}>{errore}</div>}
+            {errore && <div style={{ color: 'var(--dc-rosso)', fontSize: '0.8rem', marginBottom: 14 }}>{errore}</div>}
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button onClick={closeModal} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid #252830', background: 'transparent', color: '#eef0f6', cursor: 'pointer' }}>Annulla</button>
-              <button onClick={salvaCliente} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: '#00e5a0', color: '#08090c', fontWeight: 700, cursor: 'pointer' }}>Crea card</button>
+              <button onClick={closeModal} style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid var(--dc-border)', background: 'transparent', color: 'var(--dc-text)', cursor: 'pointer' }}>Annulla</button>
+              <button onClick={salvaCliente} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: 'var(--dc-verde)', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer' }}>Crea card</button>
             </div>
           </div>
         </div>
@@ -369,23 +369,23 @@ export default function FidelityPage() {
       {/* MODAL: cliente appena creato, mostro codice+password */}
       {modal && modal !== 'add' && (
         <div onClick={() => setModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#111318', borderRadius: 16, padding: 28, width: '100%', maxWidth: 380, border: '1px solid #00e5a0', textAlign: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--dc-surface)', borderRadius: 16, padding: 28, width: '100%', maxWidth: 380, border: '1px solid var(--dc-verde)', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', marginBottom: 10 }}>✓</div>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 4 }}>{modal.nome} {modal.cognome}</div>
-            <div style={{ fontSize: '0.78rem', color: '#5a5d6e', marginBottom: 20 }}>Card fidelity creata</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--dc-muted)', marginBottom: 20 }}>Card fidelity creata</div>
 
-            <div style={{ background: '#08090c', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-              <div style={{ fontSize: '0.7rem', color: '#5a5d6e', letterSpacing: 1, marginBottom: 4 }}>CODICE CLIENTE</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#00e5a0', letterSpacing: 2 }}>{modal.codice_cliente}</div>
-              <div style={{ fontSize: '0.7rem', color: '#5a5d6e', letterSpacing: 1, marginTop: 14, marginBottom: 4 }}>PASSWORD</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#00e5a0', letterSpacing: 2 }}>{modal.password}</div>
+            <div style={{ background: 'var(--dc-bg)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--dc-muted)', letterSpacing: 1, marginBottom: 4 }}>CODICE CLIENTE</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--dc-verde)', letterSpacing: 2 }}>{modal.codice_cliente}</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--dc-muted)', letterSpacing: 1, marginTop: 14, marginBottom: 4 }}>PASSWORD</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--dc-verde)', letterSpacing: 2 }}>{modal.password}</div>
             </div>
 
-            <div style={{ fontSize: '0.75rem', color: '#5a5d6e', marginBottom: 20, lineHeight: 1.5 }}>
-              Comunica questi dati al cliente: dovrà accedere su <strong style={{ color: '#eef0f6' }}>fidelity.digitalcase.it</strong> per generare il suo QR code.
+            <div style={{ fontSize: '0.75rem', color: 'var(--dc-muted)', marginBottom: 20, lineHeight: 1.5 }}>
+              Comunica questi dati al cliente: dovrà accedere su <strong style={{ color: 'var(--dc-text)' }}>fidelity.digitalcase.it</strong> per generare il suo QR code.
             </div>
 
-            <button onClick={() => setModal(null)} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: '#00e5a0', color: '#08090c', fontWeight: 700, cursor: 'pointer', width: '100%' }}>
+            <button onClick={() => setModal(null)} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: 'var(--dc-verde)', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer', width: '100%' }}>
               Fatto
             </button>
           </div>
@@ -398,7 +398,7 @@ export default function FidelityPage() {
   {/* MODAL: QR registrazione negozio */}
   {showQrNegozio && (
         <div onClick={() => setShowQrNegozio(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#111318', borderRadius: 16, padding: 28, width: '100%', maxWidth: 380, border: '1px solid #ffb830', textAlign: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--dc-surface)', borderRadius: 16, padding: 28, width: '100%', maxWidth: 380, border: '1px solid var(--dc-ambra)', textAlign: 'center' }}>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 4 }}>📲 Registrazione clienti</div>
             <div style={{ fontSize: '0.78rem', color: 'white', marginBottom: 20 }}>
               Mostra questo QR ai clienti per farli accedere direttamente alla pagina fidelity
@@ -411,7 +411,7 @@ export default function FidelityPage() {
               />
             </div>
             
-            <div style={{ fontSize: '0.75rem', color: '#5a5d6e', marginTop: 16, fontFamily: "'DM Mono',monospace" }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--dc-muted)', marginTop: 16, fontFamily: "'DM Mono',monospace" }}>
               {getSlug()}.fidelity.digitalcase.it/card
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, width: '100%', boxSizing: 'border-box' }}>
@@ -428,10 +428,10 @@ export default function FidelityPage() {
                   document.body.removeChild(a)
                   URL.revokeObjectURL(blobUrl)
                 }}
-                style={{ flex: 1, padding: '10px 24px', borderRadius: 10, border: '1px solid #ffb830', background: 'transparent', color: '#ffb830', fontWeight: 700, cursor: 'pointer', boxSizing: 'border-box' }}>
+                style={{ flex: 1, padding: '10px 24px', borderRadius: 10, border: '1px solid var(--dc-ambra)', background: 'transparent', color: 'var(--dc-ambra)', fontWeight: 700, cursor: 'pointer', boxSizing: 'border-box' }}>
                 ⬇ Scarica
               </button>
-              <button onClick={() => setShowQrNegozio(false)} style={{ flex: 1, padding: '10px 24px', borderRadius: 10, border: 'none', background: '#ffb830', color: '#08090c', fontWeight: 700, cursor: 'pointer', boxSizing: 'border-box' }}>Chiudi</button>
+              <button onClick={() => setShowQrNegozio(false)} style={{ flex: 1, padding: '10px 24px', borderRadius: 10, border: 'none', background: 'var(--dc-ambra)', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer', boxSizing: 'border-box' }}>Chiudi</button>
             </div>
          </div>
         </div>
@@ -447,15 +447,15 @@ export default function FidelityPage() {
       {/* MODAL: confirm elimina */}
       {confirmElimina && (
         <div onClick={() => setConfirmElimina(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#111318', borderRadius: 16, padding: 24, width: '100%', maxWidth: 360, border: '1px solid #ff4d6a44', textAlign: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--dc-surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 360, border: '1px solid rgba(var(--dc-rosso-rgb), 0.27)', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', marginBottom: 10 }}>🗑️</div>
             <div style={{ fontWeight: 700, marginBottom: 8 }}>Eliminare la card?</div>
             <div style={{ fontSize: '0.85rem', color: 'red', marginBottom: 20 }}>
               {confirmElimina.nome} {confirmElimina.cognome} perderà i {confirmElimina.punti} punti accumulati. Operazione non reversibile.
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setConfirmElimina(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #252830', background: 'transparent', color: '#eef0f6', cursor: 'pointer' }}>Annulla</button>
-              <button onClick={confermaElimina} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#ff4d6a', color: '#08090c', fontWeight: 700, cursor: 'pointer' }}>Elimina</button>
+              <button onClick={() => setConfirmElimina(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--dc-border)', background: 'transparent', color: 'var(--dc-text)', cursor: 'pointer' }}>Annulla</button>
+              <button onClick={confermaElimina} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'var(--dc-rosso)', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer' }}>Elimina</button>
             </div>
           </div>
         </div>
@@ -469,23 +469,23 @@ export default function FidelityPage() {
       {/* CLIENTE TROVATO -> chiedo importo */}
       {clienteScannerizzato && (
         <div onClick={() => setClienteScannerizzato(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 200 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#111318', borderRadius: 16, padding: 24, width: '100%', maxWidth: 360, border: '1px solid #00e5a0' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--dc-surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 360, border: '1px solid var(--dc-verde)' }}>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{clienteScannerizzato.nome} {clienteScannerizzato.cognome}</div>
-              <div style={{ fontSize: '0.78rem', color: '#5a5d6e', marginTop: 4 }}>Saldo attuale: {clienteScannerizzato.punti} punti</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--dc-muted)', marginTop: 4 }}>Saldo attuale: {clienteScannerizzato.punti} punti</div>
             </div>
-            <label style={{ fontSize: '0.72rem', color: '#00e5a0', letterSpacing: 1, display: 'block', marginBottom: 6 }}>IMPORTO SPESO (€)</label>
+            <label style={{ fontSize: '0.72rem', color: 'var(--dc-verde)', letterSpacing: 1, display: 'block', marginBottom: 6 }}>IMPORTO SPESO (€)</label>
             <input
               type="text" autoFocus value={importoInput}
               onChange={e => setImportoInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && confermaAccredito()}
               placeholder="es. 10.00"
-              style={{ width: '100%', boxSizing: 'border-box', background: '#08090c', border: '1px solid #252830', borderRadius: 10, padding: '12px', color: '#eef0f6', fontSize: '1rem', textAlign: 'center', marginBottom: 14 }}
+              style={{ width: '100%', boxSizing: 'border-box', background: 'var(--dc-bg)', border: '1px solid var(--dc-border)', borderRadius: 10, padding: '12px', color: 'var(--dc-text)', fontSize: '1rem', textAlign: 'center', marginBottom: 14 }}
             />
-            {erroreScanner && <div style={{ color: '#ff4d6a', fontSize: '0.8rem', textAlign: 'center', marginBottom: 14 }}>{erroreScanner}</div>}
+            {erroreScanner && <div style={{ color: 'var(--dc-rosso)', fontSize: '0.8rem', textAlign: 'center', marginBottom: 14 }}>{erroreScanner}</div>}
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setClienteScannerizzato(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #252830', background: 'transparent', color: '#eef0f6', cursor: 'pointer' }}>Annulla</button>
-              <button onClick={confermaAccredito} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#00e5a0', color: '#08090c', fontWeight: 700, cursor: 'pointer' }}>Accredita</button>
+              <button onClick={() => setClienteScannerizzato(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--dc-border)', background: 'transparent', color: 'var(--dc-text)', cursor: 'pointer' }}>Annulla</button>
+              <button onClick={confermaAccredito} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: 'var(--dc-verde)', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer' }}>Accredita</button>
             </div>
           </div>
         </div>
@@ -507,12 +507,12 @@ export default function FidelityPage() {
           }}
           onClick={() => { if (!scontrinoInAttesa && !risultatoAccredito.omaggioRaggiunto) setRisultatoAccredito(null) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 200 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#111318', borderRadius: 16, padding: 28, width: '100%', maxWidth: 360, border: `1px solid ${risultatoAccredito.omaggioRaggiunto ? '#ffb830' : '#00e5a0'}`, textAlign: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--dc-surface)', borderRadius: 16, padding: 28, width: '100%', maxWidth: 360, border: `1px solid ${risultatoAccredito.omaggioRaggiunto ? 'var(--dc-ambra)' : 'var(--dc-verde)'}`, textAlign: 'center' }}>
             {risultatoAccredito.omaggioRaggiunto ? (
               <>
                 <div style={{ fontSize: '2.2rem', marginBottom: 10 }}>🎉</div>
-                <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#ffb830', marginBottom: 8 }}>Soglia raggiunta!</div>
-                <div style={{ fontSize: '0.85rem', color: '#eef0f6', lineHeight: 1.6 }}>
+                <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--dc-ambra)', marginBottom: 8 }}>Soglia raggiunta!</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--dc-text)', lineHeight: 1.6 }}>
                   Applica <strong>€ {(risultatoAccredito.valoreOmaggio / 100).toFixed(2)}</strong> di sconto/omaggio.<br/>
                   I punti del cliente sono stati azzerati.
                 </div>
@@ -521,8 +521,8 @@ export default function FidelityPage() {
               <>
                 <div style={{ fontSize: '2.2rem', marginBottom: 10 }}>✓</div>
                 <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: 8 }}>+{risultatoAccredito.puntiGuadagnati} punti</div>
-                <div style={{ fontSize: '0.85rem', color: '#5a5d6e' }}>
-                  Nuovo saldo: <strong style={{ color: '#00e5a0' }}>{risultatoAccredito.puntiFinali} punti</strong>
+                <div style={{ fontSize: '0.85rem', color: 'var(--dc-muted)' }}>
+                  Nuovo saldo: <strong style={{ color: 'var(--dc-verde)' }}>{risultatoAccredito.puntiFinali} punti</strong>
                 </div>
               </>
             )}
@@ -530,7 +530,7 @@ export default function FidelityPage() {
               <button onClick={() => {
                   setRisultatoAccredito(null)
                   if (scontrinoInAttesa) { setScontrinoInAttesa(null); router.push('/cassa') }
-                }} style={{ marginTop: 20, padding: '10px 24px', borderRadius: 10, border: 'none', background: '#00e5a0', color: '#08090c', fontWeight: 700, cursor: 'pointer', width: '100%' }}>
+                }} style={{ marginTop: 20, padding: '10px 24px', borderRadius: 10, border: 'none', background: 'var(--dc-verde)', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer', width: '100%' }}>
                 {scontrinoInAttesa ? 'Torna alla cassa' : 'Fatto'}
               </button>
             )}
@@ -544,7 +544,7 @@ export default function FidelityPage() {
 
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: '#00e5a0', color: '#08090c', padding: '10px 20px', borderRadius: 10, fontWeight: 700, fontSize: '0.85rem' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--dc-verde)', color: 'var(--dc-bg)', padding: '10px 20px', borderRadius: 10, fontWeight: 700, fontSize: '0.85rem' }}>
           {toast}
         </div>
       )}

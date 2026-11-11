@@ -1,13 +1,13 @@
 .page {
-  --accent: #ffb830;
-  --accent-dim: rgba(255,184,48,0.12);
-  --bg: #08090c;
-  --surface: #111318;
-  --surface2: #1a1c24;
-  --border: #252830;
-  --text: #eef0f6;
-  --muted: #5a5d6e;
-  --danger: #ff4d6a;
+  --accent: var(--dc-ambra);
+  --accent-dim: rgba(var(--dc-ambra-rgb), 0.12);
+  --bg: var(--dc-bg);
+  --surface: var(--dc-surface);
+  --surface2: var(--dc-surface2);
+  --border: var(--dc-border);
+  --text: var(--dc-text);
+  --muted: var(--dc-muted);
+  --danger: var(--dc-rosso);
 
   min-height: 100vh;
   background: var(--bg);
@@ -20,13 +20,13 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 24px;
   background: var(--surface);
-  border-bottom: 2px solid rgba(255,184,48,0.3);
+  border-bottom: 2px solid rgba(var(--dc-ambra-rgb), 0.3);
   position: sticky; top: 0; z-index: 10;
 }
 .headerTitle {
   display: flex; flex-direction: column;
   font-family: 'Unbounded', sans-serif; font-size: 0.9rem; font-weight: 700;
-  color: #ffb830;
+  color: var(--dc-ambra);
 }
 .headerSub { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
 
@@ -36,7 +36,7 @@
   font-family: 'DM Mono', monospace; font-size: 0.8rem; cursor: pointer;
   transition: all 0.2s;
 }
-.exitBtn:hover { border-color: #ffb830; color: #ffb830; }
+.exitBtn:hover { border-color: var(--dc-ambra); color: var(--dc-ambra); }
 
 .content {
   flex: 1; padding: 24px;
@@ -50,7 +50,7 @@
 }
 .sectionTitle {
   font-family: 'Unbounded', sans-serif; font-size: 0.82rem; font-weight: 700;
-  color: #ffb830;
+  color: var(--dc-ambra);
 }
 
 .infoGrid { display: flex; flex-direction: column; gap: 8px; }
@@ -78,21 +78,21 @@
   color: var(--text); font-family: 'DM Mono', monospace;
   font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
 }
-.techBtn:hover { border-color: #ffb830; color: #ffb830; }
+.techBtn:hover { border-color: var(--dc-ambra); color: var(--dc-ambra); }
 .techBtnOff:hover { border-color: var(--danger) !important; color: var(--danger) !important; }
-.techBtnOn:hover { border-color: #00e5a0 !important; color: #00e5a0 !important; }
+.techBtnOn:hover { border-color: var(--dc-verde) !important; color: var(--dc-verde) !important; }
 
 .pinEdit { display: flex; align-items: center; gap: 6px; }
 .pinEditInput {
   width: 90px; padding: 7px 10px; border-radius: 8px;
-  background: var(--surface); border: 1px solid #ffb830;
+  background: var(--surface); border: 1px solid var(--dc-ambra);
   color: var(--text); font-family: 'DM Mono', monospace;
   font-size: 0.9rem; outline: none; text-align: center;
   letter-spacing: 4px;
 }
 .savePin {
   padding: 7px 12px; border-radius: 8px; border: none;
-  background: #00e5a0; color: #000; cursor: pointer; font-weight: 700;
+  background: var(--dc-verde); color: #000; cursor: pointer; font-weight: 700;
 }
 .cancelPin {
   padding: 7px 12px; border-radius: 8px;
@@ -107,7 +107,7 @@
   color: var(--danger); font-family: 'DM Mono', monospace;
   font-size: 0.82rem; cursor: pointer; transition: all 0.2s;
 }
-.resetBtn:hover { background: rgba(255,77,106,0.1); }
+.resetBtn:hover { background: rgba(var(--dc-rosso-rgb), 0.1); }
 .resetBtnConfirm {
   padding: 10px 20px; border-radius: 10px; border: none;
   background: var(--danger); color: #fff;
@@ -118,8 +118,8 @@
 
 .toast {
   position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
-  background: var(--surface); border: 1px solid #ffb830;
-  color: #ffb830; padding: 12px 24px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--dc-ambra);
+  color: var(--dc-ambra); padding: 12px 24px; border-radius: 12px;
   font-size: 0.82rem; z-index: 100;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   animation: toastIn 0.3s ease;
@@ -131,7 +131,7 @@
 .negozioField { display: flex; flex-direction: column; gap: 4px; }
 .negozioField label { font-size: 0.68rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
 .negozioInput {
-  background: var(--surface2); border: 1px solid #ffb830;
+  background: var(--surface2); border: 1px solid var(--dc-ambra);
   border-radius: 8px; padding: 10px 14px;
   font-family: 'DM Mono', monospace; font-size: 0.88rem; color: var(--text);
   outline: none; width: 100%;

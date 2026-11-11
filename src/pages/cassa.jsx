@@ -830,9 +830,9 @@ export default function CassaPage() {
 
       {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
         <div style={{
-          background:'#ffb83022', borderBottom:'2px solid #ffb830',
+          background:'rgba(var(--dc-ambra-rgb), 0.13)', borderBottom:'2px solid var(--dc-ambra)',
           padding:'10px 16px', textAlign:'center',
-          fontSize:'0.82rem', color:'#ffb830',
+          fontSize:'0.82rem', color:'var(--dc-ambra)',
           fontFamily:"'DM Mono',monospace"
         }}>
           ⚠️ Licenza in scadenza tra <strong>{negozio.giorniRimanenti} giorni</strong> ({new Date(negozio.data_scadenza).toLocaleDateString('it-IT')}) — contatta il rivenditore
@@ -882,29 +882,29 @@ export default function CassaPage() {
           animation:'benvenutoFade 3s ease forwards',
         }}>
           <div style={{
-            background:'#111318', border:'1px solid #00e5a0',
+            background:'var(--dc-surface)', border:'1px solid var(--dc-verde)',
             borderRadius:24, padding:'48px 72px',
             display:'flex', flexDirection:'column', alignItems:'center', gap:16,
-            boxShadow:'0 0 64px rgba(0,229,160,0.2), 0 32px 80px rgba(0,0,0,0.7)',
+            boxShadow:'0 0 64px rgba(var(--dc-verde-rgb), 0.2), 0 32px 80px rgba(0,0,0,0.7)',
             animation:'benvenutoIn 0.5s cubic-bezier(0.34,1.56,0.64,1)',
           }}>
             <div style={{
               width:88, height:88, borderRadius:'50%',
-              background:'rgba(0,229,160,0.12)', border:'2px solid #00e5a0',
+              background:'rgba(var(--dc-verde-rgb), 0.12)', border:'2px solid var(--dc-verde)',
               display:'flex', alignItems:'center', justifyContent:'center',
-              boxShadow:'0 0 32px rgba(0,229,160,0.35)',
+              boxShadow:'0 0 32px rgba(var(--dc-verde-rgb), 0.35)',
             }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="2.5">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--dc-verde)" strokeWidth="2.5">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <div style={{fontSize:'0.72rem', color:' #00e5a0', letterSpacing:4, fontFamily:"'DM Mono',monospace", textTransform:'uppercase'}}>
+            <div style={{fontSize:'0.72rem', color:' var(--dc-verde)', letterSpacing:4, fontFamily:"'DM Mono',monospace", textTransform:'uppercase'}}>
               Benvenuto/a
             </div>
             <div style={{fontFamily:"'Unbounded',sans-serif", fontSize:'1.8rem', fontWeight:700, color:'#ffd06b', letterSpacing:'-0.5px'}}>
               {user.name}
             </div>
-            <div style={{fontSize:'0.82rem', color:' #00e5a0', fontFamily:"'DM Mono',monospace"}}>
+            <div style={{fontSize:'0.82rem', color:' var(--dc-verde)', fontFamily:"'DM Mono',monospace"}}>
               {user.role === 'owner' ? '👑 Titolare — Accesso Completo' : '👤 Cassiere — Solo Cassa'}
             </div>
           </div>
@@ -976,8 +976,8 @@ export default function CassaPage() {
                 {righe.length > 0 && (
                   <button
                     onClick={() => setShowSconto(true)}
-                    style={{padding:'4px 14px', borderRadius:8, background:'#1a1c24',
-                      border:'1px solid #00e5a0', color:'#00e5a0', fontWeight:700,
+                    style={{padding:'4px 14px', borderRadius:8, background:'var(--dc-surface2)',
+                      border:'1px solid var(--dc-verde)', color:'var(--dc-verde)', fontWeight:700,
                       fontSize:'0.8rem', cursor:'pointer'}}>
                     ✂️ Sconto
                   </button>
@@ -1001,18 +1001,18 @@ export default function CassaPage() {
           {impostazioni.asportoAbilitato && (
               <button onClick={() => router.push('/asporto')}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-                  color:'#6482ff', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  color:'var(--dc-blu)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
                   position:'relative'}}>
                 {asportiAperti > 0 && (
                   <div style={{
                     position:'absolute', top:-6, right:-6,
-                    background:'#6482ff', color:'white',
+                    background:'var(--dc-blu)', color:'white',
                     borderRadius:'50%', width:20, height:20,
                     display:'flex', alignItems:'center', justifyContent:'center',
                     fontSize:'0.68rem', fontWeight:700,
                     fontFamily:"'DM Mono',monospace",
-                    boxShadow:'0 0 8px rgba(100,130,255,0.6)',
+                    boxShadow:'0 0 8px rgba(var(--dc-blu-rgb), 0.6)',
                   }}>
                     {asportiAperti}
                   </div>
@@ -1025,18 +1025,18 @@ export default function CassaPage() {
           {impostazioni.agendaAbilitato && (
               <button onClick={() => router.push('/agenda')}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-                  color:'#c44dff', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  color:'var(--dc-viola)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
                   position:'relative'}}>
                 {prenotazioniOggi > 0 && (
                   <div style={{
                     position:'absolute', top:-6, right:-6,
-                    background:'#c44dff', color:'white',
+                    background:'var(--dc-viola)', color:'white',
                     borderRadius:'50%', width:20, height:20,
                     display:'flex', alignItems:'center', justifyContent:'center',
                     fontSize:'0.68rem', fontWeight:700,
                     fontFamily:"'DM Mono',monospace",
-                    boxShadow:'0 0 6px #c44dff88',
+                    boxShadow:'0 0 6px rgba(var(--dc-viola-rgb), 0.53)',
                   }}>
                     {prenotazioniOggi}
                   </div>
@@ -1050,7 +1050,7 @@ export default function CassaPage() {
             {impostazioni.magazzinoAbilitato && (
               <button onClick={() => router.push('/magazzino')}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-                  color:'#ffb830', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  color:'var(--dc-ambra)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
                 <span style={{fontSize:'1.4rem'}}>📦</span>
                 <span>Giacenze</span>
@@ -1067,18 +1067,18 @@ export default function CassaPage() {
 {impostazioni.tavoliAbilitati !== false && (
               <button onClick={() => router.push('/tavoli')}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-                  color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  color:'var(--dc-verde)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
                   position:'relative'}}>
                 {tavoliOccupati > 0 && (
                   <div style={{
                     position:'absolute', top:-6, right:-6,
-                    background:'#ff4d6a', color:'white',
+                    background:'var(--dc-rosso)', color:'white',
                     borderRadius:'50%', width:20, height:20,
                     display:'flex', alignItems:'center', justifyContent:'center',
                     fontSize:'0.68rem', fontWeight:700,
                     fontFamily:"'DM Mono',monospace",
-                    boxShadow:'0 0 6px #ff4d6a88',
+                    boxShadow:'0 0 6px rgba(var(--dc-rosso-rgb), 0.53)',
                   }}>
                     {tavoliOccupati}
                   </div>
@@ -1098,18 +1098,18 @@ export default function CassaPage() {
                   router.push('/fidelity')
                 }}
                 style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
-                  color:'#00e5a0', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
+                  color:'var(--dc-verde)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
                   position:'relative'}}>
                 {clientiFidelityInScadenza > 0 && (
                   <div style={{
                     position:'absolute', top:-6, right:-6,
-                    background:'#ffb830', color:'#08090c',
+                    background:'var(--dc-ambra)', color:'var(--dc-bg)',
                     borderRadius:'50%', width:20, height:20,
                     display:'flex', alignItems:'center', justifyContent:'center',
                     fontSize:'0.68rem', fontWeight:700,
                     fontFamily:"'DM Mono',monospace",
-                    boxShadow:'0 0 6px #ffb83088',
+                    boxShadow:'0 0 6px rgba(var(--dc-ambra-rgb), 0.53)',
                   }}>
                     {clientiFidelityInScadenza}
                   </div>
@@ -1143,7 +1143,7 @@ export default function CassaPage() {
             display:'flex', flexDirection:'column', gap:10}}>
             {scontrinoAperto && righe.length === 0 && (
               <button className={styles.chiudiBtn}
-                style={{background:'#ff4d6a', position:'static', marginTop:0}}
+                style={{background:'var(--dc-rosso)', position:'static', marginTop:0}}
                 onClick={() => setShowConfirmAnnulla(true)}>
                 🗑️ Annulla scontrino
               </button>
@@ -1181,7 +1181,7 @@ export default function CassaPage() {
                   }}
                   style={{
                     flex:1, background:'transparent', border:'none',
-                    borderBottom:'1px solid #252830', color:'#eef0f6',
+                    borderBottom:'1px solid var(--dc-border)', color:'var(--dc-text)',
                     fontSize:'0.85rem', padding:'4px 8px', outline:'none',
                     fontFamily:"'DM Mono',monospace"
                   }}
@@ -1227,14 +1227,14 @@ export default function CassaPage() {
   <div style={{ display:'flex', alignItems:'center', gap:4, marginRight: 18 }}>
     <button
       onClick={() => aggiornaQuantita(r.id, -1)}
-      style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+      style={{ width:24, height:24, borderRadius:6, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
     >−</button>
-    <span style={{ fontSize:'0.82rem', color:'#eef0f6', minWidth:16, textAlign:'center', fontFamily:"'DM Mono',monospace" }}>
+    <span style={{ fontSize:'0.82rem', color:'var(--dc-text)', minWidth:16, textAlign:'center', fontFamily:"'DM Mono',monospace" }}>
       {r.quantita}
     </span>
     <button
       onClick={() => aggiornaQuantita(r.id, 1)}
-      style={{ width:24, height:24, borderRadius:6, background:'#252830', border:'none', color:'#eef0f6', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+      style={{ width:24, height:24, borderRadius:6, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', cursor:'pointer', fontSize:'1rem', display:'flex', alignItems:'center', justifyContent:'center' }}
     >+</button>
   </div>
   )}
@@ -1242,7 +1242,7 @@ export default function CassaPage() {
     {(impostazioni.cortesiaAbilitato || impostazioni.tavoliAbilitati) && !(r.repartoId === null && r.importo < 0) && (
                     <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota || '') }}
                       title="Aggiungi nota"
-                      style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? '#ffb830' : '#5a5d6e', fontSize:'1rem', padding:'4px' }}>
+                      style={{ background:'transparent', border:'none', cursor:'pointer', color: r.nota ? 'var(--dc-ambra)' : 'var(--dc-muted)', fontSize:'1rem', padding:'4px' }}>
                       ✏️
                     </button>
                     )}
@@ -1272,11 +1272,11 @@ export default function CassaPage() {
                       <span style={{color: rep?.colore}}>{ICONE[rep?.icona]||'📦'}</span>
                       <span>{rep?.nome}</span>
                       <span className={styles.righeCount}>{prodotti.length} prodotti</span>
-                      <button onClick={() => setPannelloProdotti(false)} style={{ marginLeft:'auto', minHeight:40, padding:'8px 16px', background:'#1a1c24', color:'#eef0f6', border:'1px solid #252830', borderRadius:8, cursor:'pointer', fontSize:'0.85rem', letterSpacing:0 }}>✕ Chiudi</button>
+                      <button onClick={() => setPannelloProdotti(false)} style={{ marginLeft:'auto', minHeight:40, padding:'8px 16px', background:'var(--dc-surface2)', color:'var(--dc-text)', border:'1px solid var(--dc-border)', borderRadius:8, cursor:'pointer', fontSize:'0.85rem', letterSpacing:0 }}>✕ Chiudi</button>
                     </div>
                     {prodotti.length === 0 ? (
                       <div className={styles.righeEmpty} style={{padding:20}}>
-                        <div style={{fontSize:'0.8rem', color:'#5a5d6e'}}>Nessun prodotto — digita importo e premi il reparto</div>
+                        <div style={{fontSize:'0.8rem', color:'var(--dc-muted)'}}>Nessun prodotto — digita importo e premi il reparto</div>
                       </div>
                     ) : (
                       <div className={styles.prodottiGrid}>
@@ -1295,7 +1295,7 @@ export default function CassaPage() {
         <div style={{
           position:'absolute', top:-8, right:-8,
           background: rep?.colore,
-          color:'#08090c',
+          color:'var(--dc-bg)',
           borderRadius:'50%',
           width:22, height:22,
           display:'flex', alignItems:'center', justifyContent:'center',
@@ -1349,7 +1349,7 @@ export default function CassaPage() {
         <div style={{
           position: 'absolute', top: -6, right: -6,
           background: r.colore,
-          color: '#08090c',
+          color: 'var(--dc-bg)',
           borderRadius: '50%',
           width: 20, height: 20,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1476,17 +1476,17 @@ export default function CassaPage() {
       {/* MODAL SCONTO */}
       {showSconto && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#111318',border:'2px solid #00e5a0',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
-            <div style={{fontSize:'1.1rem',fontWeight:700,color:'#00e5a0',marginBottom:8}}>✂️ Applica Sconto</div>
-            <div style={{fontSize:'0.95rem',color:'#ffb830',marginBottom:20}}>
-              Totale attuale: <strong style={{color:'#eef0f6'}}>€ {fmt(totale)}</strong>
+          <div style={{background:'var(--dc-surface)',border:'2px solid var(--dc-verde)',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
+            <div style={{fontSize:'1.1rem',fontWeight:700,color:'var(--dc-verde)',marginBottom:8}}>✂️ Applica Sconto</div>
+            <div style={{fontSize:'0.95rem',color:'var(--dc-ambra)',marginBottom:20}}>
+              Totale attuale: <strong style={{color:'var(--dc-text)'}}>€ {fmt(totale)}</strong>
             </div>
             <div style={{display:'flex',gap:8,marginBottom:16}}>
               {['euro','percentuale'].map(t => (
                 <button key={t} onClick={() => setTipoSconto(t)}
                   style={{flex:1,padding:'10px',borderRadius:8,border:'none',cursor:'pointer',
-                    background: tipoSconto === t ? '#00e5a0' : '#1a1c24',
-                    color: tipoSconto === t ? '#08090c' : '#eef0f6',
+                    background: tipoSconto === t ? 'var(--dc-verde)' : 'var(--dc-surface2)',
+                    color: tipoSconto === t ? 'var(--dc-bg)' : 'var(--dc-text)',
                     fontWeight: tipoSconto === t ? 700 : 400}}>
                   {t === 'euro' ? '€ Euro' : '% Percentuale'}
                 </button>
@@ -1498,25 +1498,25 @@ export default function CassaPage() {
               onChange={e => setValoreSconto(e.target.value)}
               placeholder={tipoSconto === 'euro' ? 'Es. 1,50' : 'Es. 10'}
               autoFocus
-              style={{width:'100%',background:'#1a1c24',border:'1px solid #252830',borderRadius:10,
-                padding:'12px',color:'#eef0f6',fontSize:'1.2rem',textAlign:'center',
+              style={{width:'100%',background:'var(--dc-surface2)',border:'1px solid var(--dc-border)',borderRadius:10,
+                padding:'12px',color:'var(--dc-text)',fontSize:'1.2rem',textAlign:'center',
                 boxSizing:'border-box',outline:'none',marginBottom:16,
                 fontFamily:"'DM Mono',monospace"}}
             />
             {valoreSconto && tipoSconto === 'euro' && (
-              <div style={{textAlign:'center',color:'#00e5a0',marginBottom:12,fontSize:'0.85rem'}}>
+              <div style={{textAlign:'center',color:'var(--dc-verde)',marginBottom:12,fontSize:'0.85rem'}}>
                 Sconto: € {fmt(euroInCentesimi(valoreSconto))} · Nuovo totale: € {fmt(totale - euroInCentesimi(valoreSconto))}
               </div>
             )}
             {valoreSconto && tipoSconto === 'percentuale' && (
-              <div style={{textAlign:'center',color:'#00e5a0',marginBottom:12,fontSize:'0.85rem'}}>
+              <div style={{textAlign:'center',color:'var(--dc-verde)',marginBottom:12,fontSize:'0.85rem'}}>
                 Nuovo totale: € {fmt(totale - Math.round(totale * parseFloat(valoreSconto.replace(',','.') || 0) / 100))}
               </div>
             )}
             <div style={{display:'flex',gap:12}}>
               <button onClick={() => { setShowSconto(false); setValoreSconto('') }}
-                style={{flex:1,padding:'12px',borderRadius:10,border:'1px solid #252830',
-                  background:'transparent',color:'#eef0f6',cursor:'pointer'}}>
+                style={{flex:1,padding:'12px',borderRadius:10,border:'1px solid var(--dc-border)',
+                  background:'transparent',color:'var(--dc-text)',cursor:'pointer'}}>
                 Annulla
               </button>
               <button onClick={() => {
@@ -1526,7 +1526,7 @@ export default function CassaPage() {
                   }
                 }}
                 style={{flex:1,padding:'12px',borderRadius:10,border:'none',
-                  background:'#00e5a0',color:'#08090c',cursor:'pointer',fontWeight:700}}>
+                  background:'var(--dc-verde)',color:'var(--dc-bg)',cursor:'pointer',fontWeight:700}}>
                 ✓ Applica
               </button>
             </div>
@@ -1536,23 +1536,23 @@ export default function CassaPage() {
       {/* MODAL NOTA */}
       {notaModal !== null && (
   <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
-    <div style={{background:'#111318',border:'1px solid #252830',borderRadius:20,padding:24,width:420,maxHeight:'90vh',overflowY:'auto',display:'flex',flexDirection:'column',gap:14}}>
-      <div style={{fontSize:'0.99rem',fontWeight:700,color:'#ffb830'}}>
+    <div style={{background:'var(--dc-surface)',border:'1px solid var(--dc-border)',borderRadius:20,padding:24,width:420,maxHeight:'90vh',overflowY:'auto',display:'flex',flexDirection:'column',gap:14}}>
+      <div style={{fontSize:'0.99rem',fontWeight:700,color:'var(--dc-ambra)'}}>
         ✏️ Variante per: {righe.find(r => r.id === notaModal)?.nome}
       </div>
 
       {/* Tipo */}
       <div style={{display:'flex',gap:8}}>
       <button onClick={() => { setNotaTipo('rimozione'); setAggiunte([]) }}
-          style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='rimozione' ? '#ff4d6a' : '#252830'}`,
-            background: notaTipo==='rimozione' ? 'rgba(255,77,106,0.15)' : 'transparent',
-            color: notaTipo==='rimozione' ? '#ff4d6a' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
+          style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='rimozione' ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+            background: notaTipo==='rimozione' ? 'rgba(var(--dc-rosso-rgb), 0.15)' : 'transparent',
+            color: notaTipo==='rimozione' ? 'var(--dc-rosso)' : 'var(--dc-muted)', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
           − Rimozione
         </button>
         <button onClick={() => { if (notaTipo !== 'aggiunta') setAggiunte([]); setNotaTipo('aggiunta') }}
-          style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='aggiunta' ? '#00e5a0' : '#252830'}`,
-            background: notaTipo==='aggiunta' ? 'rgba(0,229,160,0.15)' : 'transparent',
-            color: notaTipo==='aggiunta' ? '#00e5a0' : '#5a5d6e', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
+          style={{flex:1,padding:'10px',borderRadius:10,border:`2px solid ${notaTipo==='aggiunta' ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+            background: notaTipo==='aggiunta' ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'transparent',
+            color: notaTipo==='aggiunta' ? 'var(--dc-verde)' : 'var(--dc-muted)', cursor:'pointer', fontWeight:700, fontSize:'0.9rem'}}>
           + Aggiunta
         </button>
       </div>
@@ -1567,7 +1567,7 @@ export default function CassaPage() {
   const nomiRim = [...new Set(impostazioni.aggiunteRapide.map(a => a.nome))]
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-      <div style={{ fontSize:'0.8rem', color:'#ff4d6a', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
+      <div style={{ fontSize:'0.8rem', color:'var(--dc-rosso)', letterSpacing:1 }}>RIMOZIONI RAPIDE</div>
       <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
         {nomiRim.map(item => {
           const selected = aggiunte.some(a => a.nome === item)
@@ -1576,9 +1576,9 @@ export default function CassaPage() {
               onClick={() => setAggiunte(prev => prev.some(a => a.nome === item) ? prev.filter(a => a.nome !== item) : [...prev, { nome: item, costo: 0 }])}
               style={{
                 padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                border: `1px solid ${selected ? '#ff4d6a' : '#252830'}`,
-                background: selected ? 'rgba(255,77,106,0.15)' : '#1a1c24',
-                color: selected ? '#ff4d6a' : '#eef0f6',
+                border: `1px solid ${selected ? 'var(--dc-rosso)' : 'var(--dc-border)'}`,
+                background: selected ? 'rgba(var(--dc-rosso-rgb), 0.15)' : 'var(--dc-surface2)',
+                color: selected ? 'var(--dc-rosso)' : 'var(--dc-text)',
                 fontWeight: selected ? 700 : 400,
               }}>
               {item}
@@ -1587,7 +1587,7 @@ export default function CassaPage() {
         })}
       </div>
       {aggiunte.length > 0 && (
-        <div style={{ fontSize:'0.75rem', color:'#ff4d6a', background:'rgba(255,77,106,0.1)', borderRadius:8, padding:'6px 10px' }}>
+        <div style={{ fontSize:'0.75rem', color:'var(--dc-rosso)', background:'rgba(var(--dc-rosso-rgb), 0.1)', borderRadius:8, padding:'6px 10px' }}>
           Senza: {aggiunte.map(a => a.nome).join(', ')}
         </div>
       )}
@@ -1606,11 +1606,11 @@ export default function CassaPage() {
   return (
 
   <div style={{display:'flex',flexDirection:'column',gap:8}}>
-    <div style={{fontSize:'0.8rem',color:'#00ffb3',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
+    <div style={{fontSize:'0.8rem',color:'var(--dc-menta)',letterSpacing:1}}>AGGIUNTE RAPIDE</div>
     {tiers.map(({ costo, items }) => (
 
 <div key={costo}>
-<div style={{fontSize:'0.82rem',color:'#ffb830',marginBottom:4}}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
+<div style={{fontSize:'0.82rem',color:'var(--dc-ambra)',marginBottom:4}}>€ {(costo/100).toFixed(2).replace('.',',')}</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
           {items.map(item => {
             const selected = aggiunte.some(a => a.nome === item && a.costo === costo)
@@ -1625,9 +1625,9 @@ export default function CassaPage() {
                 }}
                 style={{
                   padding:'6px 12px', borderRadius:8, fontSize:'0.9rem', cursor:'pointer',
-                  border: `1px solid ${selected ? '#00e5a0' : '#252830'}`,
-                  background: selected ? 'rgba(0,229,160,0.15)' : '#1a1c24',
-                  color: selected ? '#00e5a0' : '#eef0f6',
+                  border: `1px solid ${selected ? 'var(--dc-verde)' : 'var(--dc-border)'}`,
+                  background: selected ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-surface2)',
+                  color: selected ? 'var(--dc-verde)' : 'var(--dc-text)',
                   fontWeight: selected ? 700 : 400,
                 }}>
                 {item}
@@ -1638,7 +1638,7 @@ export default function CassaPage() {
       </div>
     ))}
     {aggiunte.length > 0 && (
-      <div style={{fontSize:'0.75rem',color:'#00e5a0',background:'rgba(0,229,160,0.1)',borderRadius:8,padding:'6px 10px'}}>
+      <div style={{fontSize:'0.75rem',color:'var(--dc-verde)',background:'rgba(var(--dc-verde-rgb), 0.1)',borderRadius:8,padding:'6px 10px'}}>
         💰 Totale aggiunte: +€{(aggiunte.reduce((s,a) => s + a.costo, 0)/100).toFixed(2).replace('.',',')}
         {' — '}{aggiunte.map(a => a.nome).join(', ')}
       </div>
@@ -1651,12 +1651,12 @@ export default function CassaPage() {
       <textarea value={notaTesto} onChange={e => { setNotaTesto(e.target.value.toUpperCase()) }}
         placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'oppure scrivi una variante personalizzata...'}
         rows={2}
-        style={{background:'#1a1c24',border:'1px solid #252830',borderRadius:10,padding:12,color:'#eef0f6',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
+        style={{background:'var(--dc-surface2)',border:'1px solid var(--dc-border)',borderRadius:10,padding:12,color:'var(--dc-text)',fontSize:'0.9rem',resize:'none',fontFamily:"'DM Sans',sans-serif"}}
       />
 
       <div style={{display:'flex',gap:10}}>
       <button onClick={() => { setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([]) }}
-          style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid #252830',color:'#eef0f6',cursor:'pointer'}}>
+          style={{flex:1,padding:12,borderRadius:10,background:'transparent',border:'1px solid var(--dc-border)',color:'var(--dc-text)',cursor:'pointer'}}>
           Annulla
         </button>
         <button onClick={() => {
@@ -1671,7 +1671,7 @@ export default function CassaPage() {
     if (testoFinale) salvaNota(notaModal, testoFinale, notaTipo, costoTotale)
     setNotaModal(null); setNotaTesto(''); setNotaTipo('rimozione'); setAggiunte([])
   }}
-  style={{flex:1,padding:12,borderRadius:10,background:'#00e5a0',border:'none',color:'#08090c',fontWeight:700,cursor:'pointer'}}>
+  style={{flex:1,padding:12,borderRadius:10,background:'var(--dc-verde)',border:'none',color:'var(--dc-bg)',fontWeight:700,cursor:'pointer'}}>
   Salva
 </button>
       </div>
@@ -1681,23 +1681,23 @@ export default function CassaPage() {
       {/* MODAL AVVISO SCORTE */}
       {avvisoMagazzino.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#111318',border:'2px solid #ffb830',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
-            <div style={{fontSize:'1.1rem',fontWeight:700,color:'#ffb830',marginBottom:16}}>⚠️ Scorte in esaurimento</div>
+          <div style={{background:'var(--dc-surface)',border:'2px solid var(--dc-ambra)',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
+            <div style={{fontSize:'1.1rem',fontWeight:700,color:'var(--dc-ambra)',marginBottom:16}}>⚠️ Scorte in esaurimento</div>
             {avvisoMagazzino.map((a,i) => (
-              <div key={i} style={{padding:'8px 0',borderBottom:'1px solid #252830',fontSize:'0.85rem'}}>
+              <div key={i} style={{padding:'8px 0',borderBottom:'1px solid var(--dc-border)',fontSize:'0.85rem'}}>
                 <strong>{a.nome}</strong>
                 <div style={{fontSize:'0.78rem',color:'white',marginTop:4}}>
-                  Rimasti: <strong style={{color:'#ffb830'}}>{a.giacenza}</strong> · Soglia minima: {a.minima}
+                  Rimasti: <strong style={{color:'var(--dc-ambra)'}}>{a.giacenza}</strong> · Soglia minima: {a.minima}
                 </div>
               </div>
             ))}
             <div style={{display:'flex',gap:12,marginTop:20}}>
               <button onClick={() => { setAvvisoMagazzino([]); router.push('/magazzino') }}
-                style={{flex:1,padding:'10px',borderRadius:10,border:'none',background:'#ffb830',color:'#08090c',cursor:'pointer',fontWeight:700}}>
+                style={{flex:1,padding:'10px',borderRadius:10,border:'none',background:'var(--dc-ambra)',color:'var(--dc-bg)',cursor:'pointer',fontWeight:700}}>
                 📦 Vai al magazzino
               </button>
               <button onClick={() => setAvvisoMagazzino([])}
-                style={{flex:1,padding:'10px',borderRadius:10,border:'1px solid #252830',background:'transparent',color:'#eef0f6',cursor:'pointer'}}>
+                style={{flex:1,padding:'10px',borderRadius:10,border:'1px solid var(--dc-border)',background:'transparent',color:'var(--dc-text)',cursor:'pointer'}}>
                 Ignora
               </button>
             </div>
@@ -1707,17 +1707,17 @@ export default function CassaPage() {
       {/* MODAL GIACENZA INSUFFICIENTE */}
       {giacenzaInsuff.length > 0 && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.8)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#111318',border:'2px solid #ff4d6a',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
-            <div style={{fontSize:'1.1rem',fontWeight:700,color:'#ff4d6a',marginBottom:16}}>⚠️ Giacenza insufficiente</div>
+          <div style={{background:'var(--dc-surface)',border:'2px solid var(--dc-rosso)',borderRadius:16,padding:28,maxWidth:400,width:'90%'}}>
+            <div style={{fontSize:'1.1rem',fontWeight:700,color:'var(--dc-rosso)',marginBottom:16}}>⚠️ Giacenza insufficiente</div>
             {giacenzaInsuff.map((r,i) => (
-              <div key={i} style={{padding:'8px 0',borderBottom:'1px solid #252830',fontSize:'0.85rem'}}>
+              <div key={i} style={{padding:'8px 0',borderBottom:'1px solid var(--dc-border)',fontSize:'0.85rem'}}>
                 <strong>{r.nome}</strong>
                 <div style={{fontSize:'0.78rem',color:'white',marginTop:4}}>
-                  Disponibili: <strong style={{color:'#ff4d6a'}}>{r.giacenza}</strong> · Richiesti: <strong>{r.quantita}</strong>
+                  Disponibili: <strong style={{color:'var(--dc-rosso)'}}>{r.giacenza}</strong> · Richiesti: <strong>{r.quantita}</strong>
                 </div>
               </div>
             ))}
-            <button onClick={() => setGiacenzaInsuff([])} style={{width:'100%',marginTop:20,padding:'12px',borderRadius:10,border:'none',background:'#ff4d6a',color:'white',cursor:'pointer',fontWeight:700}}>
+            <button onClick={() => setGiacenzaInsuff([])} style={{width:'100%',marginTop:20,padding:'12px',borderRadius:10,border:'none',background:'var(--dc-rosso)',color:'white',cursor:'pointer',fontWeight:700}}>
               OK — Modifica lo scontrino
             </button>
           </div>
@@ -1787,7 +1787,7 @@ export default function CassaPage() {
                 <span>€ {fmt(r.totaleRiga)}</span>
               </div>
               {r.nota && (
-                <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? '#00e5a0' : '#ffb830'}}>
+                <div style={{fontSize:'0.72rem', color: r.nota.startsWith('+') ? 'var(--dc-verde)' : 'var(--dc-ambra)'}}>
                   {r.nota.startsWith('+') && r.importoBase
                     ? `📝 ${r.nota} +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}`
                     : `📝 ${r.nota}`}

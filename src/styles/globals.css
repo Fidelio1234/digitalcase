@@ -14,3 +14,19 @@ html, body {
 
 button { outline: none; }
 button:focus-visible { outline: 2px solid #00e5a0; outline-offset: 2px; }
+
+/* Tema: colori base (scuro). Il tema chiaro li ridefinisce. */
+:root {
+  --dc-bg: #08090c;       --dc-bg-rgb: 8, 9, 12;
+  --dc-surface: #111318;  --dc-surface-rgb: 17, 19, 24;
+  --dc-surface2: #1a1c24; --dc-surface2-rgb: 26, 28, 36;
+  --dc-border: #252830;   --dc-border-rgb: 37, 40, 48;
+  --dc-text: #eef0f6;     --dc-text-rgb: 238, 240, 246;
+  --dc-muted: #5a5d6e;    --dc-muted-rgb: 90, 93, 110;
+  --dc-verde: #00e5a0;    --dc-verde-rgb: 0, 229, 160;
+  --dc-ambra: #ffb830;    --dc-ambra-rgb: 255, 184, 48;
+  --dc-rosso: #ff4d6a;    --dc-rosso-rgb: 255, 77, 106;
+  --dc-menta: #00ffb3;    --dc-menta-rgb: 0, 255, 179;
+  --dc-blu: #6482ff;      --dc-blu-rgb: 100, 130, 255;
+  --dc-viola: #c44dff;    --dc-viola-rgb: 196, 77, 255;
+}

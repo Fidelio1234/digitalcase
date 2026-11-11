@@ -78,8 +78,8 @@ export default function ImmagineProdotto({ value, onChange }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
           padding: 12, borderRadius: 12,
-          border: '2px dashed ' + (sopra ? '#00e5a0' : '#3a3d4e'),
-          background: sopra ? 'rgba(0,229,160,0.08)' : 'transparent',
+          border: '2px dashed ' + (sopra ? 'var(--dc-verde)' : '#3a3d4e'),
+          background: sopra ? 'rgba(var(--dc-verde-rgb), 0.08)' : 'transparent',
         }}
       >
         {value ? (
@@ -106,12 +106,12 @@ export default function ImmagineProdotto({ value, onChange }) {
         <button
           type="button"
           onClick={() => onChange(null)}
-          style={{ marginTop: 8, background: 'transparent', border: 'none', color: '#ff4d6a', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}
+          style={{ marginTop: 8, background: 'transparent', border: 'none', color: 'var(--dc-rosso)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}
         >
           Rimuovi foto
         </button>
       )}
-      {errore && <div style={{ marginTop: 8, color: '#ff4d6a', fontSize: '0.8rem' }}>⚠ {errore}</div>}
+      {errore && <div style={{ marginTop: 8, color: 'var(--dc-rosso)', fontSize: '0.8rem' }}>⚠ {errore}</div>}
     </div>
   )
 }
