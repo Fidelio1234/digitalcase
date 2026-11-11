@@ -89,7 +89,7 @@ export function useSbloccoAnnullati() {
             Annulla
           </button>
           <button onClick={conferma} disabled={invio || pin.length !== 8}
-            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'var(--dc-ambra)', color: '#111', fontWeight: 700, opacity: (invio || pin.length !== 8) ? 0.5 : 1 }}>
+            style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'var(--dc-ambra)', color: 'var(--dc-on-accent)', fontWeight: 700, opacity: (invio || pin.length !== 8) ? 0.5 : 1 }}>
             {invio ? '...' : 'Conferma'}
           </button>
         </div>

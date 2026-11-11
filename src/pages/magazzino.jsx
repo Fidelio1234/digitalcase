@@ -163,7 +163,7 @@ export default function MagazzinoPage() {
                         <input type="number" value={editVal}
                           onChange={e => setEditVal(e.target.value)}
                           autoFocus
-                          style={{ width:70, background:'var(--dc-surface2)', border:'1px solid var(--dc-verde)', borderRadius:8, padding:'6px 8px', color:'#fff', fontSize:'0.85rem' }}
+                          style={{ width:70, background:'var(--dc-surface2)', border:'1px solid var(--dc-verde)', borderRadius:8, padding:'6px 8px', color:'var(--dc-forte)', fontSize:'0.85rem' }}
                         />
                         <button onClick={() => salvaCarico(p)}
                           style={{ padding:'6px 10px', borderRadius:8, border:'none', background:'var(--dc-verde)', color:'var(--dc-bg)', cursor:'pointer', fontSize:'0.75rem', fontWeight:700 }}>
