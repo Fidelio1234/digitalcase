@@ -597,7 +597,7 @@ if (notaModal !== null) {
 
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'var(--dc-surface)', borderBottom:'1px solid var(--dc-surface2)', position:'sticky', top:0, zIndex:100 }}>
           <button onClick={() => { setVista('griglia'); carica() }}
-            style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-menta)', padding:'8px 14px', cursor:'pointer', fontSize:'0.92rem' }}>
+            style={{ background:'transparent', border:'1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius:10, color:'var(--dc-menta)', padding:'8px 14px', cursor:'pointer', fontSize:'0.92rem' }}>
             ← Tavoli
           </button>
           <div style={{ fontWeight:700 }}>🍽️ Tavolo {tavoloAttivo}</div>
@@ -648,7 +648,7 @@ if (notaModal !== null) {
                 .reduce((s, r) => s + r.quantita, 0)
               return (
                 <button key={sr.id} onClick={() => aggiungiProdotto(repAttivo, sr)}
-                  style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', textShadow: 'none' } : {}) }}>
+                  style={{ padding:'12px 8px', background:'var(--dc-surface)', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', textShadow: 'none' } : {}) }}>
                   {qtaInComanda > 0 && (
                     <div style={{
                       position:'absolute', top:-8, right:-8,
@@ -687,7 +687,7 @@ if (notaModal !== null) {
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:'0.85rem', display:'flex', alignItems:'center', gap:6 }}>
                     {r.nome}
-                    {r.quantita > 1 && <span style={{ color:'#ffffff', fontSize:'0.85rem', fontWeight:600 }}>×{r.quantita}</span>}
+                    {r.quantita > 1 && <span style={{ color:'var(--dc-forte)', fontSize:'0.85rem', fontWeight:600 }}>×{r.quantita}</span>}
                     {r.id !== 'coperto' && (
                       <button onClick={() => { setNotaModal(r.id); setNotaTesto(r.nota?.replace(/^[+-]/, '') || ''); setNotaTipo(r.nota?.startsWith('+') ? 'aggiunta' : 'rimozione'); setAggiunte([]) }}
                         style={{ background:'transparent', border:'none', cursor:'pointer', fontSize:'0.8rem', color: r.nota ? 'var(--dc-ambra)' : 'var(--dc-muted)', padding:'0 4px' }}
@@ -705,7 +705,7 @@ if (notaModal !== null) {
                   <button onClick={() => aggiornaQuantita(r.id, 1)}
                     style={{ width:24, height:24, borderRadius:6, background:'var(--dc-border)', border:'none', color:'var(--dc-text)', cursor:'pointer', fontSize:'0.9rem' }}>+</button>
                   {r.id !== 'coperto' && <button onClick={() => eliminaRiga(r.id)}
-                    style={{ background:'transparent', border:'none', color:'#ffffff', cursor:'pointer', fontSize:'1rem' }}>✕</button>}
+                    style={{ background:'transparent', border:'none', color:'var(--dc-forte)', cursor:'pointer', fontSize:'1rem' }}>✕</button>}
                 </div>
               </div>
             ))}

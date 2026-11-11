@@ -336,7 +336,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
                     </div>
                   ) : (
                     <div style={{display:'flex',alignItems:'center',gap:8,marginTop:6}}>
-                      <span style={{fontSize:'0.75rem',color:'white'}}>PIN:</span>
+                      <span style={{fontSize:'0.75rem',color:'var(--dc-forte)'}}>PIN:</span>
                       <span style={{
                         fontFamily:'monospace', fontSize:'0.9rem',
                         color:'var(--dc-ambra)', letterSpacing:3,
@@ -446,7 +446,7 @@ const [showDashboardPassword, setShowDashboardPassword] = useState(false)
             {reparti.map(r => (
               <div key={r.id} style={{
                 background:'var(--dc-surface2)', borderRadius:12,
-                border:`1px solid ${r.abilitato ? r.colore + '44' : '#252830'}`,
+                border:`1px solid ${r.abilitato ? r.colore + '44' : 'var(--dc-border)'}`,
                 overflow:'hidden'
               }}>
                 {/* Header reparto */}
@@ -653,7 +653,7 @@ function SezioneNonRiscosso({ negozioId, showToast }) {
 
   return (
     <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:12}}>
-      <div style={{fontSize:'0.82rem', color:'white'}}>
+      <div style={{fontSize:'0.82rem', color:'var(--dc-forte)'}}>
         Mostra il pulsante <strong style={{color:'var(--dc-verde)'}}>🛵 Non riscosso (Glovo)</strong> in cassa alla chiusura.<br/>
         Funziona solo con registratore 3i.
       </div>
@@ -817,8 +817,8 @@ function SezionePalmari({ showToast }) {
       {dati.palmari.map(p => (
         <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, opacity: p.attivo ? 1 : 0.45 }}>
           <div>
-            <div style={{ fontSize: '0.85rem', color: 'white' }}>{p.nome || 'Palmare senza nome'}{p.attivo ? '' : ' (disattivato)'}</div>
-            <div style={{ fontSize: '0.72rem', color: 'white' }}>
+            <div style={{ fontSize: '0.85rem', color:'var(--dc-forte)' }}>{p.nome || 'Palmare senza nome'}{p.attivo ? '' : ' (disattivato)'}</div>
+            <div style={{ fontSize: '0.72rem', color:'var(--dc-forte)' }}>
               Attivato {quando(p.creato_il)} · ultimo accesso {quando(p.ultimo_accesso)}
             </div>
           </div>

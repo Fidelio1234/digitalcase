@@ -145,7 +145,7 @@ if (!negozioId) return (
               alt="QR Code fidelity"
               style={{ width: 200, height: 200, borderRadius: 12, background: 'white', padding: 8 }}
             />
-            <div style={{ marginTop: 20, fontSize: '0.75rem', color: 'white', letterSpacing: 1 }}>
+            <div style={{ marginTop: 20, fontSize: '0.75rem', color:'var(--dc-forte)', letterSpacing: 1 }}>
               I TUOI PUNTI
             </div>
             <div style={{ fontSize: '2.4rem', fontWeight: 700, color: 'var(--dc-verde)', marginTop: 4 }}>
@@ -153,7 +153,7 @@ if (!negozioId) return (
             </div>
           </div>
 
-          <div style={{ fontSize: '0.78rem', color: 'white', marginTop: 20, lineHeight: 1.5 }}>
+          <div style={{ fontSize: '0.78rem', color:'var(--dc-forte)', marginTop: 20, lineHeight: 1.5 }}>
             Mostra questo QR alla cassa ad ogni acquisto per accumulare punti.
           </div>
 

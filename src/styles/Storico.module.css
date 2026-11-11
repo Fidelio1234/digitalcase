@@ -132,9 +132,9 @@
 .scontrinoRighe { display: flex; gap: 6px; flex-wrap: wrap; }
 .righeTag {
   background: var(--surface2); border-radius: 4px;
-  padding: 2px 8px; font-size: 0.72rem; color: white;
+  padding: 2px 8px; font-size: 0.72rem; color: var(--dc-forte);
 }
-.contatto { font-size: 0.72rem; color: white; margin-top: 4px; }
+.contatto { font-size: 0.72rem; color: var(--dc-forte); margin-top: 4px; }
 .scontrinoRight { display: flex; align-items: center; gap: 10px; }
 .scontrinoTotale { font-family: 'Unbounded', sans-serif; font-size: 0.95rem; font-weight: 700; }
 .scontrinoMetodo { font-size: 1.1rem; }
@@ -223,7 +223,7 @@
 .cancelBtn:hover { border-color: var(--accent); color: var(--accent); }
 .chiudiBtn {
   flex: 2; padding: 12px; border-radius: 10px; border: none;
-  background: var(--dc-ambra); color: #000;
+  background: var(--dc-ambra); color: var(--dc-on-accent);
   font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s;
 }

@@ -127,9 +127,9 @@ export default function ImpostazioniStampanti({ reparti, showToast }) {
                   style={{
                     padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer',
                     fontSize:'0.72rem',
-                    background: (s.gruppi || []).includes(r.id) ? r.colore + '33' : '#1a1c24',
-                    color: (s.gruppi || []).includes(r.id) ? r.colore : '#5a5d6e',
-                    border: '1px solid ' + ((s.gruppi || []).includes(r.id) ? r.colore : '#252830'),
+                    background: (s.gruppi || []).includes(r.id) ? r.colore + '33' : 'var(--dc-surface2)',
+                    color: (s.gruppi || []).includes(r.id) ? r.colore : 'var(--dc-muted)',
+                    border: '1px solid ' + ((s.gruppi || []).includes(r.id) ? r.colore : 'var(--dc-border)'),
                   }}>
                   {r.nome}
                 </button>

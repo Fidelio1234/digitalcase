@@ -612,10 +612,10 @@ async function inviaComandaInterna() {
           </button>
           <div style={{ textAlign:'center', padding:'12px', background:'var(--dc-surface2)', borderRadius:12, marginBottom:8 }}>
             <div style={{ fontSize:'0.9rem', color:'var(--dc-giallo)', letterSpacing:2 }}>TAVOLO</div>
-            <div style={{ fontSize:'2rem', fontWeight:700, color:'white' }}>{tavoloAttivo}</div>
+            <div style={{ fontSize:'2rem', fontWeight:700, color:'var(--dc-forte)' }}>{tavoloAttivo}</div>
             {impostazioni.copertoAbilitato && copertiAttuali > 0 && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:8 }}>
-                              <span style={{ fontSize:'1.1rem', fontWeight:600, color:'#ffffff' }}>👤 {copertiAttuali} coperti</span>
+                              <span style={{ fontSize:'1.1rem', fontWeight:600, color:'var(--dc-forte)' }}>👤 {copertiAttuali} coperti</span>
               </div>
             )}
           </div>
@@ -634,7 +634,7 @@ async function inviaComandaInterna() {
             ))}
             <button onClick={pressClear} style={{ padding:'14px', background:'var(--dc-surface2)', border:'1px solid rgba(var(--dc-rosso-rgb), 0.27)', borderRadius:10, color:'var(--dc-rosso)', fontSize:'0.8rem', cursor:'pointer' }}>C</button>
             <button onClick={() => pressDigit(0)} style={{ padding:'14px', background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:10, color:'var(--dc-text)', fontSize:'1.1rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>0</button>
-            <button onClick={() => setInputCents(prev => parseInt(String(prev) + '00'))} style={{ padding:'14px', background:'#1a1c24', border:'1px solid #252830', borderRadius:10, color:'#eef0f6', fontSize:'0.9rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>00</button>
+            <button onClick={() => setInputCents(prev => parseInt(String(prev) + '00'))} style={{ padding:'14px', background:'var(--dc-surface2)', border:'1px solid #252830', borderRadius:10, color:'var(--dc-text)', fontSize:'0.9rem', cursor:'pointer', fontFamily:"'DM Mono',monospace" }}>00</button>
           </div>
 
 
@@ -681,9 +681,9 @@ setShowConto(true)
         <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
           <div style={{ flex:'0 0 50%', borderBottom:'1px solid var(--dc-surface2)', overflow:'auto', padding:16 }}>
-            <div style={{ fontSize:'0.72rem', color:'#ffffff', letterSpacing:2, marginBottom:12 }}>COMANDA TAVOLO {tavoloAttivo}</div>
+            <div style={{ fontSize:'0.72rem', color:'var(--dc-forte)', letterSpacing:2, marginBottom:12 }}>COMANDA TAVOLO {tavoloAttivo}</div>
             {righeComanda.length === 0 ? (
-              <div style={{ textAlign:'center', color:'#ffffff', padding:40 }}>
+              <div style={{ textAlign:'center', color:'var(--dc-forte)', padding:40 }}>
                 <div style={{ fontSize:'2rem' }}>🍽️</div>
                 <div>Nessun prodotto</div>
               </div>
@@ -697,8 +697,8 @@ setShowConto(true)
                   <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid rgba(var(--dc-surface2-rgb), 0.25)' }}>
                     <div style={{ width:32, height:32, borderRadius:8, background:r.colore+'22', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>{ICONE[r.icona]||'📦'}</div>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontSize:'0.85rem' }}>{r.nome}{r.quantita > 1 ? <span style={{ color:'#ffffff', marginLeft:6 }}>×{r.quantita}</span> : ''}</div>
-                      <div style={{ fontSize:'0.7rem', color:'#ffffff' }}>€ {fmt(r.importo)} cad.</div>
+                      <div style={{ fontSize:'0.85rem' }}>{r.nome}{r.quantita > 1 ? <span style={{ color:'var(--dc-forte)', marginLeft:6 }}>×{r.quantita}</span> : ''}</div>
+                      <div style={{ fontSize:'0.7rem', color:'var(--dc-forte)' }}>€ {fmt(r.importo)} cad.</div>
                     </div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:600 }}>€ {fmt(r.totaleRiga)}</div>
                     {r.nota && (
@@ -725,7 +725,7 @@ setShowConto(true)
 
 
                 <div style={{ display:'flex', justifyContent:'space-between', padding:'12px 0', fontWeight:700, fontSize:'0.9rem' }}>
-                  <span style={{ color:'#ffffff' }}>TOTALE</span>
+                  <span style={{ color:'var(--dc-forte)' }}>TOTALE</span>
                   <span style={{ color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace" }}>€ {fmt(totale)}</span>
                 </div>
                  {romanaPagato > 0 && (
@@ -751,7 +751,7 @@ setShowConto(true)
                   return (
                     <button key={sr.id}
                       onClick={() => aggiungiProdotto(repAttivo, sr)}
-                      style={{ padding:'12px 8px', background:'#111318', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, justifyContent: 'space-between', textShadow: 'none' } : {}) }}>
+                      style={{ padding:'12px 8px', background:'var(--dc-surface)', border:'1px solid ' + repAttivo.colore + '44', borderRadius:12, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, position:'relative', ...(sr.immagine && /^https:\/\/[^"'()\s]+$/.test(sr.immagine) ? { backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundOrigin: 'border-box', minHeight: 110, justifyContent: 'space-between', textShadow: 'none' } : {}) }}>
                       {qtaInComanda > 0 && (
                         <div style={{
                           position:'absolute', top:-8, right:-8,
@@ -973,7 +973,7 @@ setShowConto(true)
           <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:700 }}>
             <div style={{ background:'var(--dc-surface)', border:'1px solid rgba(var(--dc-rosso-rgb), 0.27)', borderRadius:20, padding:28, width:340, display:'flex', flexDirection:'column', gap:18, alignItems:'center' }}>
               <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-rosso)' }}>🗑️ Annulla comanda</div>
-              <div style={{ fontSize:'0.85rem', color:'#ffffff', textAlign:'center' }}>
+              <div style={{ fontSize:'0.85rem', color:'var(--dc-forte)', textAlign:'center' }}>
                 {infoAnnulla ? (
                   <>
                     Sul tavolo {tavoloAttivo} sono già stati incassati <strong>€ {fmt(infoAnnulla.pagato)}</strong> ({infoAnnulla.quotePagate} {infoAnnulla.quotePagate === 1 ? 'quota' : 'quote'} su {infoAnnulla.persone}) con scontrino.<br/>
@@ -1138,7 +1138,7 @@ setShowConto(true)
       <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.92)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:500 }}>
         <div style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:20, padding:32, width:320, display:'flex', flexDirection:'column', gap:20, alignItems:'center' }}>
           <div style={{fontSize:'1rem', fontWeight:700}}>🍽️ Tavolo {modalCoperti}</div>
-          <div style={{fontSize:'0.82rem', color:'#ffffff'}}>Quante persone al tavolo?</div>
+          <div style={{fontSize:'0.82rem', color:'var(--dc-forte)'}}>Quante persone al tavolo?</div>
           <div style={{display:'flex', alignItems:'center', gap:20}}>
             <button onClick={() => setNumCoperti(n => Math.max(1, n-1))}
               style={{width:44, height:44, borderRadius:12, background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', color:'var(--dc-text)', fontSize:'1.5rem', cursor:'pointer'}}>−</button>
@@ -1146,7 +1146,7 @@ setShowConto(true)
             <button onClick={() => setNumCoperti(n => n+1)}
               style={{width:44, height:44, borderRadius:12, background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', color:'var(--dc-text)', fontSize:'1.5rem', cursor:'pointer'}}>+</button>
           </div>
-          <div style={{fontSize:'0.78rem', color:'#ffffff'}}>
+          <div style={{fontSize:'0.78rem', color:'var(--dc-forte)'}}>
             Coperto: € {((impostazioni.copertoImporto * numCoperti) / 100).toFixed(2)} totale
           </div>
           <div style={{display:'flex', gap:12, width:'100%'}}>
@@ -1168,14 +1168,14 @@ setShowConto(true)
   return (
     <div style={{ minHeight:'100vh', background:'var(--dc-bg)', color:'var(--dc-text)', fontFamily:"'DM Sans', sans-serif" }}>
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 20px', background:'var(--dc-surface)', borderBottom:'1px solid var(--dc-surface2)' }}>
-        <button onClick={() => router.replace('/cassa')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-menta)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
+        <button onClick={() => router.replace('/cassa')} style={{ background:'transparent', border:'1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius:10, color:'var(--dc-menta)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           ← Cassa
         </button>
-        <button onClick={() => router.replace('/storico-tavoli')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-giallo)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
+        <button onClick={() => router.replace('/storico-tavoli')} style={{ background:'transparent', border:'1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius:10, color:'var(--dc-giallo)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           📋 Storico
         </button>
         <div style={{ fontWeight:700, fontSize:'1rem' }}>🍽️ Tavoli</div>
-        <button onClick={carica} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-ambra)', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
+        <button onClick={carica} style={{ background:'transparent', border:'1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius:10, color:'var(--dc-ambra)', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
           ↻ Aggiorna
         </button>
       </header>

@@ -1000,7 +1000,7 @@ export default function CassaPage() {
           <div style={{display:'flex', gap:8, marginBottom:8, flexWrap:'wrap'}}>
           {impostazioni.asportoAbilitato && (
               <button onClick={() => router.push('/asporto')}
-                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                style={{width:60, height:60, background:'var(--dc-tasto)', border:'none', borderRadius:10,
                   color:'var(--dc-blu)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
                   position:'relative'}}>
@@ -1024,7 +1024,7 @@ export default function CassaPage() {
 
           {impostazioni.agendaAbilitato && (
               <button onClick={() => router.push('/agenda')}
-                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                style={{width:60, height:60, background:'var(--dc-tasto)', border:'none', borderRadius:10,
                   color:'var(--dc-viola)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
                   position:'relative'}}>
@@ -1049,7 +1049,7 @@ export default function CassaPage() {
 
             {impostazioni.magazzinoAbilitato && (
               <button onClick={() => router.push('/magazzino')}
-                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                style={{width:60, height:60, background:'var(--dc-tasto)', border:'none', borderRadius:10,
                   color:'var(--dc-ambra)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
                 <span style={{fontSize:'1.4rem'}}>📦</span>
@@ -1066,7 +1066,7 @@ export default function CassaPage() {
 
 {impostazioni.tavoliAbilitati !== false && (
               <button onClick={() => router.push('/tavoli')}
-                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                style={{width:60, height:60, background:'var(--dc-tasto)', border:'none', borderRadius:10,
                   color:'var(--dc-verde)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
                   position:'relative'}}>
@@ -1097,7 +1097,7 @@ export default function CassaPage() {
                   }
                   router.push('/fidelity')
                 }}
-                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                style={{width:60, height:60, background:'var(--dc-tasto)', border:'none', borderRadius:10,
                   color:'var(--dc-verde)', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
                   position:'relative'}}>
@@ -1129,7 +1129,7 @@ export default function CassaPage() {
                     router.push('/fatture')
                   }
                 }}
-                style={{width:60, height:60, background:'black', border:'none', borderRadius:10,
+                style={{width:60, height:60, background:'var(--dc-tasto)', border:'none', borderRadius:10,
                   color:'#ffd06b', cursor:'pointer', fontSize:'0.72rem', fontWeight:700,
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2}}>
                 <span style={{fontSize:'1.4rem'}}>🧾</span>
@@ -1686,7 +1686,7 @@ export default function CassaPage() {
             {avvisoMagazzino.map((a,i) => (
               <div key={i} style={{padding:'8px 0',borderBottom:'1px solid var(--dc-border)',fontSize:'0.85rem'}}>
                 <strong>{a.nome}</strong>
-                <div style={{fontSize:'0.78rem',color:'white',marginTop:4}}>
+                <div style={{fontSize:'0.78rem',color:'var(--dc-forte)',marginTop:4}}>
                   Rimasti: <strong style={{color:'var(--dc-ambra)'}}>{a.giacenza}</strong> · Soglia minima: {a.minima}
                 </div>
               </div>
@@ -1712,7 +1712,7 @@ export default function CassaPage() {
             {giacenzaInsuff.map((r,i) => (
               <div key={i} style={{padding:'8px 0',borderBottom:'1px solid var(--dc-border)',fontSize:'0.85rem'}}>
                 <strong>{r.nome}</strong>
-                <div style={{fontSize:'0.78rem',color:'white',marginTop:4}}>
+                <div style={{fontSize:'0.78rem',color:'var(--dc-forte)',marginTop:4}}>
                   Disponibili: <strong style={{color:'var(--dc-rosso)'}}>{r.giacenza}</strong> · Richiesti: <strong>{r.quantita}</strong>
                 </div>
               </div>

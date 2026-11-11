@@ -193,7 +193,7 @@ export default function FidelityPage() {
     <div style={{ minHeight: '100vh', background: 'var(--dc-bg)', color: 'var(--dc-text)', fontFamily: "'DM Mono',monospace", padding: 24 }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid #ffffff44', borderRadius: 10, color: 'var(--dc-verde)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.85rem' }}>
+        <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius: 10, color: 'var(--dc-verde)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.85rem' }}>
           ← Cassa
         </button>
         <div>
@@ -254,7 +254,7 @@ export default function FidelityPage() {
               style={{ ...inputStyle, width: 80 }}
             />
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'white', lineHeight: 1.5 }}>
+          <div style={{ fontSize: '0.72rem', color:'var(--dc-forte)', lineHeight: 1.5 }}>
             Es. 10 = avvisa<br/>quando mancano<br/>10 punti all'omaggio<br/><span style={{ color: 'var(--dc-giallo)' }}>(0 = disabilitato)</span>
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function FidelityPage() {
 
 
 
-                <div style={{ fontSize: '0.80rem', color: 'white', marginTop: 2, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ fontSize: '0.80rem', color:'var(--dc-forte)', marginTop: 2, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                   <span>Codice: <strong style={{ color: 'var(--dc-verde)' }}>{c.codice_cliente}</strong></span>
                   <span>·</span>
                   <span onClick={() => setShowPwd(s => ({ ...s, [c.id]: !s[c.id] }))} style={{ cursor: 'pointer' }}>
@@ -352,7 +352,7 @@ export default function FidelityPage() {
               <input type="text" value={form.cognome} onChange={e => setForm(f => ({ ...f, cognome: e.target.value }))} style={inputStyle} />
             </div>
             <div style={{ marginBottom: 18 }}>
-              <label style={{ fontSize: '0.72rem', color: 'white', letterSpacing: 1, display: 'block', marginBottom: 4 }}>INSERISCI LA DATA DI NASCITA</label>
+              <label style={{ fontSize: '0.72rem', color:'var(--dc-forte)', letterSpacing: 1, display: 'block', marginBottom: 4 }}>INSERISCI LA DATA DI NASCITA</label>
               <input type="date" value={form.data_nascita} onChange={e => setForm(f => ({ ...f, data_nascita: e.target.value }))} style={inputStyle} />
             </div>
 
@@ -400,7 +400,7 @@ export default function FidelityPage() {
         <div onClick={() => setShowQrNegozio(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 100 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--dc-surface)', borderRadius: 16, padding: 28, width: '100%', maxWidth: 380, border: '1px solid var(--dc-ambra)', textAlign: 'center' }}>
             <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 4 }}>📲 Registrazione clienti</div>
-            <div style={{ fontSize: '0.78rem', color: 'white', marginBottom: 20 }}>
+            <div style={{ fontSize: '0.78rem', color:'var(--dc-forte)', marginBottom: 20 }}>
               Mostra questo QR ai clienti per farli accedere direttamente alla pagina fidelity
             </div>
             <div style={{ background: 'white', borderRadius: 12, padding: 16, display: 'inline-block' }}>

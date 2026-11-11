@@ -279,7 +279,7 @@ export default function AgendaPage() {
         <link rel="apple-touch-icon" href="/icon-agenda-192.png" />
       </Head>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: 'var(--dc-surface)', borderBottom: '1px solid var(--dc-surface2)', flexWrap: 'wrap', gap: 8 }}>
-        <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid #ffffff44', borderRadius: 10, color: 'var(--dc-menta)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.92rem' }}>
+        <button onClick={() => router.replace('/cassa')} style={{ background: 'transparent', border: '1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius: 10, color: 'var(--dc-menta)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.92rem' }}>
           ← Cassa
         </button>
         <div style={{ textAlign: 'center' }}>
@@ -357,8 +357,8 @@ export default function AgendaPage() {
               display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12,
               background: 'transparent', border: '1px dashed var(--dc-border)', cursor: 'pointer', textAlign: 'left', color: 'var(--dc-muted)',
             }}>
-              <span style={{ width: 52, fontFamily: "'DM Mono',monospace", fontSize: '0.85rem', color: 'white' }}>{ora}</span>
-              <span style={{ fontSize: '1rem', color: 'white' }}>➥ Libero</span>
+              <span style={{ width: 52, fontFamily: "'DM Mono',monospace", fontSize: '0.85rem', color:'var(--dc-forte)' }}>{ora}</span>
+              <span style={{ fontSize: '1rem', color:'var(--dc-forte)' }}>➥ Libero</span>
             </button>
           )
         })}
@@ -419,10 +419,10 @@ export default function AgendaPage() {
                     <button key={sr.id} onClick={() => toggleServizio(repAttivo, sr)}
                       style={{
                         padding: '8px', borderRadius: 10, cursor: 'pointer', textAlign: 'center',
-                        border: `1px solid ${selezionato ? '#00e5a0' : repAttivo.colore + '44'}`,
+                        border: `1px solid ${selezionato ? 'var(--dc-verde)' : repAttivo.colore + '44'}`,
                         background: selezionato ? 'rgba(var(--dc-verde-rgb), 0.15)' : 'var(--dc-surface2)',
                       }}>
-                      <div style={{ fontSize: '0.80rem', fontWeight: 600, color:'white' }}>{selezionato ? '✓ ' : ''}{sr.nome}</div>
+                      <div style={{ fontSize: '0.80rem', fontWeight: 600, color:'var(--dc-forte)' }}>{selezionato ? '✓ ' : ''}{sr.nome}</div>
                       <div style={{ fontSize: '0.79rem', color: 'var(--dc-verde)' }}>€ {fmtEuro(sr.prezzoFisso)}</div>
                     </button>
                   )

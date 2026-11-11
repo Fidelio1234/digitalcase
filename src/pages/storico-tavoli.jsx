@@ -54,7 +54,7 @@ export default function StoricoTavoliPage() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
         <button onClick={() => router.back()}
-          style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-menta)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
+          style={{ background:'transparent', border:'1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius:10, color:'var(--dc-menta)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           ← Indietro
         </button>
         <div>
@@ -69,7 +69,7 @@ export default function StoricoTavoliPage() {
           <label style={{ fontSize:'0.85rem', color:'var(--dc-menta)', letterSpacing:1, display:'block', marginBottom:4 }}>DATA</label>
           <input type="date" value={filtroData}
             onChange={e => setFiltroData(e.target.value)}
-            style={{ width:'100%', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'#ffffff', fontSize:'0.85rem', boxSizing:'border-box' }}
+            style={{ width:'100%', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'var(--dc-forte)', fontSize:'0.85rem', boxSizing:'border-box' }}
           />
         </div>
         <div style={{ width:120 }}>

@@ -337,7 +337,7 @@ async function eseguiChiusura() {
                     <div className={styles.scontrinoNum}>#{s.numeroScontrino || s.id?.slice(-4)}</div>
                     <div className={styles.scontrinoData}>{fmtData(s.timestamp)}</div>
                   {s.operatoreNome && (
-                    <div style={{fontSize:'0.9rem', color:'white', marginTop:2}}>👤 {s.operatoreNome}</div>
+                    <div style={{fontSize:'0.9rem', color:'var(--dc-forte)', marginTop:2}}>👤 {s.operatoreNome}</div>
                   )}
                   </div>
                   <div className={styles.scontrinoCenter}>
@@ -457,11 +457,11 @@ async function eseguiChiusura() {
             {ivaRiep && (
               <div style={{ marginTop: 16 }}>
                 {ivaRiep.righe.length === 0 ? (
-                  <div style={{ color: '#ffffff' }}>Nessuna vendita in questo mese.</div>
+                  <div style={{ color:'var(--dc-forte)' }}>Nessuna vendita in questo mese.</div>
                 ) : (
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'monospace', fontSize: '0.9rem' }}>
                     <thead>
-                      <tr style={{ color: '#ffffff', textAlign: 'right' }}>
+                      <tr style={{ color:'var(--dc-forte)', textAlign: 'right' }}>
                         <th style={{ textAlign: 'left', padding: '6px 4px' }}>Aliquota</th>
                         <th style={{ padding: '6px 4px' }}>Lordo</th>
                         <th style={{ padding: '6px 4px' }}>Imponibile</th>
@@ -487,7 +487,7 @@ async function eseguiChiusura() {
                   </table>
                 )}
 
-                <div style={{ marginTop: 12, fontSize: '0.8rem', color: '#ffffff' }}>
+                <div style={{ marginTop: 12, fontSize: '0.8rem', color:'var(--dc-forte)' }}>
                   {ivaRiep.numero} {ivaRiep.numero === 1 ? 'scontrino conteggiato' : 'scontrini conteggiati'} · {ivaRiep.annullati} {ivaRiep.annullati === 1 ? 'annullato (escluso)' : 'annullati (esclusi)'}
                 </div>
                 {ivaRiep.nonStampati > 0 && (
@@ -505,7 +505,7 @@ async function eseguiChiusura() {
                     ⚠ Controllo di coerenza: {ivaRiep.senzaRighe} {ivaRiep.senzaRighe === 1 ? 'scontrino senza righe' : 'scontrini senza righe'}, differenza tra totali scontrini e righe € {fmt(ivaRiep.differenza)}. I numeri potrebbero non essere completi.
                   </div>
                 )}
-                <div style={{ marginTop: 14, fontSize: '0.75rem', color: '#ffffff', lineHeight: 1.5 }}>
+                <div style={{ marginTop: 14, fontSize: '0.75rem', color:'var(--dc-forte)', lineHeight: 1.5 }}>
                   Dato indicativo calcolato dagli scontrini registrati: IVA sulle vendite, scorporata dal lordo di ogni aliquota. Non è la liquidazione: l'IVA da versare dipende anche da IVA sugli acquisti, credito e acconti (conferma con il commercialista). Il valore ufficiale resta quello del registratore: possibili differenze di pochi centesimi.
                 </div>
               </div>

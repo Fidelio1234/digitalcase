@@ -347,13 +347,13 @@ export default function DashboardPage() {
             { label: 'Tavoli aperti', valore: tavoli.length, colore: '#34d399', icona: '🍽️' },
           ].map(({ label, valore, colore, icona }) => (
             <div key={label} style={{
-              background: '#111318', border: '1px solid ' + colore + '22',
+              background: 'var(--dc-surface)', border: '1px solid ' + colore + '22',
               borderRadius: 16, padding: '20px 24px',
               display: 'flex', flexDirection: 'column', gap: 8,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: '1.9rem' }}>{icona}</span>
-                <span style={{ fontSize: '0.9rem', color: 'white', fontFamily: "'DM Mono',monospace", letterSpacing: 1 }}>{label.toUpperCase()}</span>
+                <span style={{ fontSize: '0.9rem', color:'var(--dc-forte)', fontFamily: "'DM Mono',monospace", letterSpacing: 1 }}>{label.toUpperCase()}</span>
               </div>
               <div style={{ fontSize: '1.8rem', fontWeight: 700, color: colore, fontFamily: "'DM Mono',monospace" }}>
                 {valore}
@@ -406,7 +406,7 @@ export default function DashboardPage() {
                     }}
                   />
                   {mostraLabel && (
-                    <div style={{ fontSize: '0.7rem', color: 'white', fontFamily: "'DM Mono',monospace" }}>
+                    <div style={{ fontSize: '0.7rem', color:'var(--dc-forte)', fontFamily: "'DM Mono',monospace" }}>
                       {item.label}
                     </div>
                   )}
@@ -563,11 +563,11 @@ export default function DashboardPage() {
                   borderRadius: 10, border: '1px solid rgba(var(--dc-rosso-rgb), 0.13)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '0.92rem', color: 'white', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
+                    <span style={{ fontSize: '0.92rem', color:'var(--dc-forte)', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
                       {fmtOra(sc.timestamp_emissione)}
                     </span>
                     {sc.annullato_da && (
-                      <span style={{ fontSize: '0.92rem', color: 'white' }}>annullato da {sc.annullato_da}</span>
+                      <span style={{ fontSize: '0.92rem', color:'var(--dc-forte)' }}>annullato da {sc.annullato_da}</span>
                     )}
                   </div>
                   <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--dc-rosso)', fontFamily: "'DM Mono',monospace", textDecoration: 'line-through' }}>

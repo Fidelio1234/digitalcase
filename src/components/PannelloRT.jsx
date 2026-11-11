@@ -350,7 +350,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
 
             {scontrino && (
               <div>
-                <div style={{fontSize:'0.7rem', color:'#ffffff', letterSpacing:1, marginBottom:8}}>SCONTRINO CORRENTE</div>
+                <div style={{fontSize:'0.7rem', color:'var(--dc-forte)', letterSpacing:1, marginBottom:8}}>SCONTRINO CORRENTE</div>
                 <button style={btnStyle('var(--dc-verde)')} onClick={stampaScontrino} disabled={loading}>Stampa su RT</button>
               </div>
             )}
@@ -462,7 +462,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
           display:'flex', alignItems:'center', justifyContent:'center',
         }}>
           <div style={{
-            background:'#111318', border:'1px solid ' + conferma.colore + '44',
+            background:'var(--dc-surface)', border:'1px solid ' + conferma.colore + '44',
             borderRadius:20, padding:28, width:380, maxWidth:'90vw',
             display:'flex', flexDirection:'column', gap:16,
           }}>

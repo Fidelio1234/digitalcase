@@ -92,7 +92,7 @@
 }
 .savePin {
   padding: 7px 12px; border-radius: 8px; border: none;
-  background: var(--dc-verde); color: #000; cursor: pointer; font-weight: 700;
+  background: var(--dc-verde); color: var(--dc-on-accent); cursor: pointer; font-weight: 700;
 }
 .cancelPin {
   padding: 7px 12px; border-radius: 8px;

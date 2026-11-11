@@ -47,7 +47,7 @@
 }
 
 .saveBtn {
-  background: var(--accent); color: #000;
+  background: var(--accent); color: var(--dc-on-accent);
   border: none; border-radius: 10px; padding: 10px 20px;
   font-family: 'Unbounded', sans-serif; font-size: 0.72rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s; white-space: nowrap;

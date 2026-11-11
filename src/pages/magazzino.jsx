@@ -79,12 +79,12 @@ export default function MagazzinoPage() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
         <button onClick={() => router.back()}
-          style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'#ffffff', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
+          style={{ background:'transparent', border:'1px solid rgba(var(--dc-forte-rgb), 0.267)', borderRadius:10, color:'var(--dc-forte)', padding:'8px 16px', cursor:'pointer', fontSize:'0.82rem' }}>
           ← Indietro
         </button>
         <div>
           <div style={{ fontSize:'1.1rem', fontWeight:700 }}>📦 Magazzino</div>
-          <div style={{ fontSize:'0.72rem', color:'white' }}>{prodotti.length} prodotti con giacenza</div>
+          <div style={{ fontSize:'0.72rem', color:'var(--dc-forte)' }}>{prodotti.length} prodotti con giacenza</div>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export default function MagazzinoPage() {
       </div>
 
       {/* Cerca prodotto */}
-      <style>{'.cercaMagazzino::placeholder { color: #ffffff; opacity: 1; }'}</style>
+      <style>{'.cercaMagazzino::placeholder { color: var(--dc-forte); opacity: 1; }'}</style>
       <div style={{ position:'relative', marginBottom:16 }}>
         <input type="search" className="cercaMagazzino" value={ricerca} onChange={e => setRicerca(e.target.value)}
           placeholder="🔍 Cerca prodotto"
@@ -146,7 +146,7 @@ export default function MagazzinoPage() {
                       {sottoMin && '⚠ '}{p.nome}
                     </div>
                     {p.giacenza_minima !== null && (
-                      <div style={{ fontSize:'0.72rem', color:'white', marginTop:2 }}>
+                      <div style={{ fontSize:'0.72rem', color:'var(--dc-forte)', marginTop:2 }}>
                         Soglia minima: {p.giacenza_minima}
                       </div>
                     )}
@@ -200,7 +200,7 @@ export default function MagazzinoPage() {
             <div key={m.id} style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:10, padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
                 <div style={{ fontSize:'0.85rem', fontWeight:600 }}>{m.prodotto_nome}</div>
-                <div style={{ fontSize:'0.72rem', color:'white', marginTop:2 }}>
+                <div style={{ fontSize:'0.72rem', color:'var(--dc-forte)', marginTop:2 }}>
                   {new Date(m.created_at).toLocaleDateString('it-IT')} {new Date(m.created_at).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'})}
                 </div>
               </div>

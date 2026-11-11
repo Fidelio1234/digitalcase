@@ -152,7 +152,7 @@
 }
 
 .chiudiBtn {
-  background: var(--accent); color: #000;
+  background: var(--accent); color: var(--dc-on-accent);
   border: none; border-radius: 12px; padding: 14px;
   font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s;
@@ -390,7 +390,7 @@
 .cancelBtn:hover { border-color: var(--text); color: var(--text); }
 .inviaBtn {
   flex: 2; padding: 12px; border-radius: 10px;
-  border: none; background: var(--accent); color: #000;
+  border: none; background: var(--accent); color: var(--dc-on-accent);
   font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s;
 }
@@ -451,7 +451,7 @@
 .successMeta { font-size: 0.78rem; color: var(--muted); }
 .successBtn {
   margin-top: 12px; width: 100%; padding: 14px;
-  background: var(--accent); color: #000;
+  background: var(--accent); color: var(--dc-on-accent);
   border: none; border-radius: 12px;
   font-family: 'Unbounded', sans-serif; font-size: 0.82rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s;
@@ -518,7 +518,7 @@
 }
 .avvisoBtn {
   width: 100%; padding: 14px; border-radius: 12px;
-  border: none; background: var(--dc-ambra); color: #000;
+  border: none; background: var(--dc-ambra); color: var(--dc-on-accent);
   font-family: 'Unbounded', sans-serif; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; transition: all 0.2s; margin-top: 8px;
 }
