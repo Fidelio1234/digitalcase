@@ -29,6 +29,9 @@ button:focus-visible { outline: 2px solid var(--dc-verde); outline-offset: 2px; 
   --dc-menta: #00ffb3;    --dc-menta-rgb: 0, 255, 179;
   --dc-blu: #6482ff;      --dc-blu-rgb: 100, 130, 255;
   --dc-viola: #c44dff;    --dc-viola-rgb: 196, 77, 255;
+  --dc-giallo: #ffff00;
+  --dc-rosso-vivo: #ff0000;
+  --dc-lime: #00ff00;
 }
 
 /* Tema chiaro: stesse variabili, valori chiari (contrasto >= 4,5:1 su superfici chiare). */
@@ -46,6 +49,9 @@ html[data-theme='light'] {
   --dc-menta: #00805a;    --dc-menta-rgb: 0, 128, 90;
   --dc-blu: #3552d6;      --dc-blu-rgb: 53, 82, 214;
   --dc-viola: #8a24c4;    --dc-viola-rgb: 138, 36, 196;
+  --dc-giallo: #856400;
+  --dc-rosso-vivo: #c4122f;
+  --dc-lime: #00783a;
 }
 
 body { background: var(--dc-bg); color: var(--dc-text); }

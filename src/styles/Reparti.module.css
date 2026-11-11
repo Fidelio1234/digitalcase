@@ -194,7 +194,7 @@
 }
 .modalTitle { font-family: 'Unbounded', sans-serif; font-size: 0.9rem; font-weight: 700; }
 .modalClose {
-  background: transparent; border: none; color: red;
+  background: transparent; border: none; color: var(--dc-rosso-vivo);
   cursor: pointer; font-size: 1rem; padding: 4px 8px;
   transition: color 0.2s;
 }
@@ -267,7 +267,7 @@
 .cancelBtn {
   flex: 1; padding: 12px; border-radius: 10px;
   border: 1px solid var(--border); background: transparent;
-  color: red; font-family: 'DM Mono', monospace;
+  color: var(--dc-rosso-vivo); font-family: 'DM Mono', monospace;
   font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
 }
 .cancelBtn:hover { border-color: var(--text); color: var(--text); }

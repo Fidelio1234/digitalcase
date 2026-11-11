@@ -837,7 +837,7 @@ if (notaModal !== null) {
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
             <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-text)' }}>🍽️ Tavolo {riepilogoTavolo.numero}</div>
             <button onClick={() => setRiepilogoTavolo(null)}
-              style={{ background:'transparent', border:'none', color:'red', fontSize:'1.3rem', cursor:'pointer' }}>✕</button>
+              style={{ background:'transparent', border:'none', color:'var(--dc-rosso-vivo)', fontSize:'1.3rem', cursor:'pointer' }}>✕</button>
           </div>
           {(riepilogoTavolo.righe || []).length === 0 ? (
             <div style={{ color:'var(--dc-muted)', textAlign:'center', padding:'20px 0' }}>Nessun prodotto ordinato</div>
@@ -845,7 +845,7 @@ if (notaModal !== null) {
             (riepilogoTavolo.righe || []).map((r, i) => (
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid var(--dc-surface2)' }}>
                 <div>
-                  <div style={{ fontSize:'1rem', color:'yellow' }}>{r.nome}</div>
+                  <div style={{ fontSize:'1rem', color:'var(--dc-giallo)' }}>{r.nome}</div>
                   {r.nota && <div style={{ fontSize:'0.75rem', color:'var(--dc-ambra)' }}>📝 {r.nota}</div>}
                 </div>
                 <div style={{ fontSize:'1rem', fontWeight:700, color:'var(--dc-verde)', minWidth:30, textAlign:'right' }}>×{r.quantita}</div>

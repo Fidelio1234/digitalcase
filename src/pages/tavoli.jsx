@@ -611,7 +611,7 @@ async function inviaComandaInterna() {
             ← Tavoli
           </button>
           <div style={{ textAlign:'center', padding:'12px', background:'var(--dc-surface2)', borderRadius:12, marginBottom:8 }}>
-            <div style={{ fontSize:'0.9rem', color:'yellow', letterSpacing:2 }}>TAVOLO</div>
+            <div style={{ fontSize:'0.9rem', color:'var(--dc-giallo)', letterSpacing:2 }}>TAVOLO</div>
             <div style={{ fontSize:'2rem', fontWeight:700, color:'white' }}>{tavoloAttivo}</div>
             {impostazioni.copertoAbilitato && copertiAttuali > 0 && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:8 }}>
@@ -621,7 +621,7 @@ async function inviaComandaInterna() {
           </div>
 
           <div style={{ background:'var(--dc-surface2)', borderRadius:12, padding:'12px 16px', textAlign:'center', marginBottom:4 }}>
-            <div style={{ fontSize:'0.85rem', color:'yellow', letterSpacing:2 }}>IMPORTO</div>
+            <div style={{ fontSize:'0.85rem', color:'var(--dc-giallo)', letterSpacing:2 }}>IMPORTO</div>
             <div style={{ fontSize:'1.8rem', fontWeight:700, color:'var(--dc-verde)', fontFamily:"'DM Mono',monospace" }}>
               € {fmt(inputCents)}
             </div>
@@ -702,7 +702,7 @@ setShowConto(true)
                     </div>
                     <div style={{ fontFamily:"'DM Mono',monospace", fontSize:'0.85rem', fontWeight:600 }}>€ {fmt(r.totaleRiga)}</div>
                     {r.nota && (
-                      <div style={{fontSize:'0.85rem', color: r.nota.startsWith('+') ? 'yellow' : 'red'}}>
+                      <div style={{fontSize:'0.85rem', color: r.nota.startsWith('+') ? 'var(--dc-giallo)' : 'var(--dc-rosso-vivo)'}}>
                         📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                       </div>
                     )}
@@ -929,7 +929,7 @@ setShowConto(true)
               <div key={r.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid rgba(var(--dc-surface2-rgb), 0.25)' }}>
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:'0.88rem' }}>{r.nome} <span style={{ color:'#ffffff99' }}>× {r.quantita}</span></div>
-                  {r.nota && <div style={{ fontSize:'0.75rem', color: r.nota.startsWith('+') ? 'yellow' : 'red' }}>📝 {r.nota}</div>}
+                  {r.nota && <div style={{ fontSize:'0.75rem', color: r.nota.startsWith('+') ? 'var(--dc-giallo)' : 'var(--dc-rosso-vivo)' }}>📝 {r.nota}</div>}
                   <div style={{ fontSize:'0.72rem', color:'#ffffff99' }}>€ {fmt(r.importo)} cad.</div>
                 </div>
 
@@ -1171,7 +1171,7 @@ setShowConto(true)
         <button onClick={() => router.replace('/cassa')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-menta)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           ← Cassa
         </button>
-        <button onClick={() => router.replace('/storico-tavoli')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'yellow', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
+        <button onClick={() => router.replace('/storico-tavoli')} style={{ background:'transparent', border:'1px solid #ffffff44', borderRadius:10, color:'var(--dc-giallo)', padding:'8px 16px', cursor:'pointer', fontSize:'0.92rem' }}>
           📋 Storico
         </button>
         <div style={{ fontWeight:700, fontSize:'1rem' }}>🍽️ Tavoli</div>

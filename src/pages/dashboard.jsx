@@ -524,7 +524,7 @@ export default function DashboardPage() {
                   borderRadius: 10, border: '1px solid var(--dc-border)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '0.92rem', color: 'yellow', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
+                    <span style={{ fontSize: '0.92rem', color: 'var(--dc-giallo)', fontFamily: "'DM Mono',monospace", minWidth: 40 }}>
                       {fmtOra(sc.timestamp_emissione)}
                     </span>
                     <span style={{
@@ -536,10 +536,10 @@ export default function DashboardPage() {
                       {sc.metodo === 'contanti' ? '💵' : '💳'}
                     </span>
                     {sc.operatore_nome && (
-                      <span style={{ fontSize: '0.92rem', color: 'yellow' }}>{sc.operatore_nome}</span>
+                      <span style={{ fontSize: '0.92rem', color: 'var(--dc-giallo)' }}>{sc.operatore_nome}</span>
                     )}
                   </div>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'yellow', fontFamily: "'DM Mono',monospace" }}>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--dc-giallo)', fontFamily: "'DM Mono',monospace" }}>
                     € {fmt(sc.totale)}
                   </span>
                 </div>

@@ -131,11 +131,11 @@ export default function StoricoTavoliPage() {
                         {riga.quantita > 1 ? `${riga.quantita}x ` : ''}{riga.nome}
                         {riga.nota ? <span style={{ color:'var(--dc-muted)' }}> — {riga.nota}</span> : ''}
                       </span>
-                      <span style={{ color:'#FFFF00', fontFamily:"'DM Mono',monospace" }}>€ {fmt(riga.totaleRiga)}</span>
+                      <span style={{ color:'var(--dc-giallo)', fontFamily:"'DM Mono',monospace" }}>€ {fmt(riga.totaleRiga)}</span>
                     </div>
                   ))}
                   {r.aperto_alle && (
-                    <div style={{ marginTop:8, fontSize:'0.76rem', color:'#FFFF00' }}>
+                    <div style={{ marginTop:8, fontSize:'0.76rem', color:'var(--dc-giallo)' }}>
                       Aperto alle {new Date(r.aperto_alle).toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'})}
                     </div>
                   )}

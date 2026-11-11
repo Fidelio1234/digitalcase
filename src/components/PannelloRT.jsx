@@ -283,7 +283,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
     width:'100%', boxSizing:'border-box',
     background:'var(--dc-surface2)', border:'1px solid var(--dc-border)',
     borderRadius:6, padding:'4px 8px',
-    color:'#00ff00', fontSize:'1.1rem', textAlign:'center',
+    color:'var(--dc-lime)', fontSize:'1.1rem', textAlign:'center',
     fontFamily:"'DM Mono',monospace"
   }
 
@@ -305,7 +305,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
             background: rtConfig.attivo ? 'var(--dc-verde)' : 'var(--dc-muted)',
             boxShadow: rtConfig.attivo ? '0 0 8px var(--dc-verde)' : 'none'
           }} />
-          <span style={{fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", color:'yellow'}}>
+          <span style={{fontSize:'0.78rem', fontFamily:"'DM Mono',monospace", color:'var(--dc-giallo)'}}>
             MENU RT {rtConfig.marca?.toUpperCase()}
           </span>
           <span style={{color:'var(--dc-muted)', fontSize:'0.75rem'}}>{pannelloAperto ? '▼' : '▲'}</span>
@@ -343,9 +343,9 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
           }} onClick={e => e.stopPropagation()}>
 
             <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-              <div style={{color:'yellow', fontSize:'2rem'}}>MENU RT - {rtConfig.marca?.toUpperCase()}</div>
+              <div style={{color:'var(--dc-giallo)', fontSize:'2rem'}}>MENU RT - {rtConfig.marca?.toUpperCase()}</div>
               <button onClick={() => setPannelloAperto(false)}
-                style={{background:'transparent', border:'none', color:'red', cursor:'pointer', fontSize:'1.2rem'}}>X</button>
+                style={{background:'transparent', border:'none', color:'var(--dc-rosso-vivo)', cursor:'pointer', fontSize:'1.2rem'}}>X</button>
             </div>
 
             {scontrino && (
@@ -405,28 +405,28 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
             </div>
 
             <div>
-              <div style={{width:'100%', color:'#00ff00'}}>RISTAMPA DA DGFE</div>
+              <div style={{width:'100%', color:'var(--dc-lime)'}}>RISTAMPA DA DGFE</div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6}}>
                 <div>
-                  <label style={{fontSize:'12px', color:'#00ff00'}}>DA DATA (DDMMYY)</label>
+                  <label style={{fontSize:'12px', color:'var(--dc-lime)'}}>DA DATA (DDMMYY)</label>
                   <input type="text" value={ristampaData.dataInizio}
                     onChange={e => setRistampaData(d => ({...d, dataInizio: e.target.value}))}
                     maxLength={6} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={{fontSize:'12px', color:'#00ff00'}}>A DATA (DDMMYY)</label>
+                  <label style={{fontSize:'12px', color:'var(--dc-lime)'}}>A DATA (DDMMYY)</label>
                   <input type="text" value={ristampaData.dataFine}
                     onChange={e => setRistampaData(d => ({...d, dataFine: e.target.value}))}
                     maxLength={6} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={{fontSize:'12px', color:'#00ff00'}}>DA N° SCONTRINO</label>
+                  <label style={{fontSize:'12px', color:'var(--dc-lime)'}}>DA N° SCONTRINO</label>
                   <input type="number" value={ristampaData.dalNumero}
                     onChange={e => setRistampaData(d => ({...d, dalNumero: parseInt(e.target.value)}))}
                     placeholder="0 = tutti" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={{fontSize:'12px', color:'#00ff00'}}>A N° SCONTRINO</label>
+                  <label style={{fontSize:'12px', color:'var(--dc-lime)'}}>A N° SCONTRINO</label>
                   <input type="number" value={ristampaData.alNumero}
                     onChange={e => setRistampaData(d => ({...d, alNumero: parseInt(e.target.value)}))}
                     placeholder="0 = tutti" style={inputStyle} />

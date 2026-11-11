@@ -783,8 +783,8 @@ function SezionePalmari({ showToast }) {
       )}
 
       <div>
-        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'red' }}>Palmari autorizzati su /ordini</div>
-        <div style={{ fontSize: '0.80rem', color: 'red', marginTop: 2 }}>
+        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--dc-rosso-vivo)' }}>Palmari autorizzati su /ordini</div>
+        <div style={{ fontSize: '0.80rem', color: 'var(--dc-rosso-vivo)', marginTop: 2 }}>
           In uso: {attivi} su {dati.max}. Con 0 nessun telefono può usare /ordini.
         </div>
       </div>

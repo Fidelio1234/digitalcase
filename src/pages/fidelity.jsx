@@ -255,7 +255,7 @@ export default function FidelityPage() {
             />
           </div>
           <div style={{ fontSize: '0.72rem', color: 'white', lineHeight: 1.5 }}>
-            Es. 10 = avvisa<br/>quando mancano<br/>10 punti all'omaggio<br/><span style={{ color: 'yellow' }}>(0 = disabilitato)</span>
+            Es. 10 = avvisa<br/>quando mancano<br/>10 punti all'omaggio<br/><span style={{ color: 'var(--dc-giallo)' }}>(0 = disabilitato)</span>
           </div>
         </div>
       )}
@@ -450,7 +450,7 @@ export default function FidelityPage() {
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--dc-surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 360, border: '1px solid rgba(var(--dc-rosso-rgb), 0.27)', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', marginBottom: 10 }}>🗑️</div>
             <div style={{ fontWeight: 700, marginBottom: 8 }}>Eliminare la card?</div>
-            <div style={{ fontSize: '0.85rem', color: 'red', marginBottom: 20 }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--dc-rosso-vivo)', marginBottom: 20 }}>
               {confirmElimina.nome} {confirmElimina.cognome} perderà i {confirmElimina.punti} punti accumulati. Operazione non reversibile.
             </div>
             <div style={{ display: 'flex', gap: 10 }}>

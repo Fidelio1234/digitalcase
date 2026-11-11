@@ -344,7 +344,7 @@ export default function AsportoPage() {
                   <div>
                     <div style={{ fontSize:'0.85rem', fontWeight:600 }}>{r.nome} {r.quantita > 1 && <span style={{ color:'var(--dc-verde)' }}>×{r.quantita}</span>}</div>
                     {r.nota && (
-                      <div style={{fontSize:'0.85rem', color: r.nota.startsWith('+') ? 'yellow' : 'red', marginTop:2}}>
+                      <div style={{fontSize:'0.85rem', color: r.nota.startsWith('+') ? 'var(--dc-giallo)' : 'var(--dc-rosso-vivo)', marginTop:2}}>
                         📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                       </div>
                     )}

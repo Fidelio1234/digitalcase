@@ -287,17 +287,17 @@ export default function AgendaPage() {
           <div style={{ fontSize: '0.98rem', color: 'var(--dc-ambra)' }}>{totaleOggi} Prenotazion{totaleOggi === 1 ? 'e' : 'i'} · {fmtDataItaliana(data)}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button onClick={() => cambiaGiorno(-1)} style={{ background: 'transparent', border: '1px solid #00FF00', borderRadius: 10, color: 'red', padding: '8px 12px', cursor: 'pointer' }}>◀</button>
+          <button onClick={() => cambiaGiorno(-1)} style={{ background: 'transparent', border: '1px solid var(--dc-lime)', borderRadius: 10, color: 'var(--dc-rosso-vivo)', padding: '8px 12px', cursor: 'pointer' }}>◀</button>
           <input type="date" value={data} onChange={e => e.target.value && setData(e.target.value)}
-            style={{ background: 'var(--dc-surface2)', border: '1px solid #00FF00', borderRadius: 10, color: 'var(--dc-text)', padding: '8px 10px', fontSize: '0.8rem', fontFamily: "'DM Mono',monospace", colorScheme: 'dark' }}
+            style={{ background: 'var(--dc-surface2)', border: '1px solid var(--dc-lime)', borderRadius: 10, color: 'var(--dc-text)', padding: '8px 10px', fontSize: '0.8rem', fontFamily: "'DM Mono',monospace", colorScheme: 'dark' }}
           />
           <button onClick={() => setData(oggiISO())} disabled={isOggi} style={{
-            background: 'transparent', border: '1px solid #00FF00', borderRadius: 10,
+            background: 'transparent', border: '1px solid var(--dc-lime)', borderRadius: 10,
             color: 'var(--dc-ambra)', padding: '8px 12px', fontSize: '0.8rem',
             cursor: isOggi ? 'default' : 'pointer',
             visibility: isOggi ? 'hidden' : 'visible',
           }}>Oggi</button>
-          <button onClick={() => cambiaGiorno(1)} style={{ background: 'transparent', border: '1px solid #00FF00', borderRadius: 10, color: 'red', padding: '10px 12px', cursor: 'pointer' }}>▶</button>
+          <button onClick={() => cambiaGiorno(1)} style={{ background: 'transparent', border: '1px solid var(--dc-lime)', borderRadius: 10, color: 'var(--dc-rosso-vivo)', padding: '10px 12px', cursor: 'pointer' }}>▶</button>
         </div>
       </header>
 
@@ -308,8 +308,8 @@ export default function AgendaPage() {
           if (occ && !occ.primo) {
             return (
               <div key={ora} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 12px', opacity: 0.75 }}>
-                <span style={{ width: 52, fontFamily: "'DM Mono',monospace", fontSize: '0.95rem', color: 'red' }}>{ora}</span>
-                <span style={{ fontSize: '0.95rem', color: 'red' }}>↳ Occupato</span>
+                <span style={{ width: 52, fontFamily: "'DM Mono',monospace", fontSize: '0.95rem', color: 'var(--dc-rosso-vivo)' }}>{ora}</span>
+                <span style={{ fontSize: '0.95rem', color: 'var(--dc-rosso-vivo)' }}>↳ Occupato</span>
               </div>
             )
           }
@@ -327,8 +327,8 @@ export default function AgendaPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{p.cliente_nome}{p.cliente_telefono ? ` · ${p.cliente_telefono}` : ''}</div>
                   <div style={{ fontSize: '0.78rem', color: 'rgba(var(--dc-text-rgb), 0.67)' }}>{(p.servizi || []).map(s => s.nome).join(' + ')} · € {fmtEuro(p.totale || 0)}{p.num_slot > 1 ? ` · ${p.num_slot * STEP_MIN} min` : ''}</div>
-                  {p.operatore_nome && <div style={{ fontSize: '0.92rem', color: '#00FF00' }}>👤 PRENOTATO DA {p.operatore_nome}</div>}
-                  {p.note && <div style={{ fontSize: '0.78rem', color: 'yellow', marginTop: 2 }}> 📝 {p.note}</div>}
+                  {p.operatore_nome && <div style={{ fontSize: '0.92rem', color: 'var(--dc-lime)' }}>👤 PRENOTATO DA {p.operatore_nome}</div>}
+                  {p.note && <div style={{ fontSize: '0.78rem', color: 'var(--dc-giallo)', marginTop: 2 }}> 📝 {p.note}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {!completato && (
@@ -469,7 +469,7 @@ export default function AgendaPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-              <button onClick={() => setModal(null)} style={{ flex: 1, padding: 12, borderRadius: 10, background: 'transparent', border: '1px solid var(--dc-border)', color: 'red', cursor: 'pointer' }}>Annulla</button>
+              <button onClick={() => setModal(null)} style={{ flex: 1, padding: 12, borderRadius: 10, background: 'transparent', border: '1px solid var(--dc-border)', color: 'var(--dc-rosso-vivo)', cursor: 'pointer' }}>Annulla</button>
               <button onClick={salvaPrenotazione} style={{ flex: 1, padding: 12, borderRadius: 10, background: 'var(--dc-verde)', border: 'none', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer' }}>✓ Salva</button>
             </div>
           </div>

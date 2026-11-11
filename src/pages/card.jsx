@@ -173,7 +173,7 @@ if (!negozioId) return (
 
           <button onClick={logout} style={{
             marginTop: 24, padding: '10px 20px', borderRadius: 10, border: '1px solid var(--dc-border)',
-            background: 'transparent', color: 'red', cursor: 'pointer', fontSize: '0.8rem'
+            background: 'transparent', color: 'var(--dc-rosso-vivo)', cursor: 'pointer', fontSize: '0.8rem'
           }}>
             Esci
           </button>
