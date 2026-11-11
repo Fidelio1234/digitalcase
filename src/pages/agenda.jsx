@@ -367,12 +367,12 @@ export default function AgendaPage() {
       {/* MODAL NUOVA/MODIFICA PRENOTAZIONE */}
       {modal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(var(--dc-bg-rgb), 0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 600, padding: 20 }}>
-          <div style={{ background: 'var(--dc-surface)', border: '1px solid var(--dc-border)', borderRadius: 20, padding: 24, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ fontSize: '1rem', fontWeight: 700 }}>
+          <div className="dc-agenda-modal" style={{ background: 'var(--dc-surface)', border: '1px solid var(--dc-border)', borderRadius: 20, padding: 24, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, gridArea: 'titolo' }}>
               {modal.mode === 'nuovo' ? '📅 Nuova prenotazione' : '✏️ Modifica prenotazione'} · {modal.ora}
             </div>
 
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', gridArea: 'cliente' }}>
               <label style={{ fontSize: '0.75rem', color: 'var(--dc-muted)' }}>Cliente</label>
               <input type="text" value={ricercaCliente} onChange={e => cercaCliente(e.target.value)}
                 placeholder="Nome e cognome..."
@@ -390,7 +390,7 @@ export default function AgendaPage() {
               )}
             </div>
 
-            <div>
+            <div style={{ gridArea: 'telefono' }}>
               <label style={{ fontSize: '0.75rem', color: 'var(--dc-muted)' }}>Telefono</label>
               <input type="tel" value={form.clienteTelefono || ''} onChange={e => setForm(f => ({ ...f, clienteTelefono: e.target.value }))}
                 placeholder="Es. 3331234567"
@@ -398,7 +398,7 @@ export default function AgendaPage() {
               />
             </div>
 
-            <div>
+            <div style={{ gridArea: 'servizi' }}>
               <label style={{ fontSize: '0.85rem', color: 'var(--dc-verde)' }}>Servizi (puoi selezionarne più di uno)</label>
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '6px 0' }}>
                 {reparti.map(r => (
@@ -443,7 +443,7 @@ export default function AgendaPage() {
               )}
             </div>
 
-            <div>
+            <div style={{ gridArea: 'durata' }}>
               <label style={{ fontSize: '0.8rem', color: 'var(--dc-verde)' }}>Durata</label>
               <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                 {DURATE.map(d => (
@@ -459,7 +459,7 @@ export default function AgendaPage() {
               </div>
             </div>
 
-            <div>
+            <div style={{ gridArea: 'note' }}>
               <label style={{ fontSize: '0.8rem', color: 'var(--dc-verde)' }}>Note (opzionale)</label>
               <textarea value={form.note || ''} onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
                 placeholder="Es. cliente allergico alla crema di cocco..."
@@ -468,7 +468,7 @@ export default function AgendaPage() {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 6, gridArea: 'bottoni' }}>
               <button onClick={() => setModal(null)} style={{ flex: 1, padding: 12, borderRadius: 10, background: 'transparent', border: '1px solid var(--dc-border)', color: 'var(--dc-rosso-vivo)', cursor: 'pointer' }}>Annulla</button>
               <button onClick={salvaPrenotazione} style={{ flex: 1, padding: 12, borderRadius: 10, background: 'var(--dc-verde)', border: 'none', color: 'var(--dc-bg)', fontWeight: 700, cursor: 'pointer' }}>✓ Salva</button>
             </div>

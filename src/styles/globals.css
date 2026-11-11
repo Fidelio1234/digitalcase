@@ -70,3 +70,7 @@ body { background: var(--dc-bg); color: var(--dc-text); }
 .dc-agenda-slots { padding: 10px 16px 4px; max-width: 1240px; margin: 0 auto; column-count: 2; column-gap: 16px; }
 .dc-agenda-slots > * { break-inside: avoid; margin-bottom: 4px; width: 100%; }
 @media (max-width: 860px) { .dc-agenda-slots { column-count: 1; max-width: 640px; } }
+
+/* Agenda: finestra prenotazione su due colonne (dati a sinistra, servizi a destra); verticale su schermi stretti. */
+.dc-agenda-modal { max-width: 920px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); grid-template-rows: auto auto auto auto 1fr auto; grid-template-areas: "titolo titolo" "cliente servizi" "telefono servizi" "durata servizi" "note servizi" "bottoni bottoni"; column-gap: 24px; row-gap: 14px; align-items: start; }
+@media (max-width: 860px) { .dc-agenda-modal { max-width: 420px; display: flex; flex-direction: column; align-items: stretch; gap: 14px; } }
