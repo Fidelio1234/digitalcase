@@ -83,6 +83,7 @@ export default function CassaPage() {
   const [benvenuto, setBenvenuto] = useState(false)
   const [rtConfig, setRtConfig] = useState(null)
   const tavoloDaChiudereRef = useRef(null)
+  const agendaDaChiudereRef = useRef(null) // id prenotazione Agenda da chiudere a pagamento confermato
 
   const [rtMappatura, setRtMappatura] = useState({})
   const [repartoAttivo, setRepartoAttivo] = useState(null)
@@ -200,7 +201,8 @@ export default function CassaPage() {
     const agendaDaChiudere = sessionStorage.getItem('agenda_da_chiudere')
     if (agendaDaChiudere) {
       try {
-        const { righe } = JSON.parse(agendaDaChiudere)
+        const { righe, id: idPrenotazione } = JSON.parse(agendaDaChiudere)
+        agendaDaChiudereRef.current = idPrenotazione ?? null
         setTimeout(() => {
           caricaRigheEsterne(righe)
           apriScontrino()
@@ -434,6 +436,7 @@ export default function CassaPage() {
       })
     }
     tavoloDaChiudereRef.current = null
+    agendaDaChiudereRef.current = null
     try { sessionStorage.removeItem('tavolo_da_chiudere'); sessionStorage.removeItem('cassa_tavolo') } catch {}
     annullaTutto()
     setShowConfirmAnnulla(false)
@@ -521,6 +524,17 @@ export default function CassaPage() {
     }
 
     
+  // Chiudi prenotazione Agenda (solo a pagamento confermato)
+  const agendaId = agendaDaChiudereRef.current
+  if (agendaId) {
+    try {
+      const { chiudiPrenotazioneDb } = await import('@/lib/supabase-db')
+      const okAgenda = await chiudiPrenotazioneDb(NEGOZIO_ID, agendaId)
+      if (!okAgenda) console.error('Prenotazione Agenda non chiusa:', agendaId)
+    } catch (e) { console.error('Chiusura prenotazione Agenda fallita:', e) }
+    agendaDaChiudereRef.current = null
+  }
+
   // Salva nello storico su Supabase
   try {
     const idSalvato = await salvaScontrinoDb(NEGOZIO_ID, {

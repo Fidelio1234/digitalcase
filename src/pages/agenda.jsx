@@ -263,7 +263,6 @@ export default function AgendaPage() {
         iva: s.iva || 10,
       })),
     }))
-    chiudiPrenotazioneDb(NEGOZIO_ID, p.id)
     router.push('/cassa')
   }
 
