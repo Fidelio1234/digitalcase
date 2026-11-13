@@ -442,29 +442,45 @@ async function inviaComandaInterna() {
       ultimoOrdine: ora,
       apertoAlle: tavolo.apertoAlle || ora,
     }
-    await salvaTavoloDb(NEGOZIO_ID, aggiornato)
+    const okSalvataggio = await salvaTavoloDb(NEGOZIO_ID, aggiornato)
+
+    // Prima di stampare controllo che le righe siano davvero sul database:
+    // un altro dispositivo (cassa o palmare) può sovrascrivere il tavolo.
+    // Se non riesco a rileggere, stampo come prima: meglio una stampa in più
+    // che una comanda che non arriva in cucina.
+    let righeDopo = null
+    let righeMancanti = false
+    if (okSalvataggio) {
+      try {
+        const tavoliDopo = await getTavoliDb(NEGOZIO_ID)
+        const tavoloDopo = tavoliDopo.find(t => t.numero === tavoloAttivo)
+        righeDopo = tavoloDopo ? (tavoloDopo.righe || []) : []
+        righeMancanti = !righeComanda.every(r => {
+          const d = righeDopo.find(x => x.id === r.id)
+          return !!d && (d.quantita ?? 0) >= (r.quantita ?? 0)
+        })
+      } catch (e) { /* non so come sia andata: mi comporto come prima */ }
+    }
+
+    if (!okSalvataggio || righeMancanti) {
+      try {
+        await supabase.from('debug_comande').insert({
+          negozio_id: NEGOZIO_ID,
+          numero_tavolo: tavoloAttivo,
+          righe_vecchie: righeVecchie,
+          righe_comanda: righeComanda,
+          righe_nuove: righeNuove,
+          righe_dopo_carica: righeDopo,
+        })
+      } catch (e) { /* il log non deve mai bloccare la comanda */ }
+      window.alert('Comanda NON salvata: il tavolo è stato modificato da un altro dispositivo. Non ho stampato nulla in cucina: controlla il tavolo e rimanda la comanda.')
+      carica()
+      return
+    }
 
     if (righeNuove.length > 0) {
       await stampaComanda(tavoloAttivo, righeNuove, 'comanda', reparti, NEGOZIO_ID)
     }
-
-
-
-
-
-// ── LOG DEBUG comanda (temporaneo, per bug pizza fantasma) ──────────────
-    try {
-      const tavoliDopo = await getTavoliDb(NEGOZIO_ID)
-      const tavoloDopo = tavoliDopo.find(t => t.numero === tavoloAttivo)
-      await supabase.from('debug_comande').insert({
-        negozio_id: NEGOZIO_ID,
-        numero_tavolo: tavoloAttivo,
-        righe_vecchie: righeVecchie,
-        righe_comanda: righeComanda,
-        righe_nuove: righeNuove,
-        righe_dopo_carica: tavoloDopo ? tavoloDopo.righe : null,
-      })
-    } catch (e) { /* il log non deve mai bloccare la comanda */ }
 
     setInvioOk(true)
     setTimeout(() => {
