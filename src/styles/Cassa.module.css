@@ -84,7 +84,10 @@
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column; gap: 12px;
   padding: 16px; overflow-y: auto;
+  /* Barra di scorrimento nascosta: sulla cassa si scorre col dito */
+  scrollbar-width: none; -ms-overflow-style: none;
 }
+.colLeft::-webkit-scrollbar { width: 0; height: 0; }
 
 .displayImporto {
   background: var(--surface2);
