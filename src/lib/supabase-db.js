@@ -70,14 +70,6 @@ export async function saveUtenteDb(negozioId, utente) {
   return !error
 }
 
-export async function deleteUtenteDb(id) {
-  const { error } = await supabase
-    .from('utenti')
-    .delete()
-    .eq('id', id)
-  return !error
-}
-
 // ─── REPARTI ──────────────────────────────────────────────────────────────
 
 // --- COPIA LOCALE REPARTI (inizio) ---
