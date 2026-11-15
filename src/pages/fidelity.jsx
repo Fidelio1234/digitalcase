@@ -132,7 +132,19 @@ export default function FidelityPage() {
   }
 
   async function confermaElimina() {
-    await supabase.from('fidelity_clienti').delete().eq('id', confirmElimina.id)
+    // Leggiamo l'esito: senza questo controllo la card spariva dalla schermata
+    // anche quando il database non la cancellava (policy mancante o vincolo),
+    // e ricaricando la pagina tornava al suo posto.
+    const { data, error } = await supabase
+      .from('fidelity_clienti')
+      .delete()
+      .eq('id', confirmElimina.id)
+      .select('id')
+    if (error || !data || data.length === 0) {
+      showToast(error ? 'Non eliminato: ' + error.message : 'Non eliminato, riprova')
+      setConfirmElimina(null)
+      return
+    }
     setClienti(prev => prev.filter(c => c.id !== confirmElimina.id))
     showToast('Cliente eliminato')
     setConfirmElimina(null)
