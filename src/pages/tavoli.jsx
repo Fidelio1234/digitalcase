@@ -1021,7 +1021,7 @@ setShowConto(true)
         {/* MODAL NOTA - inline nella vista comanda */}
         {notaModal !== null && (
         <div style={{ position:'fixed', inset:0, background:'rgba(var(--dc-bg-rgb), 0.95)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:600, padding:20 }}>
-        <div style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:20, padding:24, width:'100%', maxWidth:360, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
+        <div style={{ background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:20, padding:24, width:'100%', maxWidth:900, maxHeight:'85vh', overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
           <div style={{ fontSize:'0.9rem', fontWeight:700, color:'var(--dc-text)' }}>✏️ Variante per: {righeComanda.find(r => r.id === notaModal)?.nome}</div>
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={() => { if (notaTipo !== 'rimozione') setAggiunte([]); setNotaTipo('rimozione') }}
@@ -1037,6 +1037,7 @@ setShowConto(true)
                   + Aggiunta
                 </button>
               </div>
+              <div className="dc-variante-corpo">
               {notaTipo === 'rimozione' && impostazioni.aggiunteRapide?.length > 0 && (() => {
                 const nomiRim = [...new Set(impostazioni.aggiunteRapide.map(a => a.nome))]
                 return (
@@ -1113,7 +1114,8 @@ setShowConto(true)
                   </div>
                 )
               })()}
-              <textarea autoFocus value={notaTesto} onChange={e => setNotaTesto(e.target.value.toUpperCase())}
+              <div className="dc-variante-dx">
+              <textarea autoFocus data-no-autotastiera value={notaTesto} onChange={e => setNotaTesto(e.target.value.toUpperCase())}
                 placeholder={notaTipo === 'rimozione' ? 'es. senza mozzarella...' : 'es. con funghi...'}
                 rows={3}
                 style={{ background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:10, padding:12, color:'var(--dc-text)', fontSize:'0.9rem', resize:'none', fontFamily:"'DM Sans',sans-serif" }}
@@ -1140,6 +1142,8 @@ setShowConto(true)
                   style={{ flex:1, padding:12, borderRadius:10, background:'var(--dc-verde)', border:'none', color:'var(--dc-bg)', fontWeight:700, cursor:'pointer' }}>
                   Salva
                 </button>
+              </div>
+              </div>
               </div>
             </div>
           </div>

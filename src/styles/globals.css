@@ -42,16 +42,16 @@ button:focus-visible { outline: 2px solid var(--dc-verde); outline-offset: 2px; 
 /* Tema chiaro: stesse variabili, valori chiari (contrasto >= 4,5:1 su superfici chiare). */
 html[data-theme='light'] {
   color-scheme: light;
-  --dc-bg: #f3f4f8;       --dc-bg-rgb: 243, 244, 248;
-  --dc-surface: #ffffff;  --dc-surface-rgb: 255, 255, 255;
-  --dc-surface2: #e9ebf1; --dc-surface2-rgb: 233, 235, 241;
-  --dc-border: #d3d7e0;   --dc-border-rgb: 211, 215, 224;
+  --dc-bg: #eaedf4;       --dc-bg-rgb: 234, 237, 244;
+  --dc-surface: #f5f6fa;  --dc-surface-rgb: 245, 246, 250;
+  --dc-surface2: #e3e7f0; --dc-surface2-rgb: 227, 231, 240;
+  --dc-border: #ced4e0;   --dc-border-rgb: 206, 212, 224;
   --dc-text: #14161f;     --dc-text-rgb: 20, 22, 31;
   --dc-muted: #5f6475;    --dc-muted-rgb: 95, 100, 117;
   --dc-verde: #007a52;    --dc-verde-rgb: 0, 122, 82;
   --dc-ambra: #9a5b00;    --dc-ambra-rgb: 154, 91, 0;
   --dc-rosso: #c9203f;    --dc-rosso-rgb: 201, 32, 63;
-  --dc-menta: #00805a;    --dc-menta-rgb: 0, 128, 90;
+  --dc-menta: #007652;    --dc-menta-rgb: 0, 118, 82;
   --dc-blu: #3552d6;      --dc-blu-rgb: 53, 82, 214;
   --dc-viola: #8a24c4;    --dc-viola-rgb: 138, 36, 196;
   --dc-giallo: #856400;
@@ -74,3 +74,29 @@ body { background: var(--dc-bg); color: var(--dc-text); }
 /* Agenda: finestra prenotazione su due colonne (dati a sinistra, servizi a destra); verticale su schermi stretti. */
 .dc-agenda-modal { max-width: 920px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); grid-template-rows: auto auto auto auto 1fr auto; grid-template-areas: "titolo titolo" "cliente servizi" "telefono servizi" "durata servizi" "note servizi" "bottoni bottoni"; column-gap: 24px; row-gap: 14px; align-items: start; }
 @media (max-width: 860px) { .dc-agenda-modal { max-width: 420px; display: flex; flex-direction: column; align-items: stretch; gap: 14px; } }
+
+/* Finestra della variante (aggiunte e rimozioni) in Tavoli: due colonne,
+   cosi' resta bassa e la tastiera a schermo non la copre. Sotto i 760 px
+   torna una colonna sola. */
+.dc-variante-corpo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+.dc-variante-corpo > * {
+  flex: 1 1 300px;
+  min-width: 0;
+}
+.dc-variante-dx {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dc-variante-dx textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 760px) {
+  .dc-variante-corpo > * { flex: 1 1 100%; }
+}

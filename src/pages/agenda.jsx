@@ -375,7 +375,7 @@ export default function AgendaPage() {
             <div style={{ position: 'relative', gridArea: 'cliente' }}>
               <label style={{ fontSize: '0.75rem', color: 'var(--dc-muted)' }}>Cliente</label>
               <input type="text" value={ricercaCliente} onChange={e => cercaCliente(e.target.value)}
-                placeholder="Nome e cognome..."
+                autoFocus placeholder="Nome e cognome..."
                 style={{ width: '100%', background: 'var(--dc-surface2)', border: '1px solid var(--dc-border)', borderRadius: 10, padding: 12, color: 'var(--dc-text)', fontSize: '0.9rem', boxSizing: 'border-box', marginTop: 4 }}
               />
               {suggerimentiCliente.length > 0 && (
