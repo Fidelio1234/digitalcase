@@ -57,17 +57,29 @@ const S = {
   ultimoTarget: 0,   // numero atteso dopo tutti gli scontrini gia' inviati
   inVolo: 0,         // scontrini inviati e non ancora verificati
   deficit: 0,        // scontrini non emessi nel gruppo in corso (corregge i target successivi)
+  silenzi: 0,        // letture 84F andate a vuoto di fila (certe versioni non supportano 84F)
   coda: Promise.resolve(),
 }
 
 async function leggi(chiediNumeri) {
-  try { return parse84F(await chiediNumeri()) } catch { return null }
+  try {
+    const r = parse84F(await chiediNumeri())
+    if (r) S.silenzi = 0; else S.silenzi++
+    return r
+  } catch { S.silenzi++; return null }
 }
+
+// Oltre questa soglia la cassa non sa rispondere a 84F (firmware precedente alla 4.1:
+// risponde ERRORE XON/XOFF 12). Si smette di chiedere: niente falsi allarmi e niente
+// errore sul display della cassa a ogni scontrino. Una lettura riuscita riazzera tutto.
+const SILENZI_PER_RINUNCIA = 6
+export function verificaDisponibile() { return S.silenzi < SILENZI_PER_RINUNCIA }
 
 // Legge il numero scontrino attuale (da fare all'apertura della cassa).
 export function sincronizzaBase(chiediNumeri, { tentativi = 3, intervallo = 2000 } = {}) {
   const p = S.coda.then(async () => {
     if (S.inVolo > 0) return S.base
+    S.silenzi = 0 // nuovo tentativo: si riparte da zero
     for (let i = 0; i < tentativi; i++) {
       const n = await leggi(chiediNumeri)
       
@@ -124,12 +136,19 @@ export function verificaScontrino({ ticket, chiediNumeri, intervallo = 1500, att
   const p = S.coda.then(async () => {
     let timerSilenzio = null
     try {
+      if (S.silenzi >= SILENZI_PER_RINUNCIA) {
+        return { esito: 'non_verificabile', motivo: 'la cassa non risponde al comando 84F' }
+      }
       if (!base) {
         // Mai letta la cassa prima di questo scontrino: non si puo' provare niente.
         // Rileggo il numero per verificare gli scontrini successivi, ma questo lo segnalo come dubbio.
         const n = await leggi(chiediNumeri)
         if (n && S.inVolo === 1) { S.base = n; S.ultimoTarget = n.scontrino }
-        return { esito: 'cassa_non_risponde', motivo: 'numero iniziale della cassa non noto' }
+        // Se la cassa non risponde nemmeno ora, non e' una prova che lo scontrino non sia
+        // uscito: puo' semplicemente non conoscere il comando. Meglio tacere che allarmare.
+        return n
+          ? { esito: 'cassa_non_risponde', motivo: 'numero iniziale della cassa non noto' }
+          : { esito: 'non_verificabile', motivo: 'nessuna risposta al comando 84F' }
       }
       const t0 = Date.now()
       let ultima = null
@@ -190,7 +209,7 @@ export function verificaScontrino({ ticket, chiediNumeri, intervallo = 1500, att
 
 // Solo per i test.
 export function _azzeraStato() {
-  S.base = null; S.ultimoTarget = 0; S.inVolo = 0; S.deficit = 0; S.coda = Promise.resolve()
+  S.base = null; S.ultimoTarget = 0; S.inVolo = 0; S.deficit = 0; S.silenzi = 0; S.coda = Promise.resolve()
 }
 
 // ── Avvisi che sopravvivono al cambio pagina ────────────────────────────────
