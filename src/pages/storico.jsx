@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import { getNegozio, getContatori } from '@/lib/storage'
 import { sincronizzaNegozioLocale } from '@/lib/supabase-db'
-import { getStoricoDb, getScontriniPeriodoDb, salvaChiusuraDb, getChiusureDb } from '@/lib/supabase-db'
+import { getStoricoDb, getScontriniPeriodoDb, salvaChiusuraDb, getChiusureDb, getFattureDb, getImpostazioniDb, creaNotaCreditoDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Storico.module.css'
 import { totaliPerIva, riepilogoIvaMensile } from '@/lib/iva'
@@ -23,6 +23,11 @@ export default function StoricoPage() {
   const router = useRouter()
   const [storico, setStorico] = useState([])
   const [chiusure, setChiusure] = useState([])
+  const [fatture, setFatture] = useState([])
+  const [fatturazioneOn, setFatturazioneOn] = useState(false)
+  const [confNota, setConfNota] = useState(null)
+  const [ricercaFat, setRicercaFat] = useState('')
+  const [filtroTipoFat, setFiltroTipoFat] = useState('tutte')
   const [ricerca, setRicerca] = useState('')
   const [filtroData, setFiltroData] = useState(new Date().toISOString().split('T')[0])
   const [filtroMetodo, setFiltroMetodo] = useState('tutti')
@@ -68,6 +73,8 @@ export default function StoricoPage() {
     if (!user) { if (!loading) router.replace('/login'); return }
     if (user?.role !== 'owner') { router.replace('/cassa'); return }
     getChiusureDb(NEGOZIO_ID).then(c => setChiusure(c))
+    getFattureDb(NEGOZIO_ID).then(f => setFatture(f))
+    getImpostazioniDb(NEGOZIO_ID).then(imp => setFatturazioneOn(!!imp.fatturazioneAbilitato))
     setNegozio(getNegozio())
     sincronizzaNegozioLocale(NEGOZIO_ID).then(() => setNegozio(getNegozio()))
   }, [user, router])
@@ -125,6 +132,11 @@ export default function StoricoPage() {
 
 
 
+// Scontrini non confermati dalla cassa 3i (solo conteggio: i totali non cambiano)
+const nonEmessi = scontriniFiltrati.filter(x => !x.annullato && x.statoRt === 'non_emesso')
+const daVerificare = scontriniFiltrati.filter(x => !x.annullato && x.statoRt === 'da_verificare')
+const somma = lista => lista.reduce((a, x) => a + (x.totale || 0), 0)
+
 async function eseguiChiusura() {
     // Ricarica gli scontrini freschi da Supabase PRIMA di calcolare i totali,
     // per evitare di usare uno stato locale non aggiornato (es. un annullo
@@ -169,7 +181,30 @@ async function eseguiChiusura() {
     setTab('chiusure')
   }
 
+  async function scaricaXml(f) {
+    try {
+      const res = await fetch('/api/fattura/genera-xml', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fattura: f }),
+      })
+      const data = await res.json()
+      if (!res.ok) { showToast('⚠ ' + (data.error || 'Errore XML')); return }
+      const blob = new Blob([data.xml], { type: 'application/xml' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = data.nomeFile; a.click()
+      URL.revokeObjectURL(url)
+      showToast('✓ XML generato')
+    } catch { showToast('⚠ Errore generazione XML') }
+  }
 
+  async function creaNotaCredito(f) {
+    setConfNota(null)
+    const res = await creaNotaCreditoDb(NEGOZIO_ID, f)
+    if (res.error) { showToast('⚠ ' + (res.error.message || 'Errore nota di credito')); return }
+    showToast('✓ Nota di credito creata')
+    getFattureDb(NEGOZIO_ID).then(ff => setFatture(ff))
+  }
 
 
 
@@ -183,7 +218,12 @@ async function eseguiChiusura() {
         body: JSON.stringify({ negozio: neg, chiusura, html })
       })
       if (res.ok) showToast('✓ Email chiusura inviata')
-      else showToast('⚠ Errore invio email')
+      else {
+        let motivoErroreChiusura = ''
+        try { motivoErroreChiusura = (await res.json())?.error || '' } catch {}
+        console.warn('invia-chiusura', res.status, motivoErroreChiusura)
+        showToast('⚠ Errore invio email' + (motivoErroreChiusura ? ': ' + motivoErroreChiusura : ' (' + res.status + ')'))
+      }
     } catch { showToast('⚠ Errore invio email') }
   }
 
@@ -246,6 +286,24 @@ async function eseguiChiusura() {
     w.document.close()
   }
 
+
+  const fattureFiltrate = fatture.filter(f => {
+    const cli = f.cliente_snapshot || {}
+    const nome = cli.tipo === 'privato' ? `${cli.nome || ''} ${cli.cognome || ''}` : (cli.denominazione || '')
+    const tipoOk = filtroTipoFat === 'tutte'
+      || (filtroTipoFat === 'fatture' && f.tipo_documento !== 'TD04')
+      || (filtroTipoFat === 'note' && f.tipo_documento === 'TD04')
+    const q = ricercaFat.trim().toLowerCase()
+    const testoOk = !q
+      || String(f.numero).includes(q)
+      || nome.toLowerCase().includes(q)
+      || (cli.partita_iva || '').toLowerCase().includes(q)
+      || (cli.codice_fiscale || '').toLowerCase().includes(q)
+    return tipoOk && testoOk
+  })
+
+
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -270,6 +328,11 @@ async function eseguiChiusura() {
         <button className={`${styles.tab} ${tab === 'chiusure' ? styles.tabActive : ''}`} onClick={() => setTab('chiusure')}>
           🔒 Chiusure ({chiusure.length})
         </button>
+        {fatturazioneOn && (
+          <button className={`${styles.tab} ${tab === 'fatture' ? styles.tabActive : ''}`} onClick={() => setTab('fatture')}>
+            📄 Fatture ({fatture.length})
+          </button>
+        )}
       </div>
 
       {tab === 'scontrini' && (
@@ -315,6 +378,16 @@ async function eseguiChiusura() {
           </div>
 
           <div className={styles.lista}>
+            {nonEmessi.length > 0 && (
+              <div style={{background:'rgba(255,77,106,0.12)', border:'1px solid #ff4d6a', borderRadius:10, padding:'10px 14px', marginBottom:10, color:'#ff4d6a', fontWeight:700, fontSize:'0.9rem'}}>
+                🚫 {nonEmessi.length} {nonEmessi.length === 1 ? 'scontrino NON stampato' : 'scontrini NON stampati'} dalla cassa (€ {fmt(somma(nonEmessi))}). Controlla se sono stati rifatti.
+              </div>
+            )}
+            {daVerificare.length > 0 && (
+              <div style={{background:'rgba(255,184,48,0.12)', border:'1px solid #ffb830', borderRadius:10, padding:'10px 14px', marginBottom:10, color:'#ffb830', fontWeight:700, fontSize:'0.9rem'}}>
+                ⚠ {daVerificare.length} {daVerificare.length === 1 ? 'scontrino da verificare' : 'scontrini da verificare'}: la cassa non ha risposto (€ {fmt(somma(daVerificare))}).
+              </div>
+            )}
             {scontriniFiltrati.length === 0 && (
               <div className={styles.empty}>
                 <div style={{fontSize:'2rem'}}>🧾</div>
@@ -331,6 +404,12 @@ async function eseguiChiusura() {
                   <div className={styles.scontrinoLeft}>
                     <div className={styles.scontrinoNum}>#{s.numeroScontrino || s.id?.slice(-4)}</div>
                     <div className={styles.scontrinoData}>{fmtData(s.timestamp)}</div>
+                    {!s.annullato && s.statoRt === 'non_emesso' && (
+                      <div style={{marginTop:4, display:'inline-block', fontSize:'0.72rem', fontWeight:700, padding:'2px 8px', borderRadius:6, background:'rgba(255,77,106,0.18)', color:'#ff4d6a'}}>🚫 NON STAMPATO</div>
+                    )}
+                    {!s.annullato && s.statoRt === 'da_verificare' && (
+                      <div style={{marginTop:4, display:'inline-block', fontSize:'0.72rem', fontWeight:700, padding:'2px 8px', borderRadius:6, background:'rgba(255,184,48,0.18)', color:'#ffb830'}}>⚠ DA VERIFICARE</div>
+                    )}
                   {s.operatoreNome && (
                     <div style={{fontSize:'0.9rem', color:'white', marginTop:2}}>👤 {s.operatoreNome}</div>
                   )}
@@ -388,7 +467,7 @@ async function eseguiChiusura() {
         </div>
       )}
 
-      {tab === 'chiusure' && (
+{tab === 'chiusure' && (
         <div className={styles.main}>
           <div className={styles.lista}>
             {chiusure.length === 0 && (
@@ -397,8 +476,6 @@ async function eseguiChiusura() {
                 <div>Nessuna chiusura fiscale ancora</div>
               </div>
             )}
-
-            
             {chiusure.map(c => (
               <div key={c.id} className={styles.chiusuraRow}>
                 <div className={styles.chiusuraLeft}>
@@ -422,14 +499,108 @@ async function eseguiChiusura() {
                     <span style={{color:'#ff9f43'}}>💵 €{fmt(c.totaleContanti)}</span>
                   </div>
                 </div>
-                 {/* STAMPA SU ODF E MANDA LA MAIL
-                <div className={styles.chiusuraActions}>
-                  <button className={styles.actionBtn} onClick={() => stampaPDF(c)} title="Stampa PDF">🖨️</button>
-                  <button className={styles.actionBtn} onClick={() => inviaChiusuraEmail(c)} title="Invia email">📧</button>
+                <div style={{display:'flex', alignItems:'center', marginLeft:12}}>
+                  <button type="button" title="Invia il report della chiusura via email"
+                    onClick={() => inviaChiusuraEmail(c)}
+                    style={{background:'transparent', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', cursor:'pointer', fontSize:'1rem'}}>
+                    📧
+                  </button>
                 </div>
-                */}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+{fatturazioneOn && tab === 'fatture' && (
+        <div className={styles.main}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+            <input type="search" name="cerca-fatture" autoComplete="off"
+              value={ricercaFat} onChange={e => setRicercaFat(e.target.value)}
+              placeholder="🔍 Cerca per numero, cliente, P.IVA o C.F…"
+              style={{ flex: 1, minWidth: 220, background: '#1a1c24', border: '1px solid #252830', borderRadius: 10, padding: 10, color: '#eef0f6', fontSize: '0.9rem' }} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[['tutte','Tutte'],['fatture','Fatture'],['note','Note credito']].map(([v, l]) => (
+                <button key={v} onClick={() => setFiltroTipoFat(v)}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + (filtroTipoFat === v ? '#00e5a0' : '#252830'), background: filtroTipoFat === v ? 'rgba(0,229,160,0.15)' : 'transparent', color: filtroTipoFat === v ? '#00e5a0' : '#eef0f6', cursor: 'pointer', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.lista}>
+            {fattureFiltrate.length === 0 && (
+              <div className={styles.empty}>
+                <div style={{fontSize:'2rem'}}>📄</div>
+                <div>Nessuna fattura trovata</div>
+              </div>
+            )}
+            {fattureFiltrate.map(f => {
+              const cli = f.cliente_snapshot || {}
+              const nomeCli = cli.tipo === 'privato'
+                ? `${cli.nome || ''} ${cli.cognome || ''}`.trim()
+                : (cli.denominazione || '—')
+              const statoColore = {
+                bozza: '#5a5d6e', esportata: '#6482ff', inviata: '#ffb830',
+                consegnata: '#00e5a0', accettata: '#00e5a0',
+                scartata: '#ff4d6a', rifiutata: '#ff4d6a',
+              }[f.stato] || '#5a5d6e'
+              return (
+                <div key={f.id} className={styles.chiusuraRow} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className={styles.chiusuraLeft}>
+                  <div className={styles.chiusuraNum}>
+                      {f.tipo_documento === 'TD04' ? 'Nota credito' : 'Fattura'} n° {f.numero}/{f.anno}
+                      <span style={{marginLeft:8, fontSize:'0.65rem', padding:'2px 8px', borderRadius:6,
+                        background: statoColore + '22', color: statoColore}}>
+                        {(f.stato || 'bozza').toUpperCase()}
+                      </span>
+                    </div>
+                    <div className={styles.chiusuraData}>
+                      {new Date(f.data + 'T00:00:00').toLocaleDateString('it-IT')} · {nomeCli}
+                    </div>
+                    <div className={styles.chiusuraMeta}>
+                      {cli.partita_iva ? `P.IVA ${cli.partita_iva}` : (cli.codice_fiscale ? `C.F. ${cli.codice_fiscale}` : '')}
+                      {f.fattura_collegata ? ` · rif. fattura n° ${f.fattura_collegata.numero}` : ''}
+                    </div>
+                  </div>
+                  <div className={styles.chiusuraCenter}>
+                    <div className={styles.chiusuraTotale}>€ {fmt(f.totale_cents)}</div>
+                    <div className={styles.chiusuraSplit}>
+                      <span style={{color:'#5a5d6e'}}>imp. €{fmt(f.imponibile_cents)}</span>
+                      <span style={{color:'#5a5d6e'}}>IVA €{fmt(f.iva_cents)}</span>
+                    </div>
+                  </div>
+                  {f.tipo_documento !== 'TD04' && (
+                    <button onClick={() => setConfNota(f)}
+                      style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid #ff4d6a55', borderRadius: 8, color: '#ff4d6a', fontWeight: 700, padding: '10px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      ↩ Nota credito
+                    </button>
+                  )}
+                  <button onClick={() => scaricaXml(f)}
+                    style={{ marginLeft: f.tipo_documento === 'TD04' ? 'auto' : 12, background: '#ffd06b', border: 'none', borderRadius: 8, color: '#08090c', fontWeight: 700, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    ⬇ XML
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+
+
+
+{confNota && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#111318', border: '2px solid #ff4d6a', borderRadius: 16, padding: 28, maxWidth: 400, width: '100%' }}>
+            <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ff4d6a', marginBottom: 8 }}>↩ Nota di credito</div>
+            <div style={{ fontSize: '0.85rem', color: '#ffb830', marginBottom: 20 }}>
+              Creo una nota di credito (TD04) che storna la fattura n° {confNota.numero}/{confNota.anno}. Avrà un nuovo numero e riferirà la fattura originale.
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setConfNota(null)} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid #252830', background: 'transparent', color: '#eef0f6', cursor: 'pointer' }}>Annulla</button>
+              <button onClick={() => creaNotaCredito(confNota)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: '#ff4d6a', color: 'white', fontWeight: 700, cursor: 'pointer' }}>Crea nota di credito</button>
+            </div>
           </div>
         </div>
       )}

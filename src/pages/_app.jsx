@@ -1,5 +1,6 @@
 
 import '@/styles/globals.css'
+import AvvisoStampaRT from '@/components/AvvisoStampaRT'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { NegozioProvider, useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
@@ -93,6 +94,7 @@ export default function App({ Component, pageProps }) {
         <Component {...pageProps} />
       
       </AuthProviderWrapper>
+      <AvvisoStampaRT />
     </NegozioProvider>
   )
 }

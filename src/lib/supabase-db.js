@@ -80,13 +80,67 @@ export async function deleteUtenteDb(id) {
 
 // ─── REPARTI ──────────────────────────────────────────────────────────────
 
-export async function getRepartiDb(negozioId) {
+// --- COPIA LOCALE REPARTI (inizio) ---
+const REPARTI_ATTESA_RETE_MS = 5000
+const REPARTI_ETA_MAX_MS = 7 * 24 * 60 * 60 * 1000
+
+function leggiCopiaReparti(chiave) {
+  try {
+    const raw = window.localStorage.getItem(chiave)
+    if (!raw) return null
+    const c = JSON.parse(raw)
+    if (!c || !Array.isArray(c.dati) || !c.salvato) return null
+    if (Date.now() - c.salvato > REPARTI_ETA_MAX_MS) return null
+    return c.dati
+  } catch (e) { return null }
+}
+
+function salvaCopiaReparti(chiave, lista) {
+  try { window.localStorage.setItem(chiave, JSON.stringify({ salvato: Date.now(), dati: lista })) } catch (e) {}
+}
+
+// Senza opzioni funziona come prima. Con { copiaLocale: true }, se Supabase non risponde entro
+// REPARTI_ATTESA_RETE_MS o dà errore, usa l'ultima copia salvata (max 7 giorni). Senza copia aspetta la risposta vera.
+export async function getRepartiDb(negozioId, opzioni = {}) {
+  const usaCopia = !!(opzioni && opzioni.copiaLocale)
+  const chiave = 'dc_reparti_' + negozioId
+  const rete = getRepartiDbRete(negozioId)
+
+  if (!usaCopia) {
+    const lista = await rete
+    if (lista) salvaCopiaReparti(chiave, lista)
+    return lista || []
+  }
+
+  const reteSicura = rete.catch(() => null)
+  let timer
+  const scaduto = new Promise((resolve) => { timer = setTimeout(() => resolve('scaduto'), REPARTI_ATTESA_RETE_MS) })
+  const esito = await Promise.race([reteSicura, scaduto])
+  clearTimeout(timer)
+
+  if (Array.isArray(esito)) {
+    salvaCopiaReparti(chiave, esito)
+    return esito
+  }
+  const copia = leggiCopiaReparti(chiave)
+  if (copia) {
+    // se la risposta vera arriva dopo, aggiorna la copia per la prossima volta
+    reteSicura.then((lista) => { if (lista) salvaCopiaReparti(chiave, lista) })
+    return copia
+  }
+  const lista = await reteSicura
+  if (lista) salvaCopiaReparti(chiave, lista)
+  return lista || []
+}
+// --- COPIA LOCALE REPARTI (fine) ---
+
+async function getRepartiDbRete(negozioId) {
   const { data: reparti, error } = await supabase
     .from('reparti')
     .select('*, prodotti(*)')
     .eq('negozio_id', negozioId)
     .order('ordine')
-  if (error) return []
+  if (error) return null
   return reparti.map(r => ({
     id: r.id,
     nome: r.nome,
@@ -172,9 +226,13 @@ export async function deleteProdottoDb(id) {
 // ─── SCONTRINI ────────────────────────────────────────────────────────────
 
 export async function salvaScontrinoDb(negozioId, scontrino) {
-  const { data, error } = await supabase
+  // Se il programma fornisce un id (coda locale), lo scontrino e' ripetibile senza doppioni:
+  // un secondo tentativo riconosce quello gia' salvato e completa soltanto le righe mancanti.
+  const idFornito = scontrino.id || null
+  let { data, error } = await supabase
     .from('scontrini')
     .insert({
+      ...(idFornito ? { id: idFornito } : {}),
       negozio_id: negozioId,
       numero_scontrino: scontrino.numeroScontrino,
       totale: scontrino.totale,
@@ -187,22 +245,35 @@ export async function salvaScontrinoDb(negozioId, scontrino) {
     })
     .select()
     .single()
+  if (idFornito && error && error.code === '23505') {
+    // Violazione di unicita': e' davvero il nostro scontrino gia' salvato? Altrimenti e' un altro vincolo.
+    const { data: esiste } = await supabase.from('scontrini').select('id').eq('id', idFornito).maybeSingle()
+    if (!esiste) return null
+    data = { id: idFornito }
+    error = null
+  }
   if (error || !data) return null
 
   // Salva righe
   if (scontrino.righe?.length > 0) {
-    await supabase.from('righe_scontrino').insert(
-      scontrino.righe.map(r => ({
-        scontrino_id: data.id,
-        nome: r.nome,
-        importo: r.importo,
-        quantita: r.quantita || 1,
-        totale_riga: r.totaleRiga,
-        iva: r.iva,
-        nota: r.nota || null,
-        importo_base: r.importoBase || null,
-      }))
-    )
+    const righe = scontrino.righe.map(r => ({
+      ...(idFornito && r.idRiga ? { id: r.idRiga } : {}),
+      scontrino_id: data.id,
+      nome: r.nome,
+      importo: r.importo,
+      quantita: r.quantita || 1,
+      totale_riga: r.totaleRiga,
+      iva: r.iva,
+      nota: r.nota || null,
+      importo_base: r.importoBase || null,
+    }))
+    if (idFornito) {
+      // Con id fornito un errore sulle righe deve far ripetere il salvataggio (le righe gia' presenti sono ignorate).
+      const { error: errRighe } = await supabase.from('righe_scontrino').upsert(righe, { onConflict: 'id', ignoreDuplicates: true })
+      if (errRighe) return null
+    } else {
+      await supabase.from('righe_scontrino').insert(righe)
+    }
   }
   return data.id
 }
@@ -244,6 +315,9 @@ export async function getStoricoDb(negozioId, filtri = {}) {
     annullato: s.annullato || false,
     annullatoDa: s.annullato_da || null,
     annullatoAlle: s.annullato_alle || null,
+    statoRt: s.stato_rt || null,            // 'emesso' | 'non_emesso' | 'da_verificare' | null
+    numeroRt: s.numero_rt ?? null,
+    azzeramentoRt: s.azzeramento_rt ?? null,
     righe: (s.righe_scontrino || []).map(r => ({
       nome: r.nome,
       importo: r.importo,
@@ -522,6 +596,7 @@ export async function getImpostazioniDb(negozioId) {
     cortesiaAbilitato: data?.cortesia_abilitato || false,
     asportoAbilitato: data?.asporto_abilitato || false,
     nonRiscossoAbilitato: data?.non_riscosso_abilitato || false,
+    fatturazioneAbilitato: data?.fatturazione_abilitato || false,
     agendaAbilitato: data?.agenda_abilitato || false,
     costoAggiunta: data?.costo_aggiunta ?? 50,
     aggiunteRapide: data?.aggiunte_rapide || [],
@@ -827,4 +902,136 @@ export async function sincronizzaNegozioLocale(negozioId) {
     console.warn('sincronizzaNegozioLocale:', e && e.message)
     return false
   }
+}
+
+// ---- Fatturazione: anagrafica clienti ----
+export async function getClientiFatturaDb(negozioId, cerca = '') {
+  let query = supabase
+    .from('clienti_fattura')
+    .select('*')
+    .eq('negozio_id', negozioId)
+    .order('created_at', { ascending: false })
+  if (cerca && cerca.trim()) {
+    const t = cerca.trim()
+    query = query.or(
+      `denominazione.ilike.%${t}%,cognome.ilike.%${t}%,partita_iva.ilike.%${t}%,codice_fiscale.ilike.%${t}%`
+    )
+  }
+  const { data, error } = await query
+  if (error) { console.error('getClientiFatturaDb', error); return [] }
+  return data || []
+}
+
+export async function salvaClienteFatturaDb(negozioId, c) {
+  const payload = {
+    negozio_id: negozioId,
+    tipo: c.tipo || 'azienda',
+    denominazione: c.denominazione || null,
+    nome: c.nome || null,
+    cognome: c.cognome || null,
+    partita_iva: c.partitaIva || null,
+    codice_fiscale: c.codiceFiscale || null,
+    indirizzo: c.indirizzo,
+    cap: c.cap,
+    comune: c.comune,
+    provincia: c.provincia,
+    nazione: c.nazione || 'IT',
+    codice_destinatario: c.codiceDestinatario || '0000000',
+    pec: c.pec || null,
+    email: c.email || null,
+    telefono: c.telefono || null,
+    note: c.note || null,
+  }
+  if (c.id) {
+    const { data, error } = await supabase.from('clienti_fattura').update(payload).eq('id', c.id).select().single()
+    if (error) { console.error('salvaClienteFatturaDb update', error); return null }
+    return data
+  }
+  const { data, error } = await supabase.from('clienti_fattura').insert(payload).select().single()
+  if (error) { console.error('salvaClienteFatturaDb insert', error); return null }
+  return data
+}
+
+export async function eliminaClienteFatturaDb(id) {
+  const { error } = await supabase.from('clienti_fattura').delete().eq('id', id)
+  if (error) { console.error('eliminaClienteFatturaDb', error); return false }
+  return true
+}
+
+
+
+// ---- Fatturazione: fatture ----
+export async function getProssimoNumeroFattura(negozioId) {
+  const anno = new Date().getFullYear()
+  const { data, error } = await supabase
+    .from('fatture').select('numero')
+    .eq('negozio_id', negozioId).eq('anno', anno)
+    .order('numero', { ascending: false }).limit(1)
+  if (error) { console.error('getProssimoNumeroFattura', error); return { numero: 1, anno } }
+  const ultimo = data && data.length > 0 ? data[0].numero : 0
+  return { numero: ultimo + 1, anno }
+}
+
+export async function salvaFatturaDb(negozioId, f) {
+  const payload = {
+    negozio_id: negozioId,
+    numero: f.numero, anno: f.anno, data: f.data,
+    cliente_id: f.clienteId || null,
+    cliente_snapshot: f.clienteSnapshot || null,
+    righe: f.righe,
+    imponibile_cents: f.imponibileCents,
+    iva_cents: f.ivaCents,
+    totale_cents: f.totaleCents,
+    tipo_documento: f.tipoDocumento || 'TD01',
+    metodo_pagamento: f.metodoPagamento || 'carta',
+    fattura_collegata: f.fatturaCollegata || null,
+    stato: f.stato || 'bozza',
+  }
+  if (f.id) {
+    const { data, error } = await supabase.from('fatture').update(payload).eq('id', f.id).select().single()
+    return error ? { error } : { data }
+  }
+  const { data, error } = await supabase.from('fatture').insert(payload).select().single()
+  return error ? { error } : { data }
+}
+
+export async function getFattureDb(negozioId) {
+  const { data, error } = await supabase
+    .from('fatture').select('*')
+    .eq('negozio_id', negozioId)
+    .order('anno', { ascending: false }).order('numero', { ascending: false })
+  if (error) { console.error('getFattureDb', error); return [] }
+  return data || []
+}
+
+
+export async function creaNotaCreditoDb(negozioId, orig) {
+  const { numero, anno } = await getProssimoNumeroFattura(negozioId)
+  return await salvaFatturaDb(negozioId, {
+    numero, anno,
+    data: new Date().toISOString().split('T')[0],
+    clienteId: orig.cliente_id,
+    clienteSnapshot: orig.cliente_snapshot,
+    righe: orig.righe,
+    imponibileCents: orig.imponibile_cents,
+    ivaCents: orig.iva_cents,
+    totaleCents: orig.totale_cents,
+    metodoPagamento: orig.metodo_pagamento,
+    tipoDocumento: 'TD04',
+    fatturaCollegata: { numero: orig.numero, data: orig.data },
+    stato: 'bozza',
+  })
+}
+
+// ─── STATO EMISSIONE SULLA CASSA 3i ──────────────────────────────────────────
+// stato: 'emesso' | 'non_emesso' | 'da_verificare'. Richiede le colonne
+// stato_rt, numero_rt, azzeramento_rt nella tabella scontrini (vedi sql-scontrini-stato-rt.sql).
+export async function aggiornaStatoRtScontrinoDb(negozioId, idScontrino, stato, numeroRt = null, azzeramentoRt = null) {
+  const { error } = await supabase
+    .from('scontrini')
+    .update({ stato_rt: stato, numero_rt: numeroRt, azzeramento_rt: azzeramentoRt })
+    .eq('id', idScontrino)
+    .eq('negozio_id', negozioId)
+  if (error) console.warn('Stato RT scontrino non salvato:', error.message)
+  return !error
 }

@@ -235,8 +235,15 @@ async function inviaTCP(ip, porta, comando, marca = 'ditron') {
   return new Promise((resolve, reject) => {
     const client = new net.Socket()
     let risposta = ''
+    let connesso = false
+    // 3i: se la connessione non si apre entro 3 s il comando NON e' arrivato alla cassa: errore subito
+    const attesaConnessione = marca === '3i'
+      ? setTimeout(() => { if (!connesso) { client.destroy(); reject(new Error('Cassa non raggiungibile')) } }, 3000)
+      : null
     client.setTimeout(8000)
     client.connect(parseInt(porta), ip, () => {
+      connesso = true
+      if (attesaConnessione) clearTimeout(attesaConnessione)
       const terminatore = marca === '3i' ? '\r' : '\r\n'
       client.write(comando + terminatore)
     })
@@ -246,8 +253,11 @@ async function inviaTCP(ip, porta, comando, marca = 'ditron') {
     client.on('timeout', () => { client.destroy(); reject(new Error('Timeout cassa')) })
     client.on('error', (err) => {
       client.destroy()
+      if (attesaConnessione) clearTimeout(attesaConnessione)
       if (err.code === 'ECONNRESET' || err.code === 'EPIPE') {
         resolve(risposta || 'OK')
+      } else if (marca === '3i' && !connesso && ['EHOSTDOWN', 'EHOSTUNREACH', 'ENETUNREACH', 'ECONNREFUSED', 'ETIMEDOUT'].includes(err.code)) {
+        reject(new Error('Cassa non raggiungibile'))
       } else {
         reject(err)
       }

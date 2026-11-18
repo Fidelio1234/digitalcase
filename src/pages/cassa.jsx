@@ -5,6 +5,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useNegozio } from '@/context/NegozioContext'
 import PannelloRT from '@/components/PannelloRT'
 import { totaliPerIva } from '@/lib/iva'
+import { nuovoIdScontrino, accodaScontrino, contaCoda, esitoInCoda, togliDallaCoda, sincronizzaCoda, attendiMax } from '@/lib/coda-scontrini'
+import { soloAscii } from '@/lib/preconto-rt'
 import { salvaScontrinoDb, chiudiTavoloDb, scalaRigheTavoloDb, registraQuotaRomanaDb, salvaStoricoTavolo, getImpostazioniDb, aggiornaGiacenza, salvaAnnulloDb } from '@/lib/supabase-db'
 import { getRepartiDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
@@ -13,6 +15,8 @@ import { supabase } from '@/lib/supabase'
 import { useCassa, euroInCentesimi } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini } from '@/lib/storage'
+import { aggiornaStatoRtScontrinoDb } from '@/lib/supabase-db'
+import { sincronizzaBase, verificaScontrino, registraInvio, annullaInvio, segnalaProblemaStampa } from '@/lib/scontrino3i'
 import Head from 'next/head'
 
 
@@ -83,6 +87,7 @@ export default function CassaPage() {
   const [benvenuto, setBenvenuto] = useState(false)
   const [rtConfig, setRtConfig] = useState(null)
   const tavoloDaChiudereRef = useRef(null)
+  const ultimoScontrinoElaborato = useRef(null) // protezione doppio tocco
 
   const [rtMappatura, setRtMappatura] = useState({})
   const [repartoAttivo, setRepartoAttivo] = useState(null)
@@ -141,7 +146,7 @@ export default function CassaPage() {
   useEffect(() => {
     if (!user) return
     async function loadReparti() {
-      const r = (await getRepartiDb(NEGOZIO_ID)).filter(r => r.abilitato)
+      const r = (await getRepartiDb(NEGOZIO_ID, { copiaLocale: true })).filter(r => r.abilitato)
       setReparti(r)
       if (r.length > 0) setRepartoAttivo(r[0].id)
     }
@@ -290,14 +295,86 @@ export default function CassaPage() {
 
 
 
-  // Carica config RT separatamente
+  // Scontrini ancora da salvare su Supabase (coda locale): conteggio per l'avviso e ripresa automatica ogni 20 s.
+  const [inCoda, setInCoda] = useState(0)
   useEffect(() => {
+    if (!NEGOZIO_ID) return
+    let attivo = true
+    const giro = async () => {
+      try {
+        await sincronizzaCoda(NEGOZIO_ID, {
+          salva: dati => salvaScontrinoDb(NEGOZIO_ID, dati),
+          applicaEsito: (id, e) => aggiornaStatoRtScontrinoDb(NEGOZIO_ID, id, e.stato, e.numero, e.azzeramento),
+        })
+      } catch (e) {}
+      if (attivo) setInCoda(contaCoda(NEGOZIO_ID))
+    }
+    giro()
+    const t = setInterval(giro, 20000)
+    return () => { attivo = false; clearInterval(t) }
+  }, [NEGOZIO_ID])
+
+  // Carica config RT: prima dal negozio gia' in memoria (anche da copia locale),
+  // poi aggiorna da Supabase appena risponde. Cosi' rtConfig non resta mai vuota senza rete.
+  useEffect(() => {
+    const iniziale = negozio?.rt_config
+    if (iniziale?.config) setRtConfig(iniziale.config)
+    if (iniziale?.mappatura) setRtMappatura(iniziale.mappatura)
     supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single().then(({ data }) => {
       //console.log('RT config caricata:', JSON.stringify(data?.rt_config))
       if (data?.rt_config?.config) setRtConfig(data.rt_config.config)
       if (data?.rt_config?.mappatura) setRtMappatura(data.rt_config.mappatura)
-    })
+    }).catch(() => {})
   }, [])
+
+  // ── 3i: verifica che la cassa emetta davvero gli scontrini (comando 84F) ───
+  const chiediNumeri3i = useCallback(async () => {
+    const r = await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: '84F' } }, rtConfig.serviceIp)
+    if (!r?.ok) throw new Error(r?.error || 'Cassa non raggiungibile')
+    return r.risposta
+  }, [rtConfig])
+
+  // Legge una volta il numero scontrino della cassa appena la cassa e' pronta.
+  useEffect(() => {
+    if (rtConfig?.attivo && rtConfig?.ip && rtConfig.marca === '3i') sincronizzaBase(chiediNumeri3i)
+  }, [rtConfig, chiediNumeri3i])
+
+  // Segna l'esito della stampa: se lo scontrino e' ancora in coda locale (non salvato) l'esito viene annotato in coda
+  // e applicato al salvataggio; altrimenti aggiorna subito il database.
+  function aggiornaStatoRtOCoda(idScontrino, stato, numero, azzeramento) {
+    if (!idScontrino) return
+    if (esitoInCoda(NEGOZIO_ID, idScontrino, { stato, numero, azzeramento })) return
+    aggiornaStatoRtScontrinoDb(NEGOZIO_ID, idScontrino, stato, numero, azzeramento)
+  }
+
+  function esitoStampa3i(r, idScontrino, dati, avvisoGiaMostrato = false) {
+    if (r.esito === 'non_verificabile') { console.log('Verifica scontrino 3i non possibile:', r.motivo); return }
+    const stato = r.esito === 'emesso' ? 'emesso' : r.esito === 'non_emesso' ? 'non_emesso' : 'da_verificare'
+    aggiornaStatoRtOCoda(idScontrino, stato, r.numero ?? null, r.azzeramento ?? null)
+    if (r.esito !== 'emesso' && !(r.esito === 'cassa_non_risponde' && avvisoGiaMostrato)) segnalaProblemaStampa({ esito: r.esito, ...dati })
+  }
+
+  // ── RCH / Ditron: controlla che la cassa abbia accettato lo scontrino ───────
+  // Non si puo' rileggere il numero scontrino come con la 3i: si giudica la risposta del comando.
+  // Ritorna true se la cassa ha accettato; altrimenti segna lo scontrino e mostra l'avviso rosso.
+  function esitoStampaGenerico(res, marca, idScontrino, dati) {
+    let r = res
+    if (r?.ok && marca !== 'rch' && typeof r.risposta === 'string' && /\b(err|errore|error|ko|nak)\b/i.test(r.risposta)) {
+      r = { ok: false, error: 'Risposta della cassa: ' + r.risposta.trim() }
+    }
+    if (r?.ok) return true
+    const msg = r?.error || 'nessuna risposta dalla cassa'
+    // Dubbio: la cassa potrebbe aver stampato (carta finita = completa da sola; nessuna risposta; servizio spento)
+    const incerto = r?.codice === 'carta_finita' || r?.codice === 'coperchio_aperto' ||
+      /raggiungibile|timeout|non risponde|failed to fetch|networkerror|risposta non valida/i.test(msg)
+    console.error('Scontrino ' + marca + ' NON confermato dalla cassa:', msg)
+    aggiornaStatoRtOCoda(idScontrino, incerto ? 'da_verificare' : 'non_emesso', null, null)
+    const tipoRt = r?.codice === 'carta_finita' ? 'carta_finita'
+      : r?.codice === 'coperchio_aperto' ? 'coperchio_aperto'
+      : incerto ? 'non_risponde' : 'rifiutato'
+    segnalaProblemaStampa({ esito: incerto ? 'cassa_non_risponde' : 'non_emesso', tipoRt, ...dati, dettaglio: msg })
+    return false
+  }
 
   // ── Avviso mezzanotte ──────────────────────────────────────────────────
   useEffect(() => {
@@ -419,6 +496,7 @@ export default function CassaPage() {
         const { chiudiAsportoDb } = await import('@/lib/supabase-db')
         await chiudiAsportoDb(NEGOZIO_ID, parsed.id)
         sessionStorage.removeItem('asporto_da_chiudere')
+       
       } catch(e) {}
     }
 
@@ -436,6 +514,7 @@ export default function CassaPage() {
     tavoloDaChiudereRef.current = null
     try { sessionStorage.removeItem('tavolo_da_chiudere'); sessionStorage.removeItem('cassa_tavolo') } catch {}
     annullaTutto()
+    
     setShowConfirmAnnulla(false)
   }
 
@@ -450,7 +529,38 @@ export default function CassaPage() {
 
 
 
+  // Copia di cortesia via email: va chiamata SOLO dopo che la cassa ha confermato lo scontrino.
+  async function inviaEmailCliente(info) {
+    const d = info?.emailDaInviare
+    if (!d?.destinatario) return
+    try {
+      const res = await fetch('/api/invia-scontrino', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(d),
+      })
+      if (!res.ok) throw new Error('HTTP ' + res.status)
+    } catch (e) {
+      console.error('Email scontrino NON inviata:', e)
+      window.alert('Lo scontrino è stato emesso, ma l\'email a ' + d.destinatario + ' NON è stata inviata. Controlla l\'indirizzo.')
+    }
+  }
+
+  // Alla cassa (scontrino parlante) va solo un codice fiscale (16 caratteri) o una partita IVA (11 cifre).
+  // Email, telefono o testo libero NON vanno mai inviati: la cassa li rifiuta o stampa un documento sbagliato.
+  function cfPivaPerCassa(testo) {
+    const t = String(testo || '').trim().toUpperCase()
+    return (/^[A-Z0-9]{16}$/.test(t) || /^\d{11}$/.test(t)) ? t : null
+  }
+
   async function handleSuccesso(info) {
+    // Protezione doppio tocco: lo stesso scontrino (stesso id) non viene elaborato due volte.
+    if (info?.id && ultimoScontrinoElaborato.current === info.id) {
+      console.warn('Doppio tocco ignorato per lo scontrino', info.id)
+      return
+    }
+    ultimoScontrinoElaborato.current = info?.id || null
+
     // Chiudi tavolo su Supabase se scontrino viene da un tavolo
 
 
@@ -521,11 +631,20 @@ export default function CassaPage() {
     }
 
     
-  // Salva nello storico su Supabase
+  // Salva nello storico su Supabase.
+  // Prima lo scontrino va nella coda locale con un id nostro (uguale a quello che avra' nel database):
+  // se il salvataggio non riesce resta in coda e viene ripreso in automatico (vedi coda-scontrini.js).
+  let idScontrinoDb = null
+  let ticketScontrino = null
+  // Tempo massimo condiviso (3 s) per salvataggio e giacenze: oltre, la stampa parte lo stesso e il resto continua in background.
+  const scadenzaAttesa = Date.now() + 3000
+  const restoAttesa = () => Math.max(0, scadenzaAttesa - Date.now())
+  const idClient = nuovoIdScontrino()
   try {
-    const idSalvato = await salvaScontrinoDb(NEGOZIO_ID, {
+    const datiSalvataggio = {
+      id: idClient,
       timestamp: new Date().toISOString(),
-      righe: scontrinoCorrente?.righe || [],
+      righe: (scontrinoCorrente?.righe || []).map(r => ({ ...r, idRiga: nuovoIdScontrino() })),
       totale: info.totale,
       metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo,
       resto: info.resto || 0,
@@ -533,15 +652,33 @@ export default function CassaPage() {
       numeroScontrino: scontrinoCorrente?.numeroScontrino || 1,
       operatoreId: user?.id || null,
       operatoreNome: user?.name || null,
-    })
-    if (!idSalvato) {
-      console.error('⚠️ ATTENZIONE: scontrino NON salvato su Supabase (salvaScontrinoDb ha restituito null)')
-    } else {
-      console.log('✓ Scontrino salvato su Supabase, id:', idSalvato)
     }
+    idScontrinoDb = idClient // l'id nel database sara' questo: serve subito per segnare l'esito della stampa
+    if (!accodaScontrino(NEGOZIO_ID, { id: idClient, creato: Date.now(), dati: datiSalvataggio })) {
+      console.error('⚠️ ATTENZIONE: coda locale non scrivibile: se il salvataggio fallisce lo scontrino non resta in coda')
+    }
+    // Il completamento (anche tardivo) toglie lo scontrino dalla coda e applica l'esito annotato nel frattempo.
+    const salvataggio = salvaScontrinoDb(NEGOZIO_ID, datiSalvataggio).then(idSalvato => {
+      if (idSalvato) {
+        const tolto = togliDallaCoda(NEGOZIO_ID, idClient)
+        if (tolto && tolto.esito) aggiornaStatoRtScontrinoDb(NEGOZIO_ID, idClient, tolto.esito.stato, tolto.esito.numero, tolto.esito.azzeramento)
+        console.log('✓ Scontrino salvato su Supabase, id:', idSalvato)
+      } else {
+        console.error('⚠️ ATTENZIONE: scontrino NON ancora salvato su Supabase: resta nella coda locale e viene ripreso in automatico')
+      }
+      setInCoda(contaCoda(NEGOZIO_ID))
+      return idSalvato
+    }).catch(e => {
+      console.error('⚠️ ATTENZIONE: errore nel salvataggio dello scontrino (resta nella coda locale):', e)
+      setInCoda(contaCoda(NEGOZIO_ID))
+      return null
+    })
+    const esitoAttesa = await attendiMax(salvataggio, restoAttesa())
+    if (esitoAttesa === '__scaduto__') console.warn('Salvataggio scontrino lento: la stampa parte senza aspettare (resta in coda locale finche non e salvato)')
   } catch (e) {
-    console.error('⚠️ ATTENZIONE: errore critico nel salvataggio dello scontrino:', e)
+    console.error('⚠️ ATTENZIONE: errore nel salvataggio dello scontrino (resta nella coda locale):', e)
   }
+  setInCoda(contaCoda(NEGOZIO_ID))
 
     setContatori(getContatori())
     setShowChiusura(false)
@@ -550,8 +687,10 @@ export default function CassaPage() {
     resetScontrinoAperto()
 
     
-      // Scala giacenze magazzino
+      // Scala giacenze magazzino. Tempo massimo condiviso: senza rete la stampa non aspetta.
+      // (Offline le giacenze NON vengono scalate: da gestire nel passo C con una coda.)
       if (impostazioni.magazzinoAbilitato) {
+        const scalaGiacenze = async () => {
         const avvisi = []
         const righeConGiacenza = (scontrinoCorrente?.righe || []).filter(r => r.giacenza !== null && r.giacenza !== undefined)
         if (righeConGiacenza.length > 0) {
@@ -584,9 +723,15 @@ export default function CassaPage() {
           }
         }
         if (avvisi.length > 0) setAvvisoMagazzino(avvisi)
+        }
+        await attendiMax(scalaGiacenze().catch(e => console.error('Giacenze non aggiornate:', e)), restoAttesa())
       }
 
+    // Se non c'e' una cassa attiva non c'e' nessuna conferma da aspettare: la copia parte subito
+    if (!(rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0)) inviaEmailCliente(info)
+
     // Stampa su RT se configurato
+    let stampaRtConfermata = false // RCH/Ditron: true dopo che la cassa ha accettato lo scontrino principale
     if (rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0) {
       try {
         if (rtConfig.marca === '3i') {
@@ -601,7 +746,7 @@ export default function CassaPage() {
             if (riga.repartoId === null && riga.importo < 0) continue
             const reparto = mappatura[riga.repartoId]?.numeroRt || 1
             const importoCents = Math.round(riga.importo)
-            const descr = (riga.nome || '').replace(/"/g, '').substring(0, 38)
+            const descr = soloAscii(riga.nome || '').replace(/"/g, '').substring(0, 38)
             if (riga.quantita > 1) {
               cmd += `"${descr}"${riga.quantita}*${importoCents}H${reparto}R`
             } else {
@@ -612,7 +757,7 @@ export default function CassaPage() {
               const prefisso = riga.nota.match(/^([+-])/)?.[1] || ''
               const corpo = riga.nota.replace(/^([+-])\s*/, '')
               for (const voce of corpo.split(', ')) {
-                const nota = `${prefisso} ${voce}`.replace(/"/g, '').substring(0, 38)
+                const nota = soloAscii(`${prefisso} ${voce}`).replace(/"/g, '').substring(0, 38)
                 cmd += `"  >> ${nota}"@`
               }
             }
@@ -667,7 +812,8 @@ export default function CassaPage() {
 
 
 
-          await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } }, rtConfig.serviceIp)
+          ticketScontrino = registraInvio() // fissa SUBITO il numero che la cassa dovra' raggiungere
+          const rispostaScontrino = await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd } }, rtConfig.serviceIp)
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
           console.log('metodo:', info.metodo, 'cortesiaAbilitato:', impostazioni.cortesiaAbilitato)
@@ -675,14 +821,14 @@ export default function CassaPage() {
             let cmdCortesia = 'j'
             for (const riga of scontrinoCorrente.righe) {
               if (riga.importo < 0) continue
-              const descr = (riga.nome || '').replace(/"/g, '').substring(0, 38)
+              const descr = soloAscii(riga.nome || '').replace(/"/g, '').substring(0, 38)
               const qta = riga.quantita > 1 ? `${riga.quantita}x ` : ''
               cmdCortesia += `"${qta}${descr}"@`
               if (riga.nota) {
                 const prefisso = riga.nota.match(/^([+-])/)?.[1] || ''
                 const corpo = riga.nota.replace(/^([+-])\s*/, '')
                 for (const voce of corpo.split(', ')) {
-                  const nota = `${prefisso} ${voce}`.replace(/"/g, '').substring(0, 38)
+                  const nota = soloAscii(`${prefisso} ${voce}`).replace(/"/g, '').substring(0, 38)
                   cmdCortesia += `"  >> ${nota}"@`
                 }
               }}
@@ -698,6 +844,30 @@ export default function CassaPage() {
               }
             }
             console.log('🧾 Risposta cassa 3i per scontrino cortesia:', JSON.stringify(rispostaCortesia))
+          }
+
+          // Verifica che la cassa abbia DAVVERO emesso lo scontrino (comando 84F).
+          // Avviene in background: il cassiere non aspetta niente.
+          const datiScontrino = { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() }
+          if (rispostaScontrino?.ok === false && /raggiungibile/i.test(rispostaScontrino?.error || '')) {
+            annullaInvio(ticketScontrino)
+            esitoStampa3i({ esito: 'cassa_non_risponde' }, idScontrinoDb, datiScontrino)
+          } else {
+            let avvisoAnticipato = false
+            verificaScontrino({
+              ticket: ticketScontrino,
+              chiediNumeri: chiediNumeri3i,
+              onSilenzio: () => {
+                avvisoAnticipato = true
+                segnalaProblemaStampa({ esito: 'cassa_non_risponde', ...datiScontrino })
+              },
+              onEsito: r => {
+                esitoStampa3i(r, idScontrinoDb, datiScontrino, avvisoAnticipato)
+                // emesso = confermato dalla cassa; non_verificabile = nessun segnale di errore (come per l'avviso rosso)
+                if (r?.esito === 'emesso' || r?.esito === 'non_verificabile') inviaEmailCliente(info)
+                else if (info?.emailDaInviare) console.warn('Email NON inviata: la cassa non ha confermato lo scontrino (' + r?.esito + ')')
+              },
+            })
           }
         } else if (rtConfig.marca === 'rch') {
 
@@ -747,7 +917,9 @@ export default function CassaPage() {
             }
           }
 
-          await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi }, rtConfig.serviceIp)
+          const resRch = await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi }, rtConfig.serviceIp)
+          if (!esitoStampaGenerico(resRch, 'rch', idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() })) return
+          stampaRtConfermata = true
 
           // Stampa scontrino di cortesia RCH
           if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
@@ -774,7 +946,10 @@ export default function CassaPage() {
 
 
 
-          await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta, azione: 'scontrino', dati: { righe: righeConRt, metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo, totale: info.totale, resto: info.resto || 0, contatto: info.contatto || null } }, rtConfig.serviceIp)
+          const resDitron = await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta, azione: 'scontrino', dati: { righe: righeConRt, metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo, totale: info.totale, resto: info.resto || 0, contatto: cfPivaPerCassa(info.contatto) } }, rtConfig.serviceIp)
+          console.log('📟 Risposta Ditron (scontrino):', JSON.stringify(resDitron))
+          if (!esitoStampaGenerico(resDitron, 'ditron', idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() })) return
+          stampaRtConfermata = true
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
           if (info.metodo === 'cortesia' || (info.metodo === 'carta' && impostazioni.cortesiaAbilitato)) {
@@ -795,8 +970,15 @@ export default function CassaPage() {
             console.log('🧾 Risposta cassa per scontrino cortesia:', JSON.stringify(rispostaCortesia))
           }
         }
+        // RCH / Ditron: se si arriva qui la cassa ha accettato lo scontrino (altrimenti c'e' stato un return)
+        if (rtConfig.marca !== '3i') inviaEmailCliente(info)
       } catch(e) {
         console.error('Errore stampa RT:', e)
+        // Errore dopo la conferma (es. solo lo scontrino di cortesia): lo scontrino principale c'e', la mail parte
+        if (rtConfig?.marca !== '3i' && stampaRtConfermata) inviaEmailCliente(info)
+        if (rtConfig?.marca !== '3i' && !stampaRtConfermata) esitoStampaGenerico({ ok: false, error: 'Servizio locale non raggiungibile: ' + (e?.message || e) }, rtConfig?.marca, idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() })
+        if (rtConfig?.marca === '3i') annullaInvio(ticketScontrino)
+        if (rtConfig?.marca === '3i') esitoStampa3i({ esito: 'cassa_non_risponde' }, idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() })
      
       }
     }
@@ -814,16 +996,6 @@ export default function CassaPage() {
     <Head><link rel="manifest" href="/manifest-cassa.json" /></Head>
   <div className={styles.page}>
 
-      {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
-        <div style={{
-          background:'#ffb83022', borderBottom:'2px solid #ffb830',
-          padding:'10px 16px', textAlign:'center',
-          fontSize:'0.82rem', color:'#ffb830',
-          fontFamily:"'DM Mono',monospace"
-        }}>
-          ⚠️ Licenza in scadenza tra <strong>{negozio.giorniRimanenti} giorni</strong> ({new Date(negozio.data_scadenza).toLocaleDateString('it-IT')}) — contatta il rivenditore
-        </div>
-      )}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.logoMark}>🧾</div>
@@ -858,6 +1030,26 @@ export default function CassaPage() {
           </button>
         </div>
       </header>
+      {inCoda > 0 && (
+        <div style={{
+          background:'#ff4d6a22', borderBottom:'2px solid #ff4d6a',
+          padding:'10px 16px', textAlign:'center',
+          fontSize:'0.82rem', color:'#ff4d6a',
+          fontFamily:"'DM Mono',monospace"
+        }}>
+          ⚠️ {inCoda === 1 ? '1 scontrino non ancora salvato' : inCoda + ' scontrini non ancora salvati'} su internet: {inCoda === 1 ? 'resta' : 'restano'} in coda su questo dispositivo e {inCoda === 1 ? 'viene salvato' : 'vengono salvati'} appena la connessione torna. Non svuotare i dati del browser.
+        </div>
+      )}
+      {negozio && !negozio.scaduto && negozio.giorniRimanenti <= 7 && (
+        <div style={{
+          background:'#ffb83022', borderBottom:'2px solid #ffb830',
+          padding:'10px 16px', textAlign:'center',
+          fontSize:'0.82rem', color:'#ffb830',
+          fontFamily:"'DM Mono',monospace"
+        }}>
+          ⚠️ Licenza in scadenza tra <strong>{negozio.giorniRimanenti} giorni</strong> ({new Date(negozio.data_scadenza).toLocaleDateString('it-IT')}) — contatta il rivenditore
+        </div>
+      )}
 
       {/* BENVENUTO */}
       {benvenuto && user && (
@@ -1425,7 +1617,7 @@ export default function CassaPage() {
               <span>🔒 Chiusura n° {showSuccesso.numeroChiusure}</span>
             </div>
             {showSuccesso.contatto && (
-              <div className={styles.successContatto}>📨 Inviato a <strong>{showSuccesso.contatto}</strong></div>
+              <div className={styles.successContatto}>📨 Copia via email a <strong>{showSuccesso.contatto}</strong></div>
             )}
             <div className={styles.successTotale}>€ {fmt(showSuccesso.totale)}</div>
             <div className={styles.successMeta}>
@@ -1704,27 +1896,11 @@ export default function CassaPage() {
 
   async function handleInvia() {
     const negozio = (() => { try { return JSON.parse(localStorage.getItem('sd_negozio') || '{}') } catch { return {} } })()
-    // Invia email solo se il contatto è un'email valida
-    if (datoCliente && datoCliente.includes('@')) {
-      setInvio('sending')
-      try {
-        const res = await fetch('/api/invia-scontrino', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            destinatario: datoCliente,
-            scontrino: { ...scontrino, metodo, resto },
-            negozio,
-          })
-        })
-        if (!res.ok) throw new Error('Errore invio')
-      } catch {
-        setInvio('error')
-        setTimeout(() => setInvio('idle'), 3000)
-        return
-      }
-    }
-    onSuccesso({ id:scontrino.id, totale:scontrino.totale, contatto:datoCliente||null, metodo, resto })
+    // La mail NON parte qui: parte da handleSuccesso solo dopo che la cassa ha confermato lo scontrino.
+    const emailDaInviare = (datoCliente && datoCliente.includes('@'))
+      ? { destinatario: datoCliente.trim(), scontrino: { ...scontrino, metodo, resto }, negozio }
+      : null
+    onSuccesso({ id:scontrino.id, totale:scontrino.totale, contatto:datoCliente||null, metodo, resto, emailDaInviare })
   }
 
   return (
@@ -1806,8 +1982,8 @@ export default function CassaPage() {
           )}
         </div>
         <div className={styles.modalSection}>
-          <div className={styles.modalLabel}>Invia scontrino digitale (opzionale)</div>
-          <input type="text" inputMode="email" placeholder="Email o numero di telefono"
+          <div className={styles.modalLabel}>Cliente (opzionale)</div>
+          <input type="text" inputMode="email" placeholder={marca === 'ditron' ? 'Email (copia) o codice fiscale / P.IVA' : 'Email per la copia dello scontrino'}
             value={datoCliente} onChange={e => setDatoCliente(e.target.value)}
             className={styles.clienteInput} />
         </div>

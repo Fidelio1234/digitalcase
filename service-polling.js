@@ -7,6 +7,11 @@ const https = require('https')
 // ── CONFIGURAZIONE ──────────────────────────────────────────────────────────
 // Leggi da .env.local se presente
 const fs = require('fs')
+// Evita il doppio avvio: una sola copia per PC (altrimenti le comande escono doppie)
+require('net').createServer().listen(3003, '127.0.0.1').on('error', () => {
+  console.log('Polling già attivo su questo PC: esco.')
+  process.exit(0)
+})
 let env = {}
 try {
   fs.readFileSync('.env.local', 'utf8').split('\n').forEach(line => {

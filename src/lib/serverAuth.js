@@ -106,11 +106,14 @@ export function cookieSessioneCancella() {
 export async function utenteDaSessione(req) {
   const s = leggiSessione(req)
   if (!s) return null
-  const { data } = await supabaseAdmin()
+  const { data, error } = await supabaseAdmin()
     .from('utenti')
     .select('id, nome, ruolo, abilitato, negozio_id')
     .eq('id', s.uid)
     .maybeSingle()
+  // Errore del database (rete assente, Supabase lento o non raggiungibile) NON e' una sessione scaduta:
+  // si lancia l'errore (le route rispondono 500) cosi' il client non disconnette l'utente. L'accesso resta negato.
+  if (error) throw new Error('Database non raggiungibile: ' + (error.message || error.code || 'errore sconosciuto'))
   if (!data || !data.abilitato || data.negozio_id !== s.nid) return null
   return data
 }

@@ -149,12 +149,19 @@ async function inviaTCP(ip, porta, dati) {
   })
 }
 
-async function inviaTCPRT(ip, porta, comando, marca) {
+async function inviaTCPRTRaw(ip, porta, comando, marca) {
   return new Promise((resolve, reject) => {
     const client = new net.Socket()
     let risposta = ''
+    let connesso = false
+    // 3i: se la connessione non si apre entro 3 s il comando NON e' arrivato alla cassa: errore subito
+    const attesaConnessione = marca === '3i'
+      ? setTimeout(() => { if (!connesso) { client.destroy(); reject(new Error('Cassa non raggiungibile')) } }, 3000)
+      : null
     client.setTimeout(8000)
     client.connect(parseInt(porta), ip, () => {
+      connesso = true
+      if (attesaConnessione) clearTimeout(attesaConnessione)
       const terminatore = marca === '3i' ? '\r' : '\r\n'
       client.write(comando + terminatore)
     })
@@ -164,14 +171,16 @@ async function inviaTCPRT(ip, porta, comando, marca) {
     client.on('timeout', () => { client.destroy(); reject(new Error('Timeout cassa')) })
     client.on('error', err => {
       client.destroy()
+      if (attesaConnessione) clearTimeout(attesaConnessione)
       if (err.code === 'ECONNRESET' || err.code === 'EPIPE') resolve(risposta || 'OK')
+      else if (marca === '3i' && !connesso && ['EHOSTDOWN', 'EHOSTUNREACH', 'ENETUNREACH', 'ECONNREFUSED', 'ETIMEDOUT'].includes(err.code)) reject(new Error('Cassa non raggiungibile'))
       else reject(err)
     })
     setTimeout(() => { if (risposta) { client.destroy(); resolve(risposta) } }, 2000)
   })
 }
 
-async function inviaTCP3i(ip, porta, comandi) {
+async function inviaTCP3iRaw(ip, porta, comandi) {
   let rispostaFinale = ''
   for (const cmd of comandi) {
     const risposta = await new Promise((resolve, reject) => {
@@ -207,9 +216,53 @@ async function inviaRCH(ip, porta, comandi) {
   const errorCode = testo.match(/<errorCode>(\d+)<\/errorCode>/)?.[1] || '0'
   const busy = testo.match(/<busy>(\d+)<\/busy>/)?.[1] || '0'
   const lastCmd = testo.match(/<lastCmd>(\d+)<\/lastCmd>/)?.[1] || '0'
+  const campo = t => testo.match(new RegExp('<' + t + '>(\\d+)</' + t + '>'))?.[1] || '0'
+  const erroreRCH = (msg, codice) => { const e = new Error(msg); e.codice = codice; return e }
+  if (!/<errorCode>/.test(testo)) throw new Error('Risposta non valida dalla cassa RCH')
+  // Fine carta: la cassa completa la stampa da sola quando si rimette la carta (manuale RCH, par. 4.3)
+  if (campo('paperEnd') === '1') throw erroreRCH('Carta finita: inserire la carta. La cassa completa la stampa da sola, NON ripetere lo scontrino', 'carta_finita')
+  if (campo('coverOpen') === '1') throw erroreRCH('Coperchio della cassa aperto: chiuderlo e controllare lo scontrino', 'coperchio_aperto')
   if (busy === '1') throw new Error('Cassa occupata')
   if (errorCode !== '0') throw new Error(`Errore cassa E${errorCode}`)
+  if (campo('printerError') !== '0') throw new Error('Errore stampante della cassa')
   return { ok: true, lastCmd: parseInt(lastCmd) }
+}
+
+// ─── Log comandi cassa (service-rt.log, solo per assistenza) ──────────────────
+const fsLog = require('fs')
+const pathLog = require('path')
+const LOG_RT = pathLog.join(__dirname, 'service-rt.log')
+function logRT(riga) {
+  try {
+    if (fsLog.existsSync(LOG_RT) && fsLog.statSync(LOG_RT).size > 1000000) fsLog.renameSync(LOG_RT, LOG_RT + '.old')
+    fsLog.appendFileSync(LOG_RT, new Date().toLocaleString('sv-SE') + ' ' + riga + '\n')
+  } catch (e) {}
+}
+function pulisciCmd(c) {
+  return String(c).replace(/"[^"]*"/g, '"…"').replace(/cf='[^']*'/g, "cf='…'").replace(/\n/g, ' | ').slice(0, 60)
+}
+async function inviaTCPRT(ip, porta, comando, marca) {
+  const t0 = Date.now()
+  try {
+    const r = await inviaTCPRTRaw(ip, porta, comando, marca)
+    if (comando !== 'K') logRT(marca + ' ' + ip + ':' + porta + ' cmd=' + pulisciCmd(comando) + ' OK ' + (Date.now() - t0) + 'ms risposta=' + JSON.stringify(r).slice(0, 160))
+    return r
+  } catch (e) {
+    logRT(marca + ' ' + ip + ':' + porta + ' cmd=' + pulisciCmd(comando) + ' ERRORE ' + (Date.now() - t0) + 'ms ' + e.message)
+    throw e
+  }
+}
+async function inviaTCP3i(ip, porta, comandi) {
+  const t0 = Date.now()
+  const cmds = comandi.map(pulisciCmd).join(',')
+  try {
+    const r = await inviaTCP3iRaw(ip, porta, comandi)
+    logRT('3i ' + ip + ':' + porta + ' cmds=' + cmds + ' OK ' + (Date.now() - t0) + 'ms risposta=' + JSON.stringify(r).slice(0, 160))
+    return r
+  } catch (e) {
+    logRT('3i ' + ip + ':' + porta + ' cmds=' + cmds + ' ERRORE ' + (Date.now() - t0) + 'ms ' + e.message)
+    throw e
+  }
 }
 
 const server = http.createServer(async (req, res) => {
@@ -288,6 +341,7 @@ const server = http.createServer(async (req, res) => {
             switch (azione) {
               case 'ping': comando = marca === '3i' ? 'K' : 'report num=0'; break
               case 'lettura_x': comando = marca === '3i' ? '1F' : 'report num=2'; break
+              case 'chiusura_fiscale': comando = `azzgio tipo=${dati?.tipo || 1}`; break
               case 'annullo': {
                 if (marca === '3i') {
                   const nazz = String(dati.numeroAzzeramento).padStart(4, '0')
@@ -347,6 +401,8 @@ const server = http.createServer(async (req, res) => {
           }
           if (!comando) throw new Error('Comando RT mancante')
           const risposta = await inviaTCPRT(ip, porta || 1471, comando, marca)
+          if (marca !== '3i') console.log('📟 Risposta ' + marca + ' a ' + JSON.stringify(comando).slice(0, 120) + ' →', JSON.stringify(risposta))
+          if (marca !== '3i' && /\b(err|errore|error|ko|nak)\b/i.test(risposta)) throw new Error('Risposta della cassa: ' + risposta.trim())
           risultato = { ok: true, risposta }
         }
 
@@ -365,7 +421,7 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       console.error('Errore service:', err.message)
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ ok: false, error: err.message }))
+      res.end(JSON.stringify({ ok: false, error: err.message, codice: err.codice }))
     }
   })
 })

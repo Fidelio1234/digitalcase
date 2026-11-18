@@ -3,8 +3,9 @@ import { NEGOZIO_ID as NEGOZIO_ID_DEFAULT } from '@/lib/config'
 
 export async function stampaComanda(tavolo, righe, tipo = 'comanda', reparti = [], negozioId = null) {
   const NEGOZIO_ID = negozioId || NEGOZIO_ID_DEFAULT
-    // Nessuna stampante comande attiva per questo negozio: niente da accodare
-    const { data: imp } = await supabase
+
+  // Nessuna stampante comande attiva per questo negozio: niente da accodare
+  const { data: imp } = await supabase
     .from('impostazioni_negozio')
     .select('stampanti')
     .eq('negozio_id', NEGOZIO_ID)
@@ -12,6 +13,7 @@ export async function stampaComanda(tavolo, righe, tipo = 'comanda', reparti = [
   const haStampanti = (imp?.stampanti || []).some(s => s.attiva && s.ip)
   if (!haStampanti) return
   let righeFinali = righe
+  
 
   // Se c'è già una comanda in attesa di stampa, la nuova va ACCODATA, non sostituita
   const { data: esistente } = await supabase

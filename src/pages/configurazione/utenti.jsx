@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import { useAuth } from '@/context/AuthContext'
+import { useNegozio } from '@/context/NegozioContext'
 import { useRouter } from 'next/router'
 import styles from '@/styles/Utenti.module.css'
 
@@ -54,34 +55,54 @@ export default function UtentiPage() {
   const [confirmElimina, setConfirmElimina] = useState(null)
   const [testando, setTestando] = useState(false)
   const [statoConnessione, setStatoConnessione] = useState(null)
+  const [erroreLista, setErroreLista] = useState('')
+  const [messaggioTest, setMessaggioTest] = useState('')
+  const { negozio } = useNegozio() || {}
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return }
     if (user?.role !== 'owner') { router.replace('/cassa'); return }
     apiUtenti({ azione: 'lista' }).then(r => {
       if (r.status === 401) { router.replace('/login'); return }
-      if (r.utenti) setUtenti(r.utenti)
+      if (r.utenti) { setUtenti(r.utenti); setErroreLista('') }
+      else setErroreLista('Elenco non caricato: internet assente o server non raggiungibile. Ricarica la pagina quando la connessione torna.')
     })
   }, [user, router])
 
   async function testConnessione() {
     setTestando(true)
     setStatoConnessione(null)
+    setMessaggioTest('')
+    const finisci = (stato, msg) => { setStatoConnessione(stato); setMessaggioTest(msg || ''); setTestando(false) }
     try {
-      const { data: negozio } = await supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single()
-      const cfg = negozio?.rt_config?.config
-      if (!cfg?.ip) { setStatoConnessione('errore'); setTestando(false); return }
+      // Config RT: prima Supabase (dato aggiornato) con attesa massima di 3 secondi,
+      // poi la copia del negozio gia in memoria (anche da copia locale).
+      let cfg = null
+      try {
+        const q = supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single()
+        const r = await Promise.race([Promise.resolve(q), new Promise(res => setTimeout(() => res(null), 3000))])
+        cfg = r?.data?.rt_config?.config || null
+      } catch (e) {}
+      if (!cfg?.ip) cfg = negozio?.rt_config?.config || null
+      if (!cfg?.ip) return finisci('errore', 'Configurazione della cassa non disponibile: IP non impostato oppure internet assente')
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 10000)
       let res
-      if (isLocalhost) {
-        res = await fetch('/api/ditron', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {}, marca: cfg.marca }) })
-      } else {
-        res = await fetch('http://localhost:3002', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca: cfg.marca, ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {} }) })
-      }
+      try {
+        if (isLocalhost) {
+          res = await fetch('/api/ditron', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {}, marca: cfg.marca }) })
+        } else {
+          res = await fetch('http://localhost:3002', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tipo: 'rt', marca: cfg.marca, ip: cfg.ip, porta: cfg.porta, azione: 'ping', dati: {} }) })
+        }
+      } finally { clearTimeout(timer) }
       const data = await res.json()
-      setStatoConnessione(data.ok ? 'ok' : 'errore')
-    } catch (e) { setStatoConnessione('errore') }
-    setTestando(false)
+      finisci(data.ok ? 'ok' : 'errore', data.ok ? '' : 'La cassa ha risposto con un errore')
+    } catch (e) {
+      finisci('errore', e?.name === 'AbortError'
+        ? 'La cassa non risponde entro 10 secondi: controlla IP, cavo e rete'
+        : 'Impossibile contattare la cassa o il servizio di stampa')
+    }
   }
 
   function showToast(msg) {
@@ -236,7 +257,7 @@ export default function UtentiPage() {
         </button>
         <div className={styles.headerTitle}>
           <span>Utenti e PIN</span>
-          <span className={styles.headerSub}>{utenti.length} utenti configurati</span>
+          <span className={styles.headerSub} style={erroreLista ? { color: '#ff4d6a' } : undefined}>{erroreLista || (utenti.length + ' utenti configurati')}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button
@@ -253,7 +274,10 @@ export default function UtentiPage() {
             {statoConnessione === 'ok' && <span style={{ color: '#00e5a0', fontSize: '2.1rem' }}>✓</span>}
             {statoConnessione === 'errore' && <span style={{ color: '#ff4d6a', fontSize: '2.1rem' }}>✗</span>}
           </button>
-          <button className={styles.addBtn} onClick={openAdd}>
+          {statoConnessione === 'errore' && messaggioTest && (
+            <span style={{ color: '#ff4d6a', fontSize: '0.78rem', maxWidth: 260 }}>{messaggioTest}</span>
+          )}
+          <button className={styles.addBtn} onClick={openAdd} disabled={!!erroreLista} style={erroreLista ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>

@@ -1,5 +1,25 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { parse88F, eseguiChiusuraVerificata, ESITI, chiusuraEseguita } from '@/lib/chiusura3i'
+
+// RCH / Ditron: il programma non puo' rileggere lo stato della cassa come fa con la 3i,
+// quindi puo' solo controllare che il comando sia stato accettato.
+const ESITI_RT = {
+  ...ESITI,
+  comando_accettato: {
+    colore: '#ffb830', icona: '!', titolo: 'COMANDO ACCETTATO',
+    testo: "La cassa ha accettato il comando di chiusura. Controlla che abbia stampato lo scontrino di chiusura Z: con questa cassa il programma non puo' verificarlo.",
+  },
+}
+
+function esitoChiusuraGenerica(res) {
+  if (!res?.ok) return { esito: 'non_eseguita', dettaglio: res?.error || 'La cassa non ha accettato il comando' }
+  const testo = typeof res.risposta === 'string' ? res.risposta : ''
+  if (/\b(err|errore|error|ko|nak)\b/i.test(testo)) {
+    return { esito: 'non_eseguita', dettaglio: 'Risposta della cassa: ' + testo.trim() }
+  }
+  return { esito: 'comando_accettato' }
+}
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
 async function callRT(marca, body) {
@@ -20,6 +40,9 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
   const [conferma, setConferma] = useState(null)
   const [risultato, setRisultato] = useState(null)
   const [pannelloAperto, setPannelloAperto] = useState(false)
+  const [chiusuraFase, setChiusuraFase] = useState(null)      // fase in corso della chiusura 3i
+  const [esitoChiusura, setEsitoChiusura] = useState(null)    // esito mostrato nel modal
+  const chiusuraInCorso = useRef(false)                        // blocca il doppio tocco
   const [annulloData, setAnnulloData] = useState({ nazz: '', ndoc: '', data: '' })
   const [ristampaData, setRistampaData] = useState({
     dataInizio: new Date().toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit'}).replace(/\//g,''),
@@ -139,17 +162,12 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
       messaggio: 'Eseguire la chiusura fiscale Z ' + tipoLabel + '? Questa operazione azzera i totalizzatori giornalieri.',
       colore: '#ffb830',
       onConferma: async () => {
-        const res = await chiamaRT('chiusura_fiscale', { tipo })
-        try {
-          await salvaChiusura(res?.ok ? 'inviata' : 'non_inviata')
-        } catch (e) {
-          console.error('Errore salvataggio chiusura:', e)
-          setConferma({
-            titolo: 'Chiusura NON salvata',
-            messaggio: 'La chiusura è stata eseguita sul registratore, ma NON è stata salvata nello storico di DigitalCase. Non ripetere la chiusura. Avvisa subito l\'assistenza (339 119 9015) e segna i totali del giorno.',
-            colore: '#ff5d5d', onConferma: null
-          })
+        if (rtConfig.marca === '3i') {
+          // 3i: la cassa viene letta prima e dopo la chiusura (comando 88F)
+          await chiusura3iVerificata(tipo)
+          return
         }
+        await chiusuraGenerica(tipo)
       }
     })
   }
@@ -162,8 +180,94 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
 
 
 
+  // Chiusura RCH / Ditron: la riga in "chiusure" si salva solo se la cassa ha accettato il comando.
+  async function chiusuraGenerica(tipo) {
+    if (chiusuraInCorso.current) return
+    chiusuraInCorso.current = true
+    setPannelloAperto(false)
+    setEsitoChiusura(null)
+    setRisultato(null)
+    setLoading(true)
+    setChiusuraFase('chiusura')
+    let r
+    try {
+      const res = await chiamaRT('chiusura_fiscale', { tipo })
+      console.log('📟 Risposta cassa (chiusura Z):', JSON.stringify(res))
+      r = esitoChiusuraGenerica(res)
+      if (r.esito === 'comando_accettato') {
+        try {
+          await salvaChiusura('inviata')
+        } catch (e) {
+          console.error('Errore salvataggio chiusura:', e)
+          r = { ...r, dettaglio: 'Chiusura eseguita ma NON salvata nello storico del programma. Non ripetere la chiusura: avvisa subito l\'assistenza (339 119 9015) e segna i totali del giorno.' }
+        }
+      }
+    } catch (e) {
+      r = { esito: 'non_raggiungibile', dettaglio: e.message }
+    } finally {
+      chiusuraInCorso.current = false
+      setLoading(false)
+      setChiusuraFase(null)
+      setRisultato(null)
+    }
+    setEsitoChiusura(r)
+  }
+
+  // Chiusura 3i con verifica reale: legge la cassa prima, manda la Z,
+  // controlla che la cassa abbia chiuso e che abbia inviato all'Agenzia.
+  async function chiusura3iVerificata(tipo) {
+    if (chiusuraInCorso.current) return
+    chiusuraInCorso.current = true
+    setPannelloAperto(false)
+    setEsitoChiusura(null)
+    setRisultato(null)
+    setLoading(true)
+    setChiusuraFase('lettura')
+
+    const parametri = { ip: rtConfig.ip, porta: rtConfig.porta, marca: rtConfig.marca, modalita: rtConfig.modalita || 'MF' }
+    const chiediStato = async () => {
+      const r = await callRT(rtConfig.marca, { ...parametri, azione: 'raw', dati: { cmd: '88F' } })
+      if (!r?.ok) throw new Error(r?.error || 'Cassa non raggiungibile')
+      return parse88F(r.risposta)
+    }
+    const inviaChiusura = async () => {
+      try { return await callRT(rtConfig.marca, { ...parametri, azione: 'chiusura_fiscale', dati: { tipo } }) }
+      catch (e) { return { ok: false, error: e.message } }
+    }
+
+    let r
+    try {
+      r = await eseguiChiusuraVerificata({ chiediStato, inviaChiusura, onFase: setChiusuraFase })
+      if (chiusuraEseguita(r.esito)) {
+        try {
+          await salvaChiusura(r.esito, r.azzeramentoDopo)
+          // aggiornaChiusureTrasmesse: se la cassa non ha piu' chiusure in attesa (pending 0),
+          // quelle rimaste "non inviata" sono state trasmesse: si aggiornano.
+          if (r.esito === 'inviata' && r.pendingDopo === 0) {
+            try {
+              const { error: errAgg } = await supabase.from('chiusure')
+                .update({ stato: 'inviata' })
+                .eq('negozio_id', negozioId).eq('stato', 'non_inviata')
+              if (errAgg) console.warn('Aggiornamento chiusure trasmesse non riuscito:', errAgg.message)
+            } catch (e) { console.warn('Aggiornamento chiusure trasmesse non riuscito:', e.message) }
+          }
+        } catch (e) {
+          console.error('Errore salvataggio chiusura:', e)
+          r = { ...r, dettaglio: 'Chiusura eseguita ma NON salvata nello storico del programma. Non ripetere la chiusura: avvisa subito l\'assistenza (339 119 9015) e segna i totali del giorno.' }
+        }
+      }
+    } catch (e) {
+      r = { esito: 'non_raggiungibile', dettaglio: e.message }
+    } finally {
+      chiusuraInCorso.current = false
+      setLoading(false)
+      setChiusuraFase(null)
+    }
+    setEsitoChiusura(r)
+  }
+
   // Riprova una chiamata Supabase (3 tentativi, pausa crescente). Se fallisce sempre lancia l'errore:
-  // cosi' il chiamante puo' avvisare invece di perdere la chiusura in silenzio.
+  // cosi' il chiamante mostra l'avviso "Chiusura eseguita ma NON salvata" invece di perderla in silenzio.
   async function conRiprova(chiama, nome) {
     let ultimo = null
     for (let i = 1; i <= 3; i++) {
@@ -177,7 +281,8 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
     throw new Error(nome + ': ' + (ultimo?.message || 'errore sconosciuto'))
   }
 
-  async function salvaChiusura(stato) {
+  // numeroCassa = numero di azzeramento letto dalla cassa (3i). Se manca, contatore giornaliero come prima.
+  async function salvaChiusura(stato, numeroCassa) {
     const ora = new Date().toISOString()
     const oggi = ora.split('T')[0]
     const { data: ultimaChiusura } = await conRiprova(() => supabase
@@ -201,7 +306,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
     const { data: cont } = await conRiprova(() => supabase
       .from('contatori').select('chiusure')
       .eq('negozio_id', negozioId).eq('data', oggi).maybeSingle(), 'Lettura contatori')
-    const numChiusura = (cont?.chiusure || 0) + 1
+    const numChiusura = numeroCassa ?? ((cont?.chiusure || 0) + 1)
 
     const riga = {
       negozio_id: negozioId, numero_chiusura: numChiusura, stato,
@@ -337,7 +442,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
           <div style={{
             background:'#111318', border:'1px solid #252830',
             borderRadius:20, padding:24,
-            width:520, maxWidth:'95vw', maxHeight:'90vh', overflowY:'auto',
+            width:880, maxWidth:'95vw', maxHeight:'90vh', overflowY:'auto',
             boxShadow:'0 24px 64px rgba(0,0,0,0.7)',
             display:'flex', flexDirection:'column', gap:14,
           }} onClick={e => e.stopPropagation()}>
@@ -355,6 +460,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
               </div>
             )}
 
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(360px, 1fr))', gap:28, alignItems:'start'}}>
             <div>
               <div style={{display:'flex', flexDirection:'column', gap:6}}>
                 <div style={{width:'100%', color:'#ffb830'}}>CHIUSURE FISCALI</div>
@@ -376,8 +482,8 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
               </div>
 
             </div>
-            <br/>
 
+            <div style={{display:'flex', flexDirection:'column', gap:24}}>
             <div>
               <div style={{width:'100%', color:'#ff4d6a'}}>ANNULLO SCONTRINO RT</div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, marginBottom:6}}>
@@ -402,7 +508,6 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
               </div>
               <button style={btnStyle('#ff4d6a')} onClick={annulloScontrino} disabled={loading}>Annulla scontrino RT</button>
             </div>
-            <br/>
 
             <div>
               <div style={{width:'100%', color:'#00ff00'}}>RISTAMPA DA DGFE</div>
@@ -434,6 +539,8 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
               </div>
               <button style={btnStyle('#00ff00')} onClick={ristampaDGFE} disabled={loading}>Ristampa scontrini</button>
             </div>
+            </div>
+            </div>
 
             {loading && (
               <div style={{textAlign:'center', color:'#5a5d6e', fontSize:'0.8rem'}}>⏳ Comunicazione con la cassa...</div>
@@ -452,6 +559,65 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
           </div>
         </div>
       )}
+
+      {(chiusuraFase || esitoChiusura) && (() => {
+        const e = esitoChiusura ? ESITI_RT[esitoChiusura.esito] : null
+        const colore = e ? e.colore : '#ffb830'
+        const fasi = {
+          lettura: 'Controllo la cassa...',
+          chiusura: 'Chiusura in corso... non spegnere la cassa',
+          verifica: 'Attendo la conferma dalla cassa...',
+          invio: "Invio all'Agenzia delle Entrate...",
+        }
+        const dettaglio = esitoChiusura?.dettaglio
+        const servizioOff = dettaglio && /failed to fetch|networkerror/i.test(dettaglio)
+        return (
+          <div style={{ position:'fixed', inset:0, zIndex:700, background:'rgba(8,9,12,0.92)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+            <div style={{
+              background:'#111318', border:'2px solid ' + colore, borderRadius:24,
+              padding:'36px 44px', width:560, maxWidth:'95vw',
+              display:'flex', flexDirection:'column', alignItems:'center', gap:16, textAlign:'center',
+              boxShadow:'0 0 64px ' + colore + '33',
+            }}>
+              {!e ? (
+                <>
+                  <div style={{ fontSize:'2.4rem' }}>⏳</div>
+                  <div style={{ fontSize:'1.2rem', fontWeight:700, color:'#ffb830' }}>{fasi[chiusuraFase] || 'Attendere...'}</div>
+                  <div style={{ fontSize:'0.8rem', color:'#aeb0bc' }}>Non chiudere questa finestra</div>
+                </>
+              ) : (
+                <>
+                  <div style={{
+                    width:72, height:72, borderRadius:'50%', border:'2px solid ' + colore, background: colore + '22',
+                    display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2.2rem', fontWeight:700, color:colore,
+                  }}>{e.icona}</div>
+                  <div style={{ fontSize:'1.5rem', fontWeight:700, color:colore, letterSpacing:1 }}>{e.titolo}</div>
+                  <div style={{ fontSize:'0.95rem', color:'#eef0f6', lineHeight:1.6 }}>{e.testo}</div>
+                  {esitoChiusura.azzeramentoDopo != null && (
+                    <div style={{ fontSize:'0.9rem', color:'#ffffff', fontFamily:"'DM Mono',monospace" }}>
+                      Chiusura n° {String(esitoChiusura.azzeramentoDopo).padStart(4, '0')}
+                    </div>
+                  )}
+                  {esitoChiusura.esito === 'non_inviata' && (
+                    <div style={{ fontSize:'0.9rem', color:'#ffb830', fontFamily:"'DM Mono',monospace" }}>
+                      Chiusure in attesa di invio: {esitoChiusura.pendingDopo}
+                    </div>
+                  )}
+                  {dettaglio && (
+                    <div style={{ fontSize:'0.75rem', color:'#aeb0bc', fontFamily:"'DM Mono',monospace" }}>
+                      {servizioOff ? 'Il servizio locale DigitalCase non risponde su questo PC: controlla che sia acceso.' : dettaglio}
+                    </div>
+                  )}
+                  <button onClick={() => setEsitoChiusura(null)} style={{
+                    marginTop:8, padding:'12px 40px', borderRadius:12, border:'none',
+                    background:colore, color:'#08090c', fontWeight:700, fontSize:'1rem', cursor:'pointer',
+                  }}>OK</button>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {conferma && (
         <div style={{

@@ -5,6 +5,8 @@ import { getTavoliDb, salvaTavoloDb, chiudiTavoloDb, getImpostazioniDb, getRepar
 import { stampaComanda } from '@/lib/stampante'
 import { supabase } from '@/lib/supabase'
 import { useNegozioId } from '@/hooks/useNegozioId'
+import { useNegozio } from '@/context/NegozioContext'
+import { stampaPrecontoRT } from '@/lib/preconto-rt'
 
 
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
@@ -62,6 +64,15 @@ function righeQuotaRomana(righe, importoQuota, numeroTavolo) {
 
 export default function TavoliPage() {
   const NEGOZIO_ID = useNegozioId()
+  const { negozio: negozioCtx } = useNegozio() || {}
+  const [precontoRtInCorso, setPrecontoRtInCorso] = useState(false)
+  const [precontoGrigliaMsg, setPrecontoGrigliaMsg] = useState(null) // { n, testo }
+  const [precontoStampati, setPrecontoStampati] = useState({}) // { [numeroTavolo]: { ora, totale, aperto } }
+  useEffect(() => {
+    if (!NEGOZIO_ID) return
+    try { setPrecontoStampati(JSON.parse(localStorage.getItem('dc_preconto_' + NEGOZIO_ID) || '{}') || {}) } catch (e) {}
+  }, [NEGOZIO_ID])
+  const cassa3i = negozioCtx?.rt_config?.config?.marca === '3i'
   const { user, loading } = useAuth()
   const router = useRouter()
   const [tavoli, setTavoli] = useState([])
@@ -470,6 +481,48 @@ async function inviaComandaInterna() {
 
 
 
+  function totaleRigheTavolo(tv) {
+    return (tv.righe || []).reduce((s, r) => s + (r.totaleRiga || 0), 0)
+  }
+
+  function statoPrecontoGriglia(tv) {
+    if (precontoGrigliaMsg?.n === tv.numero) return { ok: false, testo: precontoGrigliaMsg.testo }
+    const p = precontoStampati[tv.numero]
+    if (p && p.totale === totaleRigheTavolo(tv) && p.aperto === (tv.apertoAlle || null)) {
+      return { ok: true, testo: '✓ Stampato ' + p.ora }
+    }
+    return null
+  }
+
+  async function stampaPrecontoDaGriglia(tavolo) {
+    if (precontoRtInCorso) return
+    setPrecontoRtInCorso(true)
+    setPrecontoGrigliaMsg(null)
+    const errore = (testo) => setPrecontoGrigliaMsg({ n: tavolo.numero, testo })
+    try {
+      let cfg = negozioCtx?.rt_config?.config
+      if (!cfg) {
+        const { data } = await supabase.from('negozi').select('rt_config').eq('id', NEGOZIO_ID).single()
+        cfg = data?.rt_config?.config
+      }
+      if (!cfg || cfg.marca !== '3i') { errore('✗ Solo con registratore 3i'); return }
+      const r = await stampaPrecontoRT(cfg, tavolo.numero, tavolo.righe || [])
+      console.log('Preconto cassa 3i (griglia, tavolo ' + tavolo.numero + '):', JSON.stringify(r))
+      if (r.ok) {
+        const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+        const next = { ...precontoStampati, [tavolo.numero]: { ora, totale: totaleRigheTavolo(tavolo), aperto: tavolo.apertoAlle || null } }
+        setPrecontoStampati(next)
+        try { localStorage.setItem('dc_preconto_' + NEGOZIO_ID, JSON.stringify(next)) } catch (e) {}
+      } else {
+        errore('✗ Cassa non risponde')
+      }
+    } catch (e) {
+      errore('✗ Errore: ' + e.message)
+    } finally {
+      setPrecontoRtInCorso(false)
+    }
+  }
+
   async function stampaPreconto() {
     await stampaComanda(tavoloAttivo, righeComanda, 'preconto', reparti, NEGOZIO_ID)
   }
@@ -595,7 +648,7 @@ async function inviaComandaInterna() {
                    {totale > 0 && (
               <>
                 <button onClick={stampaPreconto} style={{ padding:'12px', background:'#ffb830', border:'none', borderRadius:12, color:'#08090c', fontWeight:700, cursor:'pointer', fontSize:'0.85rem' }}>
-                  🧾 Preconto
+                  🧾 Preconto su comanda
                 </button>
                 <button
                   onClick={() => {
@@ -1118,9 +1171,27 @@ setShowConto(true)
                     <div style={{ fontSize:'0.98rem', fontWeight:600, color:'#eef0f6', fontFamily:"'DM Mono',monospace" }}>€ {fmt(Math.max(0, totTavolo - (t.divisione?.importoPagato || 0)))}</div>
                     {t.divisione && <div style={{ fontSize:'0.8rem', color:'#ffb830' }}>alla romana {t.divisione.quotePagate}/{t.divisione.persone}</div>}
                     <div style={{ fontSize:'0.88rem', color:'#00ffb3' }}>{(() => { const n = t.righe?.filter(r => r.id !== 'coperto').length || 0; return n === 1 ? '1 prodotto' : `${n} prodotti` })()}</div>
-                    {tempo && <div style={{ fontSize:'0.95rem', color:'#ffb830' }}>Occupato ⏱ {tempo}</div>}
+                    {tempo && <div style={{ fontSize:'0.8rem', color:'#ffb830', whiteSpace:'nowrap' }}>Occupato ⏱ {tempo}</div>}
                     {impostazioni.copertoAbilitato && t.coperti > 0 && (
                       <div style={{ fontSize:'0.95rem', color:'#00ffb3' }}>👤 {t.coperti} coperti</div>
+                    )}
+                    {/* PRECONTO_SOTTO_COPERTI */}
+                    {cassa3i && (t.righe?.length || 0) > 0 && (
+                      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:6, marginTop:4 }}>
+                        <span role="button"
+                          onClick={(e) => { e.stopPropagation(); stampaPrecontoDaGriglia(t) }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onMouseUp={(e) => e.stopPropagation()}
+                          onTouchStart={(e) => e.stopPropagation()}
+                          onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); stampaPrecontoDaGriglia(t) }}
+                          style={{ padding:'6px 14px', border:'1px solid #ffb830', borderRadius:8, color:'#ffb830', fontWeight:700, fontSize:'0.85rem', cursor: precontoRtInCorso ? 'wait' : 'pointer', userSelect:'none' }}>
+                          Preconto
+                        </span>
+                        {(() => {
+                          const s = statoPrecontoGriglia(t)
+                          return s ? <div style={{ fontSize:'0.74rem', color: s.ok ? '#00e5a0' : '#ff4d6a', whiteSpace: s.ok ? 'nowrap' : 'normal' }}>{s.testo}</div> : null
+                        })()}
+                      </div>
                     )}
                   </>
                 ) : (
