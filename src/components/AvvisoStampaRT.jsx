@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 import {
   ESITI_SCONTRINO, ESITI_SCONTRINO_RT, EVENTO_PROBLEMA_STAMPA,
+  EVENTO_RIFAI_SCONTRINO, CHIAVE_DA_RIFARE,
   leggiProblemiStampa, rimuoviPrimoProblemaStampa,
 } from '@/lib/scontrino3i'
 
@@ -12,6 +14,7 @@ function fmt(cents) {
 // Va montato una sola volta in _app.jsx: resta visibile anche se si cambia pagina.
 export default function AvvisoStampaRT() {
   const [problemi, setProblemi] = useState([])
+  const router = useRouter()
 
   useEffect(() => {
     const aggiorna = () => setProblemi(leggiProblemiStampa())
@@ -22,6 +25,16 @@ export default function AvvisoStampaRT() {
 
   if (problemi.length === 0) return null
   const p = problemi[0]
+
+  // Ricarica in cassa le righe dello scontrino non uscito, cosi' il cassiere non ribatte tutto.
+  // Con la carta finita NON si propone: la cassa completa da sola la stampa e ne uscirebbero due.
+  const puoRifare = Array.isArray(p.righe) && p.righe.length > 0 && p.tipoRt !== 'carta_finita'
+  function rifaiScontrino() {
+    try { sessionStorage.setItem(CHIAVE_DA_RIFARE, JSON.stringify(p.righe)) } catch (e) {}
+    rimuoviPrimoProblemaStampa()
+    if (router.pathname === '/cassa') window.dispatchEvent(new Event(EVENTO_RIFAI_SCONTRINO))
+    else router.push('/cassa')
+  }
   const esito = (p.tipoRt && ESITI_SCONTRINO_RT[p.tipoRt]) || ESITI_SCONTRINO[p.esito] || ESITI_SCONTRINO.cassa_non_risponde
   // Dettaglio tecnico della cassa (es. "Errore cassa E12"): non serve se il testo spiega gia' tutto
   const mostraDettaglio = !!p.dettaglio && !['carta_finita', 'coperchio_aperto'].includes(p.tipoRt)
@@ -60,10 +73,19 @@ export default function AvvisoStampaRT() {
             Altri avvisi in coda: {problemi.length - 1}
           </div>
         )}
-        <button onClick={rimuoviPrimoProblemaStampa} style={{
-          padding: '12px 44px', borderRadius: 10, border: 'none', cursor: 'pointer',
-          background: '#ff4d6a', color: '#08090c', fontWeight: 700, fontSize: '1rem',
-        }}>OK</button>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+          <button onClick={rimuoviPrimoProblemaStampa} style={{
+            padding: '12px 28px', borderRadius: 10, cursor: 'pointer',
+            background: 'transparent', border: '1px solid #4a4d5e',
+            color: '#eef0f6', fontWeight: 700, fontSize: '1rem',
+          }}>OK</button>
+          {puoRifare && (
+            <button onClick={rifaiScontrino} style={{
+              padding: '12px 28px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              background: '#ff4d6a', color: '#08090c', fontWeight: 700, fontSize: '1rem',
+            }}>Rifai lo scontrino</button>
+          )}
+        </div>
       </div>
     </div>
   )

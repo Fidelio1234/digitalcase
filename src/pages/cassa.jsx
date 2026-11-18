@@ -16,7 +16,7 @@ import { useCassa, euroInCentesimi } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini } from '@/lib/storage'
 import { aggiornaStatoRtScontrinoDb } from '@/lib/supabase-db'
-import { sincronizzaBase, verificaScontrino, registraInvio, annullaInvio, segnalaProblemaStampa } from '@/lib/scontrino3i'
+import { sincronizzaBase, verificaScontrino, registraInvio, annullaInvio, segnalaProblemaStampa, EVENTO_RIFAI_SCONTRINO, CHIAVE_DA_RIFARE } from '@/lib/scontrino3i'
 import Head from 'next/head'
 
 
@@ -315,6 +315,22 @@ export default function CassaPage() {
     const t = setInterval(giro, 20000)
     return () => { attivo = false; clearInterval(t) }
   }, [NEGOZIO_ID])
+
+  // "Rifai lo scontrino": l'avviso di stampa non riuscita lascia qui le righe da ribattere.
+  useEffect(() => {
+    const caricaDaRifare = () => {
+      try {
+        const salvato = sessionStorage.getItem(CHIAVE_DA_RIFARE)
+        if (!salvato) return
+        sessionStorage.removeItem(CHIAVE_DA_RIFARE)
+        const righeVecchie = JSON.parse(salvato)
+        if (Array.isArray(righeVecchie) && righeVecchie.length > 0) ripristinaRighe(righeVecchie)
+      } catch (e) { console.error('Righe da rifare non caricate:', e) }
+    }
+    caricaDaRifare()
+    window.addEventListener(EVENTO_RIFAI_SCONTRINO, caricaDaRifare)
+    return () => window.removeEventListener(EVENTO_RIFAI_SCONTRINO, caricaDaRifare)
+  }, [ripristinaRighe])
 
   // Carica config RT: prima dal negozio gia' in memoria (anche da copia locale),
   // poi aggiorna da Supabase appena risponde. Cosi' rtConfig non resta mai vuota senza rete.
@@ -744,6 +760,10 @@ export default function CassaPage() {
     // Se non c'e' una cassa attiva non c'e' nessuna conferma da aspettare: la copia parte subito
     if (!(rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0)) inviaEmailCliente(info)
 
+    // Copia delle righe: se la cassa non stampa, l'avviso permette di rifare lo scontrino
+    // senza ribattere tutto. Copia piatta: da qui in poi le righe non vengono piu' toccate.
+    const righeDaRifare = (scontrinoCorrente?.righe || []).map(r => ({ ...r }))
+
     // Stampa su RT se configurato
     let stampaRtConfermata = false // RCH/Ditron: true dopo che la cassa ha accettato lo scontrino principale
     if (rtConfig?.attivo && rtConfig?.ip && scontrinoCorrente?.righe?.length > 0) {
@@ -862,7 +882,7 @@ export default function CassaPage() {
 
           // Verifica che la cassa abbia DAVVERO emesso lo scontrino (comando 84F).
           // Avviene in background: il cassiere non aspetta niente.
-          const datiScontrino = { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() }
+          const datiScontrino = { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString(), righe: righeDaRifare }
           if (rispostaScontrino?.ok === false && /raggiungibile/i.test(rispostaScontrino?.error || '')) {
             annullaInvio(ticketScontrino)
             esitoStampa3i({ esito: 'cassa_non_risponde' }, idScontrinoDb, datiScontrino)
@@ -932,7 +952,7 @@ export default function CassaPage() {
           }
 
           const resRch = await callRT('rch', { ip: rtConfig.ip, porta: rtConfig.porta || 80, comandi }, rtConfig.serviceIp)
-          if (!esitoStampaGenerico(resRch, 'rch', idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() })) return
+          if (!esitoStampaGenerico(resRch, 'rch', idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString(), righe: righeDaRifare })) return
           stampaRtConfermata = true
 
           // Stampa scontrino di cortesia RCH
@@ -962,7 +982,7 @@ export default function CassaPage() {
 
           const resDitron = await callRT('ditron', { ip: rtConfig.ip, porta: rtConfig.porta, azione: 'scontrino', dati: { righe: righeConRt, metodo: info.metodo === 'cortesia' ? 'contanti' : info.metodo, totale: info.totale, resto: info.resto || 0, contatto: cfPivaPerCassa(info.contatto) } }, rtConfig.serviceIp)
           console.log('📟 Risposta Ditron (scontrino):', JSON.stringify(resDitron))
-          if (!esitoStampaGenerico(resDitron, 'ditron', idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() })) return
+          if (!esitoStampaGenerico(resDitron, 'ditron', idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString(), righe: righeDaRifare })) return
           stampaRtConfermata = true
 
           // Stampa scontrino di cortesia se richiesto (cortesia o carta con modulo abilitato)
@@ -990,9 +1010,9 @@ export default function CassaPage() {
         console.error('Errore stampa RT:', e)
         // Errore dopo la conferma (es. solo lo scontrino di cortesia): lo scontrino principale c'e', la mail parte
         if (rtConfig?.marca !== '3i' && stampaRtConfermata) inviaEmailCliente(info)
-        if (rtConfig?.marca !== '3i' && !stampaRtConfermata) esitoStampaGenerico({ ok: false, error: 'Servizio locale non raggiungibile: ' + (e?.message || e) }, rtConfig?.marca, idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() })
+        if (rtConfig?.marca !== '3i' && !stampaRtConfermata) esitoStampaGenerico({ ok: false, error: 'Servizio locale non raggiungibile: ' + (e?.message || e) }, rtConfig?.marca, idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString(), righe: righeDaRifare })
         if (rtConfig?.marca === '3i') annullaInvio(ticketScontrino)
-        if (rtConfig?.marca === '3i') esitoStampa3i({ esito: 'cassa_non_risponde' }, idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString() })
+        if (rtConfig?.marca === '3i') esitoStampa3i({ esito: 'cassa_non_risponde' }, idScontrinoDb, { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString(), righe: righeDaRifare })
      
       }
     }

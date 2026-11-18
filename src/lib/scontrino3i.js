@@ -195,6 +195,9 @@ export function _azzeraStato() {
 
 // ── Avvisi che sopravvivono al cambio pagina ────────────────────────────────
 export const EVENTO_PROBLEMA_STAMPA = 'dc-problema-stampa'
+// La cassa chiede di ricaricare le righe di uno scontrino non emesso.
+export const EVENTO_RIFAI_SCONTRINO = 'dc-rifai-scontrino'
+export const CHIAVE_DA_RIFARE = 'dc_scontrino_da_rifare'
 const CHIAVE = 'dc_problemi_stampa'
 
 export function leggiProblemiStampa() {
