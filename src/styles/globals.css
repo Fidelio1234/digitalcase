@@ -13,4 +13,64 @@ html, body {
 }
 
 button { outline: none; }
-button:focus-visible { outline: 2px solid #00e5a0; outline-offset: 2px; }
+button:focus-visible { outline: 2px solid var(--dc-verde); outline-offset: 2px; }
+
+/* Tema: colori base (scuro). Il tema chiaro li ridefinisce. */
+:root {
+  --dc-bg: #08090c;       --dc-bg-rgb: 8, 9, 12;
+  --dc-surface: #111318;  --dc-surface-rgb: 17, 19, 24;
+  --dc-surface2: #1a1c24; --dc-surface2-rgb: 26, 28, 36;
+  --dc-border: #252830;   --dc-border-rgb: 37, 40, 48;
+  --dc-text: #eef0f6;     --dc-text-rgb: 238, 240, 246;
+  --dc-muted: #5a5d6e;    --dc-muted-rgb: 90, 93, 110;
+  --dc-verde: #00e5a0;    --dc-verde-rgb: 0, 229, 160;
+  --dc-ambra: #ffb830;    --dc-ambra-rgb: 255, 184, 48;
+  --dc-rosso: #ff4d6a;    --dc-rosso-rgb: 255, 77, 106;
+  --dc-menta: #00ffb3;    --dc-menta-rgb: 0, 255, 179;
+  --dc-blu: #6482ff;      --dc-blu-rgb: 100, 130, 255;
+  --dc-viola: #c44dff;    --dc-viola-rgb: 196, 77, 255;
+  --dc-giallo: #ffff00;
+  --dc-rosso-vivo: #ff0000;
+  --dc-lime: #00ff00;     --dc-lime-rgb: 0, 255, 0;
+  --dc-forte: #ffffff;    --dc-forte-rgb: 255, 255, 255;
+  --dc-tasto: #000000;
+  --dc-on-accent: #000000;
+  --dc-ambra-testo: #ffd06b;
+  --dc-ambra-hover: #ffd06b;  --dc-arancio: #ff9f43;  --dc-corallo: #ff6b6b;
+}
+
+/* Tema chiaro: stesse variabili, valori chiari (contrasto >= 4,5:1 su superfici chiare). */
+html[data-theme='light'] {
+  color-scheme: light;
+  --dc-bg: #f3f4f8;       --dc-bg-rgb: 243, 244, 248;
+  --dc-surface: #ffffff;  --dc-surface-rgb: 255, 255, 255;
+  --dc-surface2: #e9ebf1; --dc-surface2-rgb: 233, 235, 241;
+  --dc-border: #d3d7e0;   --dc-border-rgb: 211, 215, 224;
+  --dc-text: #14161f;     --dc-text-rgb: 20, 22, 31;
+  --dc-muted: #5f6475;    --dc-muted-rgb: 95, 100, 117;
+  --dc-verde: #007a52;    --dc-verde-rgb: 0, 122, 82;
+  --dc-ambra: #9a5b00;    --dc-ambra-rgb: 154, 91, 0;
+  --dc-rosso: #c9203f;    --dc-rosso-rgb: 201, 32, 63;
+  --dc-menta: #00805a;    --dc-menta-rgb: 0, 128, 90;
+  --dc-blu: #3552d6;      --dc-blu-rgb: 53, 82, 214;
+  --dc-viola: #8a24c4;    --dc-viola-rgb: 138, 36, 196;
+  --dc-giallo: #856400;
+  --dc-rosso-vivo: #c4122f;
+  --dc-lime: #00783a;     --dc-lime-rgb: 0, 120, 58;
+  --dc-forte: #14161f;    --dc-forte-rgb: 20, 22, 31;
+  --dc-tasto: #e9ebf1;
+  --dc-on-accent: #ffffff;
+  --dc-ambra-testo: #7a4a00;
+  --dc-ambra-hover: #a56000;  --dc-arancio: #a84f00;  --dc-corallo: #c9203f;
+}
+
+body { background: var(--dc-bg); color: var(--dc-text); }
+
+/* Agenda: orari su due colonne (mattina a sinistra, pomeriggio a destra); una colonna su schermi stretti. */
+.dc-agenda-slots { padding: 10px 16px 4px; max-width: 1240px; margin: 0 auto; column-count: 2; column-gap: 16px; }
+.dc-agenda-slots > * { break-inside: avoid; margin-bottom: 4px; width: 100%; }
+@media (max-width: 860px) { .dc-agenda-slots { column-count: 1; max-width: 640px; } }
+
+/* Agenda: finestra prenotazione su due colonne (dati a sinistra, servizi a destra); verticale su schermi stretti. */
+.dc-agenda-modal { max-width: 920px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); grid-template-rows: auto auto auto auto 1fr auto; grid-template-areas: "titolo titolo" "cliente servizi" "telefono servizi" "durata servizi" "note servizi" "bottoni bottoni"; column-gap: 24px; row-gap: 14px; align-items: start; }
+@media (max-width: 860px) { .dc-agenda-modal { max-width: 420px; display: flex; flex-direction: column; align-items: stretch; gap: 14px; } }

@@ -6,6 +6,7 @@ import { sincronizzaNegozioLocale } from '@/lib/supabase-db'
 import { getStoricoDb, getScontriniPeriodoDb, salvaChiusuraDb, getChiusureDb, getFattureDb, getImpostazioniDb, creaNotaCreditoDb } from '@/lib/supabase-db'
 import { useNegozioId } from '@/hooks/useNegozioId'
 import styles from '@/styles/Storico.module.css'
+import { useSbloccoAnnullati } from '@/components/SbloccoAnnullati'
 import { totaliPerIva, riepilogoIvaMensile } from '@/lib/iva'
 
 function fmt(cents) {
@@ -35,6 +36,9 @@ export default function StoricoPage() {
   const [tab, setTab] = useState('scontrini')
   const [negozio, setNegozio] = useState({})
   const [toast, setToast] = useState('')
+  const { sbloccato, pressione, modal } = useSbloccoAnnullati()
+  // Se lo sblocco scade mentre e' selezionato il filtro Annullati, torna a Tutti
+  useEffect(() => { if (!sbloccato && filtroMetodo === 'annullati') setFiltroMetodo('tutti') }, [sbloccato, filtroMetodo])
 
   // Report IVA mensile
   const [ivaOpen, setIvaOpen] = useState(false)
@@ -229,7 +233,7 @@ async function eseguiChiusura() {
 
   function buildChiusuraHtml(c, neg) {
     const ivaRighe = Object.entries(c.totaleIva || {}).map(([iva, imp]) =>
-      `<tr><td style="padding:8px 16px;color:#5a5d6e">IVA ${iva}% su €${fmt(imp)}</td>
+      `<tr><td style="padding:8px 16px;color:var(--dc-muted)">IVA ${iva}% su €${fmt(imp)}</td>
        <td style="padding:8px 16px;text-align:right;font-family:monospace">€ ${fmt(Math.round(imp * parseInt(iva) / (100 + parseInt(iva))))}</td></tr>`
     ).join('')
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
@@ -313,7 +317,7 @@ async function eseguiChiusura() {
           </svg>
           Cassa
         </button>
-        <div className={styles.headerTitle}>
+        <div className={styles.headerTitle} {...pressione}>
           <span>Storico Scontrini</span>
            {/* 
           <span className={styles.headerSub}>{storico.length} scontrini totali</span>
@@ -321,6 +325,7 @@ async function eseguiChiusura() {
         </div>
       </header>
 
+      {modal}
       <div className={styles.tabs}>
         <button className={`${styles.tab} ${tab === 'scontrini' ? styles.tabActive : ''}`} onClick={() => setTab('scontrini')}>
           🧾 Scontrini ({scontriniFiltrati.length})
@@ -343,7 +348,7 @@ async function eseguiChiusura() {
             <input type="date" value={filtroData}
               onChange={e => setFiltroData(e.target.value)} className={styles.dateInput} />
             <div className={styles.metodoFiltro}>
-              {['tutti','carta','contanti', ...(user?.role === 'owner' ? ['annullati'] : [])].map(m => (
+              {['tutti','carta','contanti', ...(user?.role === 'owner' && sbloccato ? ['annullati'] : [])].map(m => (
                 <button key={m}
                   className={`${styles.metodoBtn} ${filtroMetodo === m ? styles.metodoActive : ''}`}
                   onClick={() => setFiltroMetodo(m)}>
@@ -365,11 +370,11 @@ async function eseguiChiusura() {
             </div>
             <div className={styles.totaleCard}>
               <div className={styles.totaleLabel}>💳 Carte</div>
-              <div className={styles.totaleVal} style={{color:'#6482ff'}}>€ {fmt(totaleCarte)}</div>
+              <div className={styles.totaleVal} style={{color:'var(--dc-blu)'}}>€ {fmt(totaleCarte)}</div>
             </div>
             <div className={styles.totaleCard}>
               <div className={styles.totaleLabel}>💵 Contanti</div>
-              <div className={styles.totaleVal} style={{color:'#ff9f43'}}>€ {fmt(totaleContanti)}</div>
+              <div className={styles.totaleVal} style={{color:'var(--dc-arancio)'}}>€ {fmt(totaleContanti)}</div>
             </div>
             <div className={styles.totaleCard}>
               <div className={styles.totaleLabel}>N° scontrini</div>
@@ -398,7 +403,7 @@ async function eseguiChiusura() {
               <React.Fragment key={s.id}>
                 <div
                   className={`${styles.scontrinoRow} ${selected?.id === s.id ? styles.selected : ''}`}
-                  style={s.annullato ? {borderColor:'#ff4d6a', opacity:0.7, background:'rgba(255,77,106,0.05)'} : {}}
+                  style={s.annullato ? {borderColor:'var(--dc-rosso)', opacity:0.7, background:'rgba(var(--dc-rosso-rgb), 0.05)'} : {}}
                   onClick={() => setSelected(selected?.id === s.id ? null : s)}
                 >
                   <div className={styles.scontrinoLeft}>
@@ -411,7 +416,7 @@ async function eseguiChiusura() {
                       <div style={{marginTop:4, display:'inline-block', fontSize:'0.72rem', fontWeight:700, padding:'2px 8px', borderRadius:6, background:'rgba(255,184,48,0.18)', color:'#ffb830'}}>⚠ DA VERIFICARE</div>
                     )}
                   {s.operatoreNome && (
-                    <div style={{fontSize:'0.9rem', color:'white', marginTop:2}}>👤 {s.operatoreNome}</div>
+                    <div style={{fontSize:'0.9rem', color:'var(--dc-forte)', marginTop:2}}>👤 {s.operatoreNome}</div>
                   )}
                   </div>
                   <div className={styles.scontrinoCenter}>
@@ -442,7 +447,7 @@ async function eseguiChiusura() {
                           <span>€ {fmt(r.totaleRiga)}</span>
                         </div>
                         {r.nota && (
-                          <div style={{fontSize:'0.82rem', color: r.nota.startsWith('+') ? 'yellow' : 'red', paddingLeft:8, marginTop:-4, marginBottom:4}}>
+                          <div style={{fontSize:'0.82rem', color: r.nota.startsWith('+') ? 'var(--dc-giallo)' : 'var(--dc-rosso-vivo)', paddingLeft:8, marginTop:-4, marginBottom:4}}>
                             📝 {r.nota}{r.nota.startsWith('+') && r.importoBase ? ` +€${((r.importo - r.importoBase)/100).toFixed(2).replace('.',',')}` : ''}
                           </div>
                         )}
@@ -483,8 +488,8 @@ async function eseguiChiusura() {
                     Chiusura #{c.numeroChiusura}
                     {c.stato && c.stato !== 'inviata' && (
                       <span style={{marginLeft:8, fontSize:'0.65rem', padding:'2px 8px', borderRadius:6,
-                        background: c.stato === 'non_inviata' ? 'rgba(255,184,48,0.15)' : 'rgba(100,130,255,0.15)',
-                        color: c.stato === 'non_inviata' ? '#ffb830' : '#6482ff'}}>
+                        background: c.stato === 'non_inviata' ? 'rgba(var(--dc-ambra-rgb), 0.15)' : 'rgba(var(--dc-blu-rgb), 0.15)',
+                        color: c.stato === 'non_inviata' ? 'var(--dc-ambra)' : 'var(--dc-blu)'}}>
                         {c.stato === 'non_inviata' ? '⚠ Non inviata RT' : '✎ Manuale'}
                       </span>
                     )}
@@ -495,8 +500,8 @@ async function eseguiChiusura() {
                 <div className={styles.chiusuraCenter}>
                   <div className={styles.chiusuraTotale}>€ {fmt(c.totaleGiornaliero)}</div>
                   <div className={styles.chiusuraSplit}>
-                    <span style={{color:'#6482ff'}}>💳 €{fmt(c.totaleCarte)}</span>
-                    <span style={{color:'#ff9f43'}}>💵 €{fmt(c.totaleContanti)}</span>
+                    <span style={{color:'var(--dc-blu)'}}>💳 €{fmt(c.totaleCarte)}</span>
+                    <span style={{color:'var(--dc-arancio)'}}>💵 €{fmt(c.totaleContanti)}</span>
                   </div>
                 </div>
                 <div style={{display:'flex', alignItems:'center', marginLeft:12}}>
@@ -607,27 +612,27 @@ async function eseguiChiusura() {
 
       {ivaOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#111318', border: '2px solid #00e5a0', borderRadius: 16, padding: 24, maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: 'var(--dc-surface)', border: '2px solid var(--dc-verde)', borderRadius: 16, padding: 24, maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#00e5a0' }}>🧮 IVA mensile sulle vendite</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--dc-verde)' }}>🧮 IVA mensile sulle vendite</div>
               <button onClick={() => setIvaOpen(false)}
-                style={{ background: 'transparent', border: '1px solid #252830', borderRadius: 8, color: '#eef0f6', padding: '6px 12px', cursor: 'pointer' }}>✕</button>
+                style={{ background: 'transparent', border: '1px solid var(--dc-border)', borderRadius: 8, color: 'var(--dc-text)', padding: '6px 12px', cursor: 'pointer' }}>✕</button>
             </div>
             <input type="month" value={ivaMese}
               onChange={e => { if (e.target.value) setIvaMese(e.target.value) }}
               className={styles.dateInput} />
 
-            {ivaLoading && <div style={{ marginTop: 16, color: '#ffb830' }}>⏳ Calcolo in corso…</div>}
-            {ivaErrore && <div style={{ marginTop: 16, color: '#ff4d6a', fontWeight: 700 }}>⚠ {ivaErrore}</div>}
+            {ivaLoading && <div style={{ marginTop: 16, color: 'var(--dc-ambra)' }}>⏳ Calcolo in corso…</div>}
+            {ivaErrore && <div style={{ marginTop: 16, color: 'var(--dc-rosso)', fontWeight: 700 }}>⚠ {ivaErrore}</div>}
 
             {ivaRiep && (
               <div style={{ marginTop: 16 }}>
                 {ivaRiep.righe.length === 0 ? (
-                  <div style={{ color: '#ffffff' }}>Nessuna vendita in questo mese.</div>
+                  <div style={{ color:'var(--dc-forte)' }}>Nessuna vendita in questo mese.</div>
                 ) : (
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'monospace', fontSize: '0.9rem' }}>
                     <thead>
-                      <tr style={{ color: '#ffffff', textAlign: 'right' }}>
+                      <tr style={{ color:'var(--dc-forte)', textAlign: 'right' }}>
                         <th style={{ textAlign: 'left', padding: '6px 4px' }}>Aliquota</th>
                         <th style={{ padding: '6px 4px' }}>Lordo</th>
                         <th style={{ padding: '6px 4px' }}>Imponibile</th>
@@ -636,14 +641,14 @@ async function eseguiChiusura() {
                     </thead>
                     <tbody>
                       {ivaRiep.righe.map(r => (
-                        <tr key={r.aliquota} style={{ color: '#eef0f6', textAlign: 'right', borderTop: '1px solid #252830' }}>
+                        <tr key={r.aliquota} style={{ color: 'var(--dc-text)', textAlign: 'right', borderTop: '1px solid var(--dc-border)' }}>
                           <td style={{ textAlign: 'left', padding: '8px 4px' }}>{r.aliquota}%</td>
                           <td style={{ padding: '8px 4px' }}>€ {fmt(r.lordo)}</td>
                           <td style={{ padding: '8px 4px' }}>€ {fmt(r.imponibile)}</td>
                           <td style={{ padding: '8px 4px' }}>€ {fmt(r.iva)}</td>
                         </tr>
                       ))}
-                      <tr style={{ color: '#00e5a0', textAlign: 'right', fontWeight: 700, borderTop: '2px solid #00e5a0' }}>
+                      <tr style={{ color: 'var(--dc-verde)', textAlign: 'right', fontWeight: 700, borderTop: '2px solid var(--dc-verde)' }}>
                         <td style={{ textAlign: 'left', padding: '8px 4px' }}>TOTALE</td>
                         <td style={{ padding: '8px 4px' }}>€ {fmt(ivaRiep.totaleLordo)}</td>
                         <td style={{ padding: '8px 4px' }}>€ {fmt(ivaRiep.totaleImponibile)}</td>
@@ -653,25 +658,25 @@ async function eseguiChiusura() {
                   </table>
                 )}
 
-                <div style={{ marginTop: 12, fontSize: '0.8rem', color: '#ffffff' }}>
+                <div style={{ marginTop: 12, fontSize: '0.8rem', color:'var(--dc-forte)' }}>
                   {ivaRiep.numero} {ivaRiep.numero === 1 ? 'scontrino conteggiato' : 'scontrini conteggiati'} · {ivaRiep.annullati} {ivaRiep.annullati === 1 ? 'annullato (escluso)' : 'annullati (esclusi)'}
                 </div>
                 {ivaRiep.nonStampati > 0 && (
-                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,77,106,0.12)', border: '1px solid #ff4d6a', color: '#ff4d6a', fontSize: '0.85rem', fontWeight: 700 }}>
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(var(--dc-rosso-rgb), 0.12)', border: '1px solid var(--dc-rosso)', color: 'var(--dc-rosso)', fontSize: '0.85rem', fontWeight: 700 }}>
                     🚫 {ivaRiep.nonStampati} {ivaRiep.nonStampati === 1 ? 'scontrino NON stampato' : 'scontrini NON stampati'} dalla cassa (€ {fmt(ivaRiep.importoNonStampati)}): {ivaRiep.nonStampati === 1 ? 'escluso' : 'esclusi'} dall'IVA.
                   </div>
                 )}
                 {ivaRiep.daVerificare > 0 && (
-                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,184,48,0.12)', border: '1px solid #ffb830', color: '#ffb830', fontSize: '0.85rem', fontWeight: 700 }}>
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(var(--dc-ambra-rgb), 0.12)', border: '1px solid var(--dc-ambra)', color: 'var(--dc-ambra)', fontSize: '0.85rem', fontWeight: 700 }}>
                     ⚠ {ivaRiep.daVerificare} {ivaRiep.daVerificare === 1 ? 'scontrino da verificare: incluso' : 'scontrini da verificare: inclusi'} nell'IVA, {ivaRiep.daVerificare === 1 ? 'controllalo' : 'controllali'} sulla cassa.
                   </div>
                 )}
                 {(ivaRiep.senzaRighe > 0 || ivaRiep.differenza !== 0) && (
-                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(255,184,48,0.12)', border: '1px solid #ffb830', color: '#ffb830', fontSize: '0.85rem', fontWeight: 700 }}>
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(var(--dc-ambra-rgb), 0.12)', border: '1px solid var(--dc-ambra)', color: 'var(--dc-ambra)', fontSize: '0.85rem', fontWeight: 700 }}>
                     ⚠ Controllo di coerenza: {ivaRiep.senzaRighe} {ivaRiep.senzaRighe === 1 ? 'scontrino senza righe' : 'scontrini senza righe'}, differenza tra totali scontrini e righe € {fmt(ivaRiep.differenza)}. I numeri potrebbero non essere completi.
                   </div>
                 )}
-                <div style={{ marginTop: 14, fontSize: '0.75rem', color: '#ffffff', lineHeight: 1.5 }}>
+                <div style={{ marginTop: 14, fontSize: '0.75rem', color:'var(--dc-forte)', lineHeight: 1.5 }}>
                   Dato indicativo calcolato dagli scontrini registrati: IVA sulle vendite, scorporata dal lordo di ogni aliquota. Non è la liquidazione: l'IVA da versare dipende anche da IVA sugli acquisti, credito e acconti (conferma con il commercialista). Il valore ufficiale resta quello del registratore: possibili differenze di pochi centesimi.
                 </div>
               </div>

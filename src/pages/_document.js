@@ -5,6 +5,7 @@ export default function Document() {
     <Html lang="it" translate="no">
       <Head>
         <meta name="google" content="notranslate" />
+        <script dangerouslySetInnerHTML={{ __html: "try{if(localStorage.getItem('dc_tema')==='light'){document.documentElement.setAttribute('data-theme','light')}}catch(e){}" }} />
         
         <meta name="theme-color" content="#00e5a0" />
         <meta name="mobile-web-app-capable" content="yes" />

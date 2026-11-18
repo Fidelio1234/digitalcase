@@ -366,7 +366,7 @@ export default function RepartiPage() {
                 <div>
                   <div className={styles.repartoNome}>{r.nome}</div>
                   <div className={styles.repartoMeta}>
-                    {r.natura_iva ? <span style={{color:'#ffb830'}}>{r.natura_iva}</span> : `IVA ${r.iva}%`} · max €{formatEuro(r.massimoImporto)} · {r.sottoreparti.length} prodotti
+                    {r.natura_iva ? <span style={{color:'var(--dc-ambra)'}}>{r.natura_iva}</span> : `IVA ${r.iva}%`} · max €{formatEuro(r.massimoImporto)} · {r.sottoreparti.length} prodotti
                   </div>
                 </div>
               </div>
@@ -407,7 +407,7 @@ export default function RepartiPage() {
 
                         <div className={styles.srMeta}>
                           €{formatEuro(sr.prezzoFisso)} · {r.natura_iva && (sr.ivaOverride === null || sr.ivaOverride === undefined)
-                            ? <span style={{color:'#ffb830'}}>{r.natura_iva} (eredita)</span>
+                            ? <span style={{color:'var(--dc-ambra)'}}>{r.natura_iva} (eredita)</span>
                             : <>IVA {sr.ivaOverride ?? r.iva}%{sr.ivaOverride !== null && sr.ivaOverride !== undefined ? ' (personalizzata)' : ' (eredita)'}</>}
                         </div>
 
@@ -472,12 +472,12 @@ export default function RepartiPage() {
           {aggiunteRapide.map((a, idx) => (
             <div key={idx} style={{
               display:'flex', alignItems:'center', gap:8,
-              background:'#1a1c24', border:'1px solid #252830', borderRadius:10,
+              background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:10,
               padding:'8px 10px 8px 14px',
             }}>
               <div>
-                <div style={{fontSize:'0.88rem', color:'#eef0f6', fontWeight:600}}>{a.nome}</div>
-                <div style={{fontSize:'0.75rem', color:'#ffb830'}}>€ {(a.costo/100).toFixed(2).replace('.',',')}</div>
+                <div style={{fontSize:'0.88rem', color:'var(--dc-text)', fontWeight:600}}>{a.nome}</div>
+                <div style={{fontSize:'0.75rem', color:'var(--dc-ambra)'}}>€ {(a.costo/100).toFixed(2).replace('.',',')}</div>
               </div>
               <button className={styles.iconBtn} onClick={() => openEditAggiunta(idx)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
@@ -568,7 +568,7 @@ export default function RepartiPage() {
                 <label>
                   Aliquota IVA
                   {modal.tipo === 'sottoreparto' && (
-                    <span style={{marginLeft:8, textTransform:'none', letterSpacing:0, color:'#5a5d6e', fontSize:'0.75rem'}}>
+                    <span style={{marginLeft:8, textTransform:'none', letterSpacing:0, color:'var(--dc-muted)', fontSize:'0.75rem'}}>
                       {form.ivaOverride === null || form.ivaOverride === undefined
                         ? `— eredita ${form._ivaParent}% dal reparto`
                         : '— personalizzata'}
@@ -600,7 +600,7 @@ export default function RepartiPage() {
                   </div>
                 )}
                 {form.natura_iva && modal.tipo === 'reparto' && (
-                  <div style={{fontSize:'0.72rem', color:'#ffb830', marginTop:4}}>
+                  <div style={{fontSize:'0.72rem', color:'var(--dc-ambra)', marginTop:4}}>
                     ⚠ Con natura {form.natura_iva} l'aliquota IVA non viene applicata
                   </div>
                 )}
@@ -702,8 +702,8 @@ export default function RepartiPage() {
                         onClick={() => setForm(f => ({...f, uscita: n}))}
                         style={{
                           flex:1, padding:'8px', borderRadius:8, border:'none', cursor:'pointer',
-                          background: (form.uscita || 1) === n ? '#00e5a0' : '#1a1c24',
-                          color: (form.uscita || 1) === n ? '#08090c' : '#eef0f6',
+                          background: (form.uscita || 1) === n ? 'var(--dc-verde)' : 'var(--dc-surface2)',
+                          color: (form.uscita || 1) === n ? 'var(--dc-bg)' : 'var(--dc-text)',
                           fontSize:'0.82rem', fontWeight: (form.uscita || 1) === n ? 700 : 400,
                         }}>
                         {n}ª uscita
@@ -724,8 +724,8 @@ export default function RepartiPage() {
                         style={{
                           padding:'5px 10px', borderRadius:8, border:'none', cursor:'pointer',
                           fontSize:'0.72rem', fontFamily:"'DM Mono',monospace",
-                          background: (form.natura_iva || '') === n.value ? '#00e5a0' : '#1a1c24',
-                          color: (form.natura_iva || '') === n.value ? '#08090c' : '#eef0f6',
+                          background: (form.natura_iva || '') === n.value ? 'var(--dc-verde)' : 'var(--dc-surface2)',
+                          color: (form.natura_iva || '') === n.value ? 'var(--dc-bg)' : 'var(--dc-text)',
                           fontWeight: (form.natura_iva || '') === n.value ? 700 : 400,
                         }}
                       >
@@ -735,7 +735,7 @@ export default function RepartiPage() {
                     ))}
                   </div>
                   {form.natura_iva && (
-                    <div style={{fontSize:'0.72rem', color:'#5a5d6e', marginTop:4}}>
+                    <div style={{fontSize:'0.72rem', color:'var(--dc-muted)', marginTop:4}}>
                       {NATURA_IVA_OPTIONS.find(n => n.value === form.natura_iva)?.label}
                     </div>
                   )}
@@ -770,23 +770,23 @@ export default function RepartiPage() {
       {/* MODAL CONFERMA ELIMINA */}
       {confirmElimina && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{background:'#111318',border:'2px solid #ff4d6a',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
+          <div style={{background:'var(--dc-surface)',border:'2px solid var(--dc-rosso)',borderRadius:16,padding:28,maxWidth:380,width:'90%'}}>
             <div style={{fontSize:'1.3rem',textAlign:'center',marginBottom:12}}>🗑️</div>
-            <div style={{fontSize:'1rem',fontWeight:700,color:'#ff4d6a',marginBottom:8,textAlign:'center'}}>
+            <div style={{fontSize:'1rem',fontWeight:700,color:'var(--dc-rosso)',marginBottom:8,textAlign:'center'}}>
               {confirmElimina.tipo === 'reparto' ? 'Elimina reparto' : confirmElimina.tipo === 'aggiunta' ? 'Elimina aggiunta' : 'Elimina prodotto'}
             </div>
-            <div style={{fontSize:'0.85rem',color:'#5a5d6e',marginBottom:20,textAlign:'center'}}>
-              Stai per eliminare <strong style={{color:'#eef0f6'}}>{confirmElimina.nome}</strong>
-              {confirmElimina.tipo === 'reparto' && <><br/><span style={{color:'#ff4d6a'}}>e tutti i suoi prodotti</span></>}.
+            <div style={{fontSize:'0.85rem',color:'var(--dc-muted)',marginBottom:20,textAlign:'center'}}>
+              Stai per eliminare <strong style={{color:'var(--dc-text)'}}>{confirmElimina.nome}</strong>
+              {confirmElimina.tipo === 'reparto' && <><br/><span style={{color:'var(--dc-rosso)'}}>e tutti i suoi prodotti</span></>}.
               <br/>Questa operazione non può essere annullata.
             </div>
             <div style={{display:'flex',gap:12}}>
               <button onClick={() => setConfirmElimina(null)}
-                style={{flex:1,padding:'12px',borderRadius:10,border:'1px solid #252830',background:'transparent',color:'#eef0f6',cursor:'pointer'}}>
+                style={{flex:1,padding:'12px',borderRadius:10,border:'1px solid var(--dc-border)',background:'transparent',color:'var(--dc-text)',cursor:'pointer'}}>
                 Annulla
               </button>
               <button onClick={confermaEliminaAction}
-                style={{flex:1,padding:'12px',borderRadius:10,border:'none',background:'#ff4d6a',color:'white',cursor:'pointer',fontWeight:700}}>
+                style={{flex:1,padding:'12px',borderRadius:10,border:'none',background:'var(--dc-rosso)',color:'white',cursor:'pointer',fontWeight:700}}>
                 Sì, elimina
               </button>
             </div>

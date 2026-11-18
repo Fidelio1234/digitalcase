@@ -1,7 +1,29 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/context/AuthContext'
 import styles from '@/styles/Negozio.module.css'
+import { applicaTema, temaAttuale } from '@/lib/tema'
+
+function InterruttoreTema() {
+  const [chiaro, setChiaro] = useState(false)
+  useEffect(() => { setChiaro(temaAttuale() === 'light') }, [])
+  function cambia(e) {
+    const v = e.target.checked
+    setChiaro(v)
+    applicaTema(v ? 'light' : 'dark')
+  }
+  return (
+    <label style={{ display:'flex', alignItems:'center', gap:14, marginTop:14, padding:'16px 18px', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:12, cursor:'pointer', color:'var(--dc-text)', fontFamily:"'DM Mono',monospace" }}>
+      <span style={{ fontSize:'1.4rem' }}>🌓</span>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize:'0.95rem' }}>Tema chiaro</div>
+        <div style={{ fontSize:'0.75rem', color:'var(--dc-muted)' }}>Vale solo per questo dispositivo</div>
+      </div>
+      <input type="checkbox" checked={chiaro} onChange={cambia} style={{ width:24, height:24, accentColor:'var(--dc-verde)' }} />
+    </label>
+  )
+}
+
 
 export default function ConfigurazioneIndex() {
   const { user, loading } = useAuth()
@@ -56,6 +78,8 @@ export default function ConfigurazioneIndex() {
           </button>
 
         </div>
+
+        <InterruttoreTema />
       </div>
     </div>
   )

@@ -111,7 +111,7 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
     }))
   }
 
-  if (loading) return <div style={{color:'#5a5d6e', padding:16}}>Caricamento...</div>
+  if (loading) return <div style={{color:'var(--dc-muted)', padding:16}}>Caricamento...</div>
 
   return (
     <div style={{display:'flex', flexDirection:'column', gap:16}}>
@@ -119,11 +119,11 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
       {/* Config base */}
       <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
         <div>
-          <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>MARCA RT</label>
+          <label style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, display:'block', marginBottom:4}}>MARCA RT</label>
           <select
             value={config.marca}
             onChange={e => setConfig(c => ({...c, marca: e.target.value}))}
-            style={{width:'100%', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem'}}
+            style={{width:'100%', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'var(--dc-text)', fontSize:'0.85rem'}}
           >
             <option value="ditron">Ditron</option>
             <option value="rch">RCH Print!F/RT</option>
@@ -132,15 +132,15 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
         </div>
         {config.marca === '3i' && (
           <div>
-            <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>MODALITÀ</label>
+            <label style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, display:'block', marginBottom:4}}>MODALITÀ</label>
             <div style={{display:'flex', gap:8}}>
               {['MF','RT'].map(m => (
                 <button key={m} type="button"
                   onClick={() => setConfig(c => ({...c, modalita: m}))}
                   style={{
                     flex:1, padding:'8px', borderRadius:8, border:'none', cursor:'pointer',
-                    background: (config.modalita || 'MF') === m ? '#00e5a0' : '#1a1c24',
-                    color: (config.modalita || 'MF') === m ? '#08090c' : '#eef0f6',
+                    background: (config.modalita || 'MF') === m ? 'var(--dc-verde)' : 'var(--dc-surface2)',
+                    color: (config.modalita || 'MF') === m ? 'var(--dc-bg)' : 'var(--dc-text)',
                     fontSize:'0.82rem', fontWeight: (config.modalita || 'MF') === m ? 700 : 400,
                   }}>
                   {m}
@@ -151,12 +151,12 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
         )}
 
         <div style={{display:'flex', alignItems:'center', gap:8, paddingTop:20}}>
-          <label style={{fontSize:'0.82rem', color:'#5a5d6e'}}>RT Attivo</label>
+          <label style={{fontSize:'0.82rem', color:'var(--dc-muted)'}}>RT Attivo</label>
           <div
             onClick={() => setConfig(c => ({...c, attivo: !c.attivo}))}
             style={{
               width:44, height:24, borderRadius:12, cursor:'pointer',
-              background: config.attivo ? '#00e5a0' : '#252830',
+              background: config.attivo ? 'var(--dc-verde)' : 'var(--dc-border)',
               position:'relative', transition:'background 0.2s'
             }}
           >
@@ -171,29 +171,29 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
 
 
         <div>
-          <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>IP CASSA</label>
+          <label style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, display:'block', marginBottom:4}}>IP CASSA</label>
           <input
             type="text"
             value={config.ip}
             onChange={e => setConfig(c => ({...c, ip: e.target.value}))}
             placeholder="es. 192.168.1.100"
-            style={{width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
+            style={{width:'100%', boxSizing:'border-box', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'var(--dc-text)', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
           />
         </div>
 
         <div>
-          <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>PORTA</label>
+          <label style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, display:'block', marginBottom:4}}>PORTA</label>
           <input
             type="text"
             value={config.porta}
             onChange={e => setConfig(c => ({...c, porta: e.target.value}))}
             placeholder="es. 7081"
-            style={{width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
+            style={{width:'100%', boxSizing:'border-box', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'var(--dc-text)', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
           />
         </div>
 
         <div style={{gridColumn:'1/-1'}}>
-          <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>
+          <label style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, display:'block', marginBottom:4}}>
             IP DEL PC CASSA (per usare il sito da altri dispositivi sulla stessa rete)
           </label>
           <input
@@ -201,7 +201,7 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
             value={config.serviceIp || ''}
             onChange={e => setConfig(c => ({...c, serviceIp: e.target.value}))}
             placeholder="es. 192.168.1.50 — lascia vuoto se usi solo questo PC"
-            style={{width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
+            style={{width:'100%', boxSizing:'border-box', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'var(--dc-text)', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
           />
         </div>
 
@@ -209,24 +209,24 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
 
 
         <div>
-          <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>PORTA</label>
+          <label style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, display:'block', marginBottom:4}}>PORTA</label>
           <input
             type="text"
             value={config.porta}
             onChange={e => setConfig(c => ({...c, porta: e.target.value}))}
             placeholder="es. 7081"
-            style={{width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#eef0f6', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
+            style={{width:'100%', boxSizing:'border-box', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'var(--dc-text)', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace"}}
           />
         </div>
 
         <div style={{gridColumn:'1/-1'}}>
-          <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>MATRICOLA RT</label>
+          <label style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, display:'block', marginBottom:4}}>MATRICOLA RT</label>
           <input
             type="text"
             value={config.matricola}
             onChange={e => setConfig(c => ({...c, matricola: e.target.value.toUpperCase()}))}
             placeholder="es. 2CIDE018691"
-            style={{width:'100%', boxSizing:'border-box', background:'#111318', border:'1px solid #252830', borderRadius:8, padding:'8px 12px', color:'#ffb830', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace", letterSpacing:2}}
+            style={{width:'100%', boxSizing:'border-box', background:'var(--dc-surface)', border:'1px solid var(--dc-border)', borderRadius:8, padding:'8px 12px', color:'var(--dc-ambra)', fontSize:'0.85rem', fontFamily:"'DM Mono',monospace", letterSpacing:2}}
           />
         </div>
       </div>
@@ -238,25 +238,25 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
           disabled={testando || !config.ip}
           style={{
             padding:'8px 20px', borderRadius:10, border:'none', cursor:'pointer',
-            background: testando ? '#1a1c24' : '#252830',
-            color: testando ? '#5a5d6e' : '#eef0f6',
+            background: testando ? 'var(--dc-surface2)' : 'var(--dc-border)',
+            color: testando ? 'var(--dc-muted)' : 'var(--dc-text)',
             fontSize:'0.82rem', fontFamily:"'DM Mono',monospace"
           }}
         >
           {testando ? '⏳ Test in corso...' : '🔌 Test connessione'}
         </button>
         {statoConnessione === 'ok' && (
-          <span style={{color:'#00e5a0', fontSize:'0.82rem'}}>✓ Cassa connessa</span>
+          <span style={{color:'var(--dc-verde)', fontSize:'0.82rem'}}>✓ Cassa connessa</span>
         )}
         {statoConnessione === 'errore' && (
-          <span style={{color:'#ff4d6a', fontSize:'0.82rem'}}>✗ Non raggiungibile</span>
+          <span style={{color:'var(--dc-rosso)', fontSize:'0.82rem'}}>✗ Non raggiungibile</span>
         )}
       </div>
 
       {/* Mappatura reparti */}
       {reparti?.length > 0 && (
         <div>
-          <div style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, marginBottom:8}}>
+          <div style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, marginBottom:8}}>
             MAPPATURA REPARTI APP → CASSA
           </div>
           <div style={{display:'flex', flexDirection:'column', gap:6}}>
@@ -264,31 +264,31 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
               <div key={r.id} style={{
                 display:'grid', gridTemplateColumns:'1fr 80px 100px',
                 gap:8, alignItems:'center',
-                padding:'8px 12px', background:'#111318',
+                padding:'8px 12px', background:'var(--dc-surface)',
                 borderRadius:8, border:`1px solid ${r.colore}33`
               }}>
                 <div style={{display:'flex', alignItems:'center', gap:8}}>
                   <div style={{width:8, height:8, borderRadius:'50%', background:r.colore, flexShrink:0}} />
                   <span style={{fontSize:'0.82rem'}}>{r.nome}</span>
-                  <span style={{fontSize:'0.7rem', color:'#5a5d6e'}}>IVA {r.iva}%{r.natura_iva ? ' · ' + r.natura_iva : ''}</span>
+                  <span style={{fontSize:'0.7rem', color:'var(--dc-muted)'}}>IVA {r.iva}%{r.natura_iva ? ' · ' + r.natura_iva : ''}</span>
                 </div>
                 <div>
-                  <label style={{fontSize:'0.65rem', color:'#5a5d6e', display:'block', marginBottom:2}}>N° REP. RT</label>
+                  <label style={{fontSize:'0.65rem', color:'var(--dc-muted)', display:'block', marginBottom:2}}>N° REP. RT</label>
                   <input
                     type="number"
                     min="1" max="16"
                     value={mappatura[r.id]?.numeroRt || ''}
                     onChange={e => setMapp(r.id, 'numeroRt', parseInt(e.target.value))}
                     placeholder="1"
-                    style={{width:'100%', boxSizing:'border-box', background:'#1a1c24', border:'1px solid #252830', borderRadius:6, padding:'4px 8px', color:'#ffb830', fontSize:'0.82rem', textAlign:'center', fontFamily:"'DM Mono',monospace"}}
+                    style={{width:'100%', boxSizing:'border-box', background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:6, padding:'4px 8px', color:'var(--dc-ambra)', fontSize:'0.82rem', textAlign:'center', fontFamily:"'DM Mono',monospace"}}
                   />
                 </div>
                 <div>
-                  <label style={{fontSize:'0.65rem', color:'#5a5d6e', display:'block', marginBottom:2}}>IVA CASSA</label>
+                  <label style={{fontSize:'0.65rem', color:'var(--dc-muted)', display:'block', marginBottom:2}}>IVA CASSA</label>
                   <select
                     value={mappatura[r.id]?.ivaIndice || ''}
                     onChange={e => setMapp(r.id, 'ivaIndice', parseInt(e.target.value))}
-                    style={{width:'100%', background:'#1a1c24', border:'1px solid #252830', borderRadius:6, padding:'4px 6px', color:'#eef0f6', fontSize:'0.75rem'}}
+                    style={{width:'100%', background:'var(--dc-surface2)', border:'1px solid var(--dc-border)', borderRadius:6, padding:'4px 6px', color:'var(--dc-text)', fontSize:'0.75rem'}}
                   >
                     <option value="">Scegli</option>
                     {IVA_DITRON_DEFAULT.map(iv => (
@@ -298,15 +298,15 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
                 </div>
         {config.marca === '3i' && (
           <div>
-            <label style={{fontSize:'0.72rem', color:'#5a5d6e', letterSpacing:1, display:'block', marginBottom:4}}>MODALITÀ</label>
+            <label style={{fontSize:'0.72rem', color:'var(--dc-muted)', letterSpacing:1, display:'block', marginBottom:4}}>MODALITÀ</label>
             <div style={{display:'flex', gap:8}}>
               {['MF','RT'].map(m => (
                 <button key={m} type="button"
                   onClick={() => setConfig(c => ({...c, modalita: m}))}
                   style={{
                     flex:1, padding:'8px', borderRadius:8, border:'none', cursor:'pointer',
-                    background: (config.modalita || 'MF') === m ? '#00e5a0' : '#1a1c24',
-                    color: (config.modalita || 'MF') === m ? '#08090c' : '#eef0f6',
+                    background: (config.modalita || 'MF') === m ? 'var(--dc-verde)' : 'var(--dc-surface2)',
+                    color: (config.modalita || 'MF') === m ? 'var(--dc-bg)' : 'var(--dc-text)',
                     fontSize:'0.82rem', fontWeight: (config.modalita || 'MF') === m ? 700 : 400,
                   }}>
                   {m}
@@ -326,7 +326,7 @@ export default function ImpostazioniRT({ reparti, onSave, showToast }) {
         onClick={salvaConfig}
         style={{
           padding:'10px 24px', borderRadius:12, border:'none', cursor:'pointer',
-          background:'#00e5a0', color:'#08090c',
+          background:'var(--dc-verde)', color:'var(--dc-bg)',
           fontSize:'0.85rem', fontWeight:700, letterSpacing:0.5
         }}
       >
