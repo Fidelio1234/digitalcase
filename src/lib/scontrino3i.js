@@ -72,7 +72,7 @@ async function leggi(chiediNumeri) {
 // Oltre questa soglia la cassa non sa rispondere a 84F (firmware precedente alla 4.1:
 // risponde ERRORE XON/XOFF 12). Si smette di chiedere: niente falsi allarmi e niente
 // errore sul display della cassa a ogni scontrino. Una lettura riuscita riazzera tutto.
-const SILENZI_PER_RINUNCIA = 6
+const SILENZI_PER_RINUNCIA = 3
 export function verificaDisponibile() { return S.silenzi < SILENZI_PER_RINUNCIA }
 
 // Legge il numero scontrino attuale (da fare all'apertura della cassa).

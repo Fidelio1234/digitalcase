@@ -348,8 +348,17 @@ export default function CassaPage() {
   // ── 3i: verifica che la cassa emetta davvero gli scontrini (comando 84F) ───
   const chiediNumeri3i = useCallback(async () => {
     const r = await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: '84F' } }, rtConfig.serviceIp)
+    const risposta = r?.risposta
+    // I firmware precedenti alla 4.1 non conoscono 84F: rispondono XOFF e lasciano
+    // "ERRORE XON/XOFF 12" sul display finche' non arriva un Clear (manuale 3i, par. 3).
+    if (!r?.ok || typeof risposta !== 'string' || !risposta.includes('@@')) {
+      try {
+        callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: 'K' } }, rtConfig.serviceIp)
+          .catch(() => {})
+      } catch (e) {}
+    }
     if (!r?.ok) throw new Error(r?.error || 'Cassa non raggiungibile')
-    return r.risposta
+    return risposta
   }, [rtConfig])
 
   // Legge una volta il numero scontrino della cassa appena la cassa e' pronta.
