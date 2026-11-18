@@ -75,17 +75,42 @@ async function leggi(chiediNumeri) {
 const SILENZI_PER_RINUNCIA = 3
 export function verificaDisponibile() { return S.silenzi < SILENZI_PER_RINUNCIA }
 
+// Su questo dispositivo quella cassa non conosce 84F: lo si ricorda, altrimenti a ogni
+// ricaricamento della pagina si riprova e la cassa mostra di nuovo l'errore sul display.
+// Si riprova comunque dopo 30 giorni, cosi' un aggiornamento del firmware viene scoperto.
+const GIORNI_MEMORIA = 30
+const chiaveMemoria = ip => 'dc_84f_assente_' + (ip || 'cassa')
+
+export function rinunciaRicordata(ip) {
+  try {
+    const quando = parseInt(localStorage.getItem(chiaveMemoria(ip)) || '', 10)
+    if (!quando) return false
+    return Date.now() - quando <= GIORNI_MEMORIA * 24 * 60 * 60 * 1000
+  } catch { return false }
+}
+
+function ricordaRinuncia(ip) {
+  try { localStorage.setItem(chiaveMemoria(ip), String(Date.now())) } catch {}
+}
+
+function dimenticaRinuncia(ip) {
+  try { localStorage.removeItem(chiaveMemoria(ip)) } catch {}
+}
+
 // Legge il numero scontrino attuale (da fare all'apertura della cassa).
-export function sincronizzaBase(chiediNumeri, { tentativi = 3, intervallo = 2000 } = {}) {
+export function sincronizzaBase(chiediNumeri, { tentativi = 3, intervallo = 2000, ip = null } = {}) {
   const p = S.coda.then(async () => {
     if (S.inVolo > 0) return S.base
+    // Gia' sappiamo che questa cassa non risponde a 84F: non la disturbiamo.
+    if (rinunciaRicordata(ip)) { S.silenzi = SILENZI_PER_RINUNCIA; return null }
     S.silenzi = 0 // nuovo tentativo: si riparte da zero
     for (let i = 0; i < tentativi; i++) {
       const n = await leggi(chiediNumeri)
       
-      if (n) { S.base = n; S.ultimoTarget = n.scontrino; S.deficit = 0; return n }
+      if (n) { dimenticaRinuncia(ip); S.base = n; S.ultimoTarget = n.scontrino; S.deficit = 0; return n }
       if (i < tentativi - 1) await pausa(intervallo)
     }
+    ricordaRinuncia(ip) // nessuna risposta: da qui in avanti si lascia stare
     return null
   })
   S.coda = p.catch(() => {})

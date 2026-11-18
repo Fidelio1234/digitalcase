@@ -363,7 +363,7 @@ export default function CassaPage() {
 
   // Legge una volta il numero scontrino della cassa appena la cassa e' pronta.
   useEffect(() => {
-    if (rtConfig?.attivo && rtConfig?.ip && rtConfig.marca === '3i') sincronizzaBase(chiediNumeri3i)
+    if (rtConfig?.attivo && rtConfig?.ip && rtConfig.marca === '3i') sincronizzaBase(chiediNumeri3i, { ip: rtConfig.ip })
   }, [rtConfig, chiediNumeri3i])
 
   // Segna l'esito della stampa: se lo scontrino e' ancora in coda locale (non salvato) l'esito viene annotato in coda
