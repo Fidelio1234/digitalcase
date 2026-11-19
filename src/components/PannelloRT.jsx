@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { parse88F, eseguiChiusuraVerificata, ESITI, chiusuraEseguita, chiusuraDaConfermare } from '@/lib/chiusura3i'
+import { ponteDisponibile, inviaConPonte } from '@/lib/pontert'
 
 // RCH / Ditron: il programma non puo' rileggere lo stato della cassa come fa con la 3i,
 // quindi puo' solo controllare che il comando sia stato accettato.
@@ -23,6 +24,8 @@ function esitoChiusuraGenerica(res) {
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
 async function callRT(marca, body) {
+  // Dentro l'app Android si passa dal canale nativo invece che dal servizio sul PC.
+  if (ponteDisponibile()) return inviaConPonte({ marca, ...body })
   const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   if (isLocalhost) {
     const endpoint = marca === 'rch' ? '/api/rch' : '/api/ditron'
