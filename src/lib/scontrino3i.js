@@ -75,6 +75,24 @@ async function leggi(chiediNumeri) {
 const SILENZI_PER_RINUNCIA = 3
 export function verificaDisponibile() { return S.silenzi < SILENZI_PER_RINUNCIA }
 
+// Spegne la verifica per questa sessione, senza mandare un solo comando alla cassa.
+export function escludiVerifica() { S.silenzi = SILENZI_PER_RINUNCIA }
+
+// La "Versione DB" che la cassa restituisce nel secondo campo di 88F, p.es.
+// "ITACACM3 V1.7 08/04/20" (manuale 3i, par. 4.1.2). Il comando 84F esiste solo
+// a partire dalla versione 4.1 (par. 4.1.3): sotto quella soglia chiederlo lascia
+// "ERRORE XON/XOFF 12" sul display della cassa.
+// Ritorna true, false, oppure null se la versione non e' leggibile (allora si prova).
+export function versioneSupporta84F(versioneDb) {
+  if (typeof versioneDb !== 'string') return null
+  const m = versioneDb.match(/V\s*(\d+)\.(\d+)/i)
+  if (!m) return null
+  const maggiore = parseInt(m[1], 10)
+  const minore = parseInt(m[2], 10)
+  if (maggiore !== 4) return maggiore > 4
+  return minore >= 1
+}
+
 // Su questo dispositivo quella cassa non conosce 84F: lo si ricorda, altrimenti a ogni
 // ricaricamento della pagina si riprova e la cassa mostra di nuovo l'errore sul display.
 // Si riprova comunque dopo 30 giorni, cosi' un aggiornamento del firmware viene scoperto.

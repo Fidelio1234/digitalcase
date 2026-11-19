@@ -16,7 +16,8 @@ import { useCassa, euroInCentesimi } from '@/hooks/useCassa'
 import styles from '@/styles/Cassa.module.css'
 import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini } from '@/lib/storage'
 import { aggiornaStatoRtScontrinoDb } from '@/lib/supabase-db'
-import { sincronizzaBase, verificaScontrino, registraInvio, annullaInvio, segnalaProblemaStampa, EVENTO_RIFAI_SCONTRINO, CHIAVE_DA_RIFARE } from '@/lib/scontrino3i'
+import { sincronizzaBase, verificaScontrino, registraInvio, annullaInvio, segnalaProblemaStampa, EVENTO_RIFAI_SCONTRINO, CHIAVE_DA_RIFARE, versioneSupporta84F, escludiVerifica } from '@/lib/scontrino3i'
+import { parse88F } from '@/lib/chiusura3i'
 import Head from 'next/head'
 
 
@@ -361,10 +362,30 @@ export default function CassaPage() {
     return risposta
   }, [rtConfig])
 
-  // Legge una volta il numero scontrino della cassa appena la cassa e' pronta.
+  // Versione dichiarata dalla cassa. Il comando 88F lo conoscono tutte le casse dalla 1.7
+  // e non lascia errori sul display: si puo' chiedere senza rischi a ogni avvio.
+  const chiediVersione3i = useCallback(async () => {
+    const r = await callRT('3i', { ip: rtConfig.ip, porta: rtConfig.porta || 9600, azione: 'raw', dati: { cmd: '88F' } }, rtConfig.serviceIp)
+    if (!r?.ok) throw new Error(r?.error || 'Cassa non raggiungibile')
+    return parse88F(r.risposta)
+  }, [rtConfig])
+
+  // All'accensione si chiede alla cassa chi e', e solo dalla versione 4.1 in su le si manda
+  // 84F. Sulle casse piu' vecchie 84F non esiste: prima si tentava lo stesso, e l'operatore
+  // vedeva tre volte "ERRORE XON/XOFF 12" lampeggiare sul display.
   useEffect(() => {
-    if (rtConfig?.attivo && rtConfig?.ip && rtConfig.marca === '3i') sincronizzaBase(chiediNumeri3i, { ip: rtConfig.ip })
-  }, [rtConfig, chiediNumeri3i])
+    if (!(rtConfig?.attivo && rtConfig?.ip && rtConfig.marca === '3i')) return
+    let annullato = false
+    chiediVersione3i()
+      .then(stato => {
+        if (annullato) return
+        if (stato?.versione) console.log('Cassa 3i:', stato.matricola, '-', stato.versione)
+        if (versioneSupporta84F(stato?.versione) === false) { escludiVerifica(); return }
+        sincronizzaBase(chiediNumeri3i, { ip: rtConfig.ip })
+      })
+      .catch(() => { if (!annullato) escludiVerifica() })
+    return () => { annullato = true }
+  }, [rtConfig, chiediNumeri3i, chiediVersione3i])
 
   // Segna l'esito della stampa: se lo scontrino e' ancora in coda locale (non salvato) l'esito viene annotato in coda
   // e applicato al salvataggio; altrimenti aggiorna subito il database.
