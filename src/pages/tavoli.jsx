@@ -123,6 +123,21 @@ const [selezione, setSelezione] = useState({}) // { idRiga: quantità da pagare 
     )
   }, [NEGOZIO_ID])
 
+  // ── solo i tavoli, per il ciclo di aggiornamento ────────────────────────
+  // Durante il servizio cambiano solo i tavoli: impostazioni e reparti si leggono
+  // all'apertura della pagina. Prima il ciclo rileggeva tutte e tre le cose ogni
+  // 3 secondi, cioe' 60 richieste al minuto invece di 20.
+  const numeroTavoli = impostazioni.numeroTavoli
+  const caricaTavoli = useCallback(async () => {
+    if (!NEGOZIO_ID) return
+    const t = await getTavoliDb(NEGOZIO_ID)
+    const tavMap = Object.fromEntries(t.map(x => [x.numero, x]))
+    setTavoli(Array.from({ length: numeroTavoli }, (_, i) => {
+      const n = i + 1
+      return tavMap[n] || { id: null, numero: n, stato: 'libero', coperti: 0, righe: [], ultimoOrdine: null, apertoAlle: null }
+    }))
+  }, [NEGOZIO_ID, numeroTavoli])
+
   // ── caricamento iniziale ─────────────────────────────────────────────────
   useEffect(() => {
     if (!user && !loading) { router.replace('/login'); return }
@@ -135,12 +150,21 @@ const [selezione, setSelezione] = useState({}) // { idRiga: quantità da pagare 
     return () => clearInterval(interval)
   }, [])
 
-  // ── polling ogni 3 secondi — solo nella vista griglia ───────────────────
+  // ── aggiornamento ogni 3 secondi — solo nella vista griglia ─────────────
+  // A pagina nascosta (altra scheda, schermo spento) non si chiede nulla: nessuno
+  // sta guardando. Appena si torna sulla pagina si rilegge subito, cosi' lo stato
+  // dei tavoli e' aggiornato gia' al primo sguardo.
   useEffect(() => {
     if (vista !== 'griglia') return
-    const interval = setInterval(carica, 3000)
-    return () => clearInterval(interval)
-  }, [vista, carica])
+    const nascosta = () => typeof document !== 'undefined' && document.hidden
+    const interval = setInterval(() => { if (!nascosta()) caricaTavoli() }, 3000)
+    const alRitorno = () => { if (!nascosta()) caricaTavoli() }
+    document.addEventListener('visibilitychange', alRitorno)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', alRitorno)
+    }
+  }, [vista, caricaTavoli])
 
 
   const inviandoRef = useRef(false)
