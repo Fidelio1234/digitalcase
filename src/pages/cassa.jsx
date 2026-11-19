@@ -18,11 +18,15 @@ import { incrementaScontrino, incrementaChiusura, getContatori, resetScontrini }
 import { aggiornaStatoRtScontrinoDb } from '@/lib/supabase-db'
 import { sincronizzaBase, verificaScontrino, registraInvio, annullaInvio, segnalaProblemaStampa, EVENTO_RIFAI_SCONTRINO, CHIAVE_DA_RIFARE, versioneSupporta84F, escludiVerifica } from '@/lib/scontrino3i'
 import { parse88F } from '@/lib/chiusura3i'
+import { ponteDisponibile, inviaConPonte } from '@/lib/pontert'
 import Head from 'next/head'
 
 
 // Helper: chiama il registratore via service locale (produzione) o API (sviluppo)
 async function callRT(marca, body, serviceIp) {
+  // Dentro l'app Android non esiste il servizio sulla 3002: si passa dal canale
+  // nativo dell'app, che parla direttamente con la cassa.
+  if (ponteDisponibile()) return inviaConPonte({ marca, ...body })
   const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   console.log('callRT:', marca, 'isLocalhost:', isLocalhost, 'porta:', body.porta)
   if (isLocalhost) {

@@ -30,6 +30,7 @@ import kotlin.concurrent.thread
 class MainActivity : AppCompatActivity() {
 
     private lateinit var web: WebView
+    private var tastoIndietro: OnBackPressedCallback? = null
     private val memoria by lazy { getSharedPreferences("digitalcase", Context.MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +44,11 @@ class MainActivity : AppCompatActivity() {
     // ─────────────────────── prima apertura: quale negozio ───────────────────────
 
     private fun mostraConfigurazione(errore: String?) {
+        // Si lascia la pagina corrente e il tasto indietro torna al comportamento normale.
+        tastoIndietro?.isEnabled = false
+        if (::web.isInitialized) {
+            runCatching { web.stopLoading(); web.loadUrl("about:blank") }
+        }
         val d = resources.displayMetrics.density
         fun dp(v: Int) = (v * d).toInt()
 
@@ -136,21 +142,27 @@ class MainActivity : AppCompatActivity() {
 
         // Il tasto indietro naviga dentro il programma; a fondo cronologia chiede conferma,
         // perche' una cassa non deve chiudersi per uno sfioramento.
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (web.canGoBack()) web.goBack() else chiediUscita()
+        if (tastoIndietro == null) {
+            tastoIndietro = object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (web.canGoBack()) web.goBack() else menuUscita()
+                }
             }
-        })
+            onBackPressedDispatcher.addCallback(this, tastoIndietro!!)
+        } else {
+            tastoIndietro?.isEnabled = true
+        }
 
         setContentView(web)
         web.loadUrl(indirizzo)
     }
 
-    private fun chiediUscita() {
+    private fun menuUscita() {
         AlertDialog.Builder(this)
-            .setTitle("Chiudere DigitalCase?")
-            .setMessage("Il programma verra' chiuso.")
-            .setNegativeButton("No", null)
+            .setTitle("DigitalCase")
+            .setMessage("Cosa vuoi fare?")
+            .setNeutralButton("Cambia negozio") { _, _ -> mostraConfigurazione(null) }
+            .setNegativeButton("Resta qui", null)
             .setPositiveButton("Chiudi") { _, _ -> finish() }
             .show()
     }
