@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import { parse88F, eseguiChiusuraVerificata, ESITI, chiusuraEseguita } from '@/lib/chiusura3i'
+import { parse88F, eseguiChiusuraVerificata, ESITI, chiusuraEseguita, chiusuraDaConfermare } from '@/lib/chiusura3i'
 
 // RCH / Ditron: il programma non puo' rileggere lo stato della cassa come fa con la 3i,
 // quindi puo' solo controllare che il comando sia stato accettato.
@@ -213,6 +213,41 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
     setEsitoChiusura(r)
   }
 
+  // Stato della cassa 3i (comando 88F). Lancia se la cassa non e' raggiungibile.
+  async function leggiStato3i() {
+    const r = await callRT(rtConfig.marca, {
+      ip: rtConfig.ip, porta: rtConfig.porta, marca: rtConfig.marca,
+      modalita: rtConfig.modalita || 'MF', azione: 'raw', dati: { cmd: '88F' },
+    })
+    if (!r?.ok) throw new Error(r?.error || 'Cassa non raggiungibile')
+    return parse88F(r.risposta)
+  }
+
+  // L'operatore ha guardato la carta e dice che la chiusura e' uscita. Non ci si fida sulla parola:
+  // si rilegge la cassa, che adesso ha finito di stampare, e si confronta il numero di azzeramento.
+  async function confermaChiusuraUscita() {
+    const atteso = esitoChiusura
+    setLoading(true)
+    try {
+      const s = await leggiStato3i()
+      if (!s) {
+        setEsitoChiusura({ ...atteso, dettaglio: "La cassa non risponde ancora. Aspetta un minuto e riprova: NON rifare la chiusura." })
+        return
+      }
+      if (atteso?.azzeramentoPrima != null && s.azzeramento === atteso.azzeramentoPrima) {
+        setEsitoChiusura({ esito: 'non_eseguita', dettaglio: "La cassa dice che l'ultima chiusura e' ancora la n° " + String(atteso.azzeramentoPrima).padStart(4, '0') + ": la chiusura non e' stata fatta, puoi rifarla." })
+        return
+      }
+      const stato = s.pending === 0 ? 'inviata' : 'non_inviata'
+      await salvaChiusura(stato, s.azzeramento)
+      setEsitoChiusura({ esito: stato, azzeramentoPrima: atteso?.azzeramentoPrima, azzeramentoDopo: s.azzeramento, pendingDopo: s.pending })
+    } catch (e) {
+      setEsitoChiusura({ ...atteso, dettaglio: 'Chiusura NON salvata nello storico del programma: ' + e.message + ". Non rifare la chiusura: avvisa l'assistenza (339 119 9015) e segna i totali del giorno." })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Chiusura 3i con verifica reale: legge la cassa prima, manda la Z,
   // controlla che la cassa abbia chiuso e che abbia inviato all'Agenzia.
   async function chiusura3iVerificata(tipo) {
@@ -225,11 +260,7 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
     setChiusuraFase('lettura')
 
     const parametri = { ip: rtConfig.ip, porta: rtConfig.porta, marca: rtConfig.marca, modalita: rtConfig.modalita || 'MF' }
-    const chiediStato = async () => {
-      const r = await callRT(rtConfig.marca, { ...parametri, azione: 'raw', dati: { cmd: '88F' } })
-      if (!r?.ok) throw new Error(r?.error || 'Cassa non raggiungibile')
-      return parse88F(r.risposta)
-    }
+    const chiediStato = leggiStato3i
     const inviaChiusura = async () => {
       try { return await callRT(rtConfig.marca, { ...parametri, azione: 'chiusura_fiscale', dati: { tipo } }) }
       catch (e) { return { ok: false, error: e.message } }
@@ -609,10 +640,25 @@ export default function PannelloRT({ rtConfig, mappatura, scontrino, onStampa, o
                       {servizioOff ? 'Il servizio locale DigitalCase non risponde su questo PC: controlla che sia acceso.' : dettaglio}
                     </div>
                   )}
+                  {chiusuraDaConfermare(esitoChiusura.esito) ? (
+                    <div style={{ marginTop:8, display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
+                      <button onClick={confermaChiusuraUscita} disabled={loading} style={{
+                        padding:'12px 24px', borderRadius:12, border:'none',
+                        background:'#00e5a0', color:'#08090c', fontWeight:700, fontSize:'1rem',
+                        cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.6 : 1,
+                      }}>{loading ? 'Controllo la cassa...' : "La chiusura e' uscita"}</button>
+                      <button onClick={() => setEsitoChiusura(null)} disabled={loading} style={{
+                        padding:'12px 24px', borderRadius:12, border:'2px solid #6b6f7d',
+                        background:'transparent', color:'#eef0f6', fontWeight:700, fontSize:'1rem',
+                        cursor: loading ? 'wait' : 'pointer',
+                      }}>Non e' uscita</button>
+                    </div>
+                  ) : (
                   <button onClick={() => setEsitoChiusura(null)} style={{
                     marginTop:8, padding:'12px 40px', borderRadius:12, border:'none',
                     background:colore, color:'#08090c', fontWeight:700, fontSize:'1rem', cursor:'pointer',
                   }}>OK</button>
+                  )}
                 </>
               )}
             </div>
