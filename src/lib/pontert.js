@@ -23,7 +23,8 @@ function preparaRicevitore() {
     attese.delete(dato.id)
     chiudi(dato.ok
       ? { ok: true, risposta: dato.risposta }
-      : { ok: false, error: dato.errore || 'Cassa non raggiungibile' })
+      // Stesso linguaggio del servizio sul PC, cosi' il programma riconosce il guasto.
+      : { ok: false, error: 'Cassa non raggiungibile: ' + (dato.errore || 'nessuna risposta') })
   }
 }
 

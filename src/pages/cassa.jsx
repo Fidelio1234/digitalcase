@@ -917,7 +917,10 @@ export default function CassaPage() {
           // Verifica che la cassa abbia DAVVERO emesso lo scontrino (comando 84F).
           // Avviene in background: il cassiere non aspetta niente.
           const datiScontrino = { totale: info.totale, metodo: info.metodo, ora: new Date().toISOString(), righe: righeDaRifare }
-          if (rispostaScontrino?.ok === false && /raggiungibile/i.test(rispostaScontrino?.error || '')) {
+          // Il messaggio cambia a seconda di chi parla con la cassa (servizio sul PC,
+          // canale dell'app, browser): si riconoscono tutte le forme di "non risponde".
+          const erroreDiRete = /raggiungibile|refused|econnrefused|ehostunreach|etimedout|unreachable|timeout|failed to (connect|fetch)|networkerror|network is|socket/i
+          if (rispostaScontrino?.ok === false && erroreDiRete.test(rispostaScontrino?.error || '')) {
             annullaInvio(ticketScontrino)
             esitoStampa3i({ esito: 'cassa_non_risponde' }, idScontrinoDb, datiScontrino)
           } else {

@@ -57,16 +57,23 @@ const S = {
   ultimoTarget: 0,   // numero atteso dopo tutti gli scontrini gia' inviati
   inVolo: 0,         // scontrini inviati e non ancora verificati
   deficit: 0,        // scontrini non emessi nel gruppo in corso (corregge i target successivi)
-  silenzi: 0,        // letture 84F andate a vuoto di fila (certe versioni non supportano 84F)
+  silenzi: 0,        // la cassa ha RISPOSTO ma non con i numeri: non conosce 84F
+  offline: 0,        // la cassa non ha risposto affatto: spenta, cavo staccato, rete giu'
   coda: Promise.resolve(),
 }
 
 async function leggi(chiediNumeri) {
   try {
     const r = parse84F(await chiediNumeri())
-    if (r) S.silenzi = 0; else S.silenzi++
+    // Risposta arrivata: se non sono i numeri, questa cassa non conosce 84F.
+    if (r) { S.silenzi = 0; S.offline = 0 } else S.silenzi++
     return r
-  } catch { S.silenzi++; return null }
+  } catch {
+    // Nessuna risposta: e' un guasto (cassa spenta, cavo staccato), non un firmware
+    // vecchio. Confondere le due cose fa smettere di avvisare proprio quando serve.
+    S.offline++
+    return null
+  }
 }
 
 // Oltre questa soglia la cassa non sa rispondere a 84F (firmware precedente alla 4.1:
@@ -122,13 +129,17 @@ export function sincronizzaBase(chiediNumeri, { tentativi = 3, intervallo = 2000
     // Gia' sappiamo che questa cassa non risponde a 84F: non la disturbiamo.
     if (rinunciaRicordata(ip)) { S.silenzi = SILENZI_PER_RINUNCIA; return null }
     S.silenzi = 0 // nuovo tentativo: si riparte da zero
+    S.offline = 0
     for (let i = 0; i < tentativi; i++) {
       const n = await leggi(chiediNumeri)
       
       if (n) { dimenticaRinuncia(ip); S.base = n; S.ultimoTarget = n.scontrino; S.deficit = 0; return n }
       if (i < tentativi - 1) await pausa(intervallo)
     }
-    ricordaRinuncia(ip) // nessuna risposta: da qui in avanti si lascia stare
+    // Si ricorda SOLO se la cassa ha risposto senza capire il comando. Se non ha
+    // risposto affatto non si conclude niente: domani potrebbe essere accesa e
+    // funzionare, e segnarla per 30 giorni spegnerebbe la verifica senza motivo.
+    if (S.silenzi > 0 && S.offline === 0) ricordaRinuncia(ip)
     return null
   })
   S.coda = p.catch(() => {})
@@ -187,11 +198,11 @@ export function verificaScontrino({ ticket, chiediNumeri, intervallo = 1500, att
         // Rileggo il numero per verificare gli scontrini successivi, ma questo lo segnalo come dubbio.
         const n = await leggi(chiediNumeri)
         if (n && S.inVolo === 1) { S.base = n; S.ultimoTarget = n.scontrino }
-        // Se la cassa non risponde nemmeno ora, non e' una prova che lo scontrino non sia
-        // uscito: puo' semplicemente non conoscere il comando. Meglio tacere che allarmare.
-        return n
-          ? { esito: 'cassa_non_risponde', motivo: 'numero iniziale della cassa non noto' }
-          : { esito: 'non_verificabile', motivo: 'nessuna risposta al comando 84F' }
+        if (n) return { esito: 'cassa_non_risponde', motivo: 'numero iniziale della cassa non noto' }
+        // La cassa non ha risposto affatto: e' un guasto e va detto.
+        if (S.offline > 0) return { esito: 'cassa_non_risponde', motivo: 'la cassa non risponde' }
+        // Ha risposto senza capire il comando: non si puo' verificare, ma non e' un allarme.
+        return { esito: 'non_verificabile', motivo: 'nessuna risposta al comando 84F' }
       }
       const t0 = Date.now()
       let ultima = null
@@ -252,7 +263,7 @@ export function verificaScontrino({ ticket, chiediNumeri, intervallo = 1500, att
 
 // Solo per i test.
 export function _azzeraStato() {
-  S.base = null; S.ultimoTarget = 0; S.inVolo = 0; S.deficit = 0; S.silenzi = 0; S.coda = Promise.resolve()
+  S.base = null; S.ultimoTarget = 0; S.inVolo = 0; S.deficit = 0; S.silenzi = 0; S.offline = 0; S.coda = Promise.resolve()
 }
 
 // ── Avvisi che sopravvivono al cambio pagina ────────────────────────────────
