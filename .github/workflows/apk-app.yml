@@ -19,16 +19,43 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Prepara la chiave di firma
+        env:
+          CHIAVE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$CHIAVE" ]; then
+            echo "ERRORE: manca il segreto ANDROID_KEYSTORE_BASE64"
+            exit 1
+          fi
+          printf '%s' "$CHIAVE" | base64 --decode > "$RUNNER_TEMP/digitalcase.p12"
+          if [ ! -s "$RUNNER_TEMP/digitalcase.p12" ]; then
+            echo "ERRORE: la chiave decodificata e' vuota. Il segreto non contiene il file."
+            exit 1
+          fi
+          echo "Chiave pronta ($(wc -c < "$RUNNER_TEMP/digitalcase.p12") byte)"
+
       - name: Prepara Gradle
         working-directory: android
         run: gradle wrapper --gradle-version 8.7 --no-daemon
 
-      - name: Compila l'APK
+      - name: Compila l'APK firmato
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/digitalcase.p12
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: 0.1.${{ github.run_number }}
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Controlla che sia davvero firmato
+        working-directory: android
+        run: |
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          "$ANDROID_HOME"/build-tools/34.0.0/apksigner verify --print-certs "$APK"
 
       - uses: actions/upload-artifact@v4
         with:
           name: digitalcase-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error

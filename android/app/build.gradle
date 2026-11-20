@@ -11,13 +11,34 @@ android {
         applicationId "it.digitalcase.cassa"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "0.1"
+        versionCode (System.getenv("VERSION_CODE") ?: "1").toInteger()
+        versionName (System.getenv("VERSION_NAME") ?: "0.1")
+    }
+
+    // La chiave di firma arriva dall'ambiente (su GitHub dai segreti del repository):
+    // nel repo non c'e' nulla di segreto. Senza chiave si compila lo stesso, non firmato.
+    def chiave = System.getenv("KEYSTORE_FILE")
+    if (chiave != null && !chiave.isEmpty()) {
+        signingConfigs {
+            rilascio {
+                storeFile file(chiave)
+                storeType "PKCS12"
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEYSTORE_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         debug {
             minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            if (chiave != null && !chiave.isEmpty()) {
+                signingConfig signingConfigs.rilascio
+            }
         }
     }
 
