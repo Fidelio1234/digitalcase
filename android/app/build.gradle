@@ -7,12 +7,17 @@ android {
     namespace 'it.digitalcase.cassa'
     compileSdk 34
 
+    // Calcolati prima: scritti dentro la chiamata, Groovy applicherebbe toInteger()
+    // al risultato di versionCode() invece che alla stringa, e la lettura fallisce.
+    def codiceVersione = Integer.parseInt(System.getenv("VERSION_CODE") ?: "1")
+    def nomeVersione = System.getenv("VERSION_NAME") ?: "0.1"
+
     defaultConfig {
         applicationId "it.digitalcase.cassa"
         minSdk 24
         targetSdk 34
-        versionCode (System.getenv("VERSION_CODE") ?: "1").toInteger()
-        versionName (System.getenv("VERSION_NAME") ?: "0.1")
+        versionCode codiceVersione
+        versionName nomeVersione
     }
 
     // La chiave di firma arriva dall'ambiente (su GitHub dai segreti del repository):
