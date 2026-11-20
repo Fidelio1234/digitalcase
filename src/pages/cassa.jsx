@@ -224,59 +224,53 @@ export default function CassaPage() {
 
 
 
+  // ── Numeri sui pulsanti Tavoli, Asporto e Agenda ───────────────────────
+  // Sono indicatori, non dati su cui si decide: bastano ogni 10 secondi, e solo
+  // mentre qualcuno guarda la pagina. Prima erano tre cicli da 5 secondi che si
+  // scaricavano anche le righe: 36 richieste al minuto per ogni cassa accesa,
+  // per tutto il servizio. Ora si chiede solo quanti sono (head: true).
   useEffect(() => {
     if (!NEGOZIO_ID) return
-    async function contaTavoli() {
-      const { data } = await supabase
-        .from('tavoli')
-        .select('numero', { count: 'exact' })
-        .eq('negozio_id', NEGOZIO_ID)
-        .eq('stato', 'occupato')
-      setTavoliOccupati(data?.length || 0)
-    }
-    contaTavoli()
-    const interval = setInterval(contaTavoli, 5000)
-    return () => clearInterval(interval)
-  }, [NEGOZIO_ID])
+    let vivo = true
+    const nascosta = () => typeof document !== 'undefined' && document.hidden
 
-
-
-
-   // Badge sul pulsante Asporto: conta quanti ordini asporto sono aperti in questo momento.
-   useEffect(() => {
-    if (!NEGOZIO_ID) return
-    async function contaAsportiAperti() {
-      const { data } = await supabase
-        .from('asporti')
-        .select('id', { count: 'exact' })
-        .eq('negozio_id', NEGOZIO_ID)
-        .eq('stato', 'aperto')
-      setAsportiAperti(data?.length || 0)
-    }
-    contaAsportiAperti()
-    const interval = setInterval(contaAsportiAperti, 5000)
-    return () => clearInterval(interval)
-  }, [NEGOZIO_ID])
-
-
-
-
-  useEffect(() => {
-    if (!NEGOZIO_ID) return
-    async function contaPrenotazioni() {
+    async function contaBadge() {
+      if (nascosta()) return
       const oggi = new Date().toISOString().split('T')[0]
-      const { data } = await supabase
-        .from('prenotazioni')
-        .select('id', { count: 'exact' })
-        .eq('negozio_id', NEGOZIO_ID)
-        .eq('data', oggi)
-        .eq('stato', 'prenotato')
-      setPrenotazioniOggi(data?.length || 0)
+      const [tav, asp, pre] = await Promise.all([
+        supabase.from('tavoli').select('numero', { count: 'exact', head: true })
+          .eq('negozio_id', NEGOZIO_ID).eq('stato', 'occupato'),
+        supabase.from('asporti').select('id', { count: 'exact', head: true })
+          .eq('negozio_id', NEGOZIO_ID).eq('stato', 'aperto'),
+        supabase.from('prenotazioni').select('id', { count: 'exact', head: true })
+          .eq('negozio_id', NEGOZIO_ID).eq('data', oggi).eq('stato', 'prenotato'),
+      ])
+      if (!vivo) return
+      setTavoliOccupati(tav?.count || 0)
+      setAsportiAperti(asp?.count || 0)
+      setPrenotazioniOggi(pre?.count || 0)
     }
-    contaPrenotazioni()
-    const interval = setInterval(contaPrenotazioni, 5000)
-    return () => clearInterval(interval)
+
+    contaBadge()
+    const interval = setInterval(contaBadge, 10000)
+    const alRitorno = () => { if (!nascosta()) contaBadge() }
+    document.addEventListener('visibilitychange', alRitorno)
+    return () => {
+      vivo = false
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', alRitorno)
+    }
   }, [NEGOZIO_ID])
+
+
+
+
+
+
+
+
+
+
 
 
 
