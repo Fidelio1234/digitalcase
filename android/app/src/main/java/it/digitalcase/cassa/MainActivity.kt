@@ -10,6 +10,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowManager
 import android.webkit.*
 import android.widget.*
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONArray
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var web: WebView
     private var tastoIndietro: OnBackPressedCallback? = null
+    private var ultimoIndietro = 0L
     private val memoria by lazy { getSharedPreferences("digitalcase", Context.MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -145,7 +147,22 @@ class MainActivity : AppCompatActivity() {
         if (tastoIndietro == null) {
             tastoIndietro = object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if (web.canGoBack()) web.goBack() else menuUscita()
+                    val ora = System.currentTimeMillis()
+                    // Due tocchi ravvicinati aprono il menu in qualunque punto del
+                    // programma: la cronologia delle pagine non si esaurisce mai, quindi
+                    // con il solo tasto indietro il menu non si raggiungeva.
+                    if (ora - ultimoIndietro < 1500) {
+                        ultimoIndietro = 0L
+                        menuUscita()
+                        return
+                    }
+                    ultimoIndietro = ora
+                    if (web.canGoBack()) {
+                        web.goBack()
+                        Toast.makeText(this@MainActivity, "Ancora indietro per il menu", Toast.LENGTH_SHORT).show()
+                    } else {
+                        menuUscita()
+                    }
                 }
             }
             onBackPressedDispatcher.addCallback(this, tastoIndietro!!)
