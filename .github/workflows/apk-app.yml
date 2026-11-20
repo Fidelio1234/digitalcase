@@ -8,6 +8,9 @@ on:
       - 'android/**'
       - '.github/workflows/apk-app.yml'
 
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -53,9 +56,28 @@ jobs:
         run: |
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
           "$ANDROID_HOME"/build-tools/34.0.0/apksigner verify --print-certs "$APK"
+          cp "$APK" "$RUNNER_TEMP/DigitalCase.apk"
 
+      # L'APK resta anche fra gli allegati della compilazione, per chi lavora dal computer
       - uses: actions/upload-artifact@v4
         with:
           name: digitalcase-apk
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+      # ...e soprattutto in una release, da cui si scarica con un link diretto:
+      # dal telefono basta aprire il link e installare, senza zip ne' computer.
+      - name: Pubblica la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="app-v0.1.${{ github.run_number }}"
+          gh release create "$TAG" "$RUNNER_TEMP/DigitalCase.apk" \
+            --title "DigitalCase per Android 0.1.${{ github.run_number }}" \
+            --notes "Installazione: apri questa pagina dal telefono e tocca DigitalCase.apk.
+
+          Si installa sopra la versione precedente: negozio e accesso restano come sono.
+
+          Compilata da ${{ github.sha }}." \
+            --target "${{ github.sha }}"
+          echo "Release pubblicata: $TAG"
